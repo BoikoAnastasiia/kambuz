@@ -34,7 +34,7 @@ is designed so that app can later filter recipes by cuisine and loved products.
 
 - TypeScript (Node 22), run with `tsx`.
 - `@anthropic-ai/sdk` with structured outputs (`output_config.format`) for every
-  agent. Default model `claude-opus-5` for all agents; the model per agent is a
+  agent. Default model `claude-sonnet-5` for all agents; the model per agent is a
   config value so cheaper models can be tried per role.
 - `yt-dlp` as a subprocess for video metadata, playlist expansion, and
   auto-caption download (VTT). No YouTube API key needed.
@@ -269,9 +269,9 @@ The ingredient list starts with ~150 common entries and grows from reports.
 
 ## 8. Cost
 
-Rough one-time cost for the whole channel at Opus 5 pricing ($5 in / $25 out
+Rough one-time cost for the whole channel at Sonnet 5 pricing ($2 in / $10 out
 per 1M tokens): ~390 videos, ~half recipes, ~5k transcript tokens each, five
-LLM stages, roughly $30–40. Individual videos cost cents. `usage` is logged
+LLM stages, roughly $12–16. Opus 5 would be about 2.5× that. Individual videos cost cents. `usage` is logged
 on every call, and the report prints the total.
 
 ## 9. Testing
