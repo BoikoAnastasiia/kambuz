@@ -13,18 +13,19 @@ import { runEval, renderEval } from "./eval/run.js";
 
 export const USAGE =
   "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize]\n" +
-  "       kambuz eval [--force] [--no-ingest]\n" +
+  "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
+  "                         (eval only: requires --ingest)\n" +
   "  --force               re-run every agent stage (does not re-fetch captions)\n" +
-  "  --no-ingest           (eval only) never call ingest for a case's video — read the catalog as it stands.\n" +
-  "                         Without this flag, eval calls the real API for any video missing from the cache.";
+  "  --ingest              (eval only) runs the pipeline for each case's video first (calls the API for\n" +
+  "                         uncached videos); without it, eval only reads the existing catalog.";
 
 const STAGES = ["scout", "extract", "verify", "categorize"] as const;
 type Stage = (typeof STAGES)[number];
 
 export type ParsedArgs =
   | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage }
-  | { ok: true; command: "eval"; force: boolean; noIngest: boolean }
+  | { ok: true; command: "eval"; force: boolean; ingest: boolean; onlyStage?: Stage }
   | { ok: false; error: string };
 
 function isStage(value: string): value is Stage {
@@ -33,7 +34,7 @@ function isStage(value: string): value is Stage {
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
-  let values: { force?: boolean; "only-stage"?: string; "no-ingest"?: boolean };
+  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean };
   try {
     ({ positionals, values } = parseArgs({
       args: argv,
@@ -41,7 +42,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       options: {
         force: { type: "boolean", default: false },
         "only-stage": { type: "string" },
-        "no-ingest": { type: "boolean", default: false },
+        ingest: { type: "boolean", default: false },
       },
     }));
   } catch (e) {
@@ -68,7 +69,19 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     if (positionals.length > 1) {
       return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(1).join(" ")}` };
     }
-    return { ok: true, command: "eval", force: values.force ?? false, noIngest: values["no-ingest"] ?? false };
+    const ingestFlag = values.ingest ?? false;
+    const onlyStageRaw = values["only-stage"];
+    let onlyStage: Stage | undefined;
+    if (onlyStageRaw !== undefined) {
+      if (!isStage(onlyStageRaw)) {
+        return { ok: false, error: `--only-stage must be one of: ${STAGES.join(", ")} (got "${onlyStageRaw}")` };
+      }
+      if (!ingestFlag) {
+        return { ok: false, error: "--only-stage requires --ingest for the eval command" };
+      }
+      onlyStage = onlyStageRaw;
+    }
+    return { ok: true, command: "eval", force: values.force ?? false, ingest: ingestFlag, onlyStage };
   }
 
   return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval" };
@@ -112,7 +125,7 @@ async function main(): Promise<void> {
       return;
     }
     case "eval": {
-      const rows = await runEval(deps, path.join(config.paths.eval, "cases"), { force: parsed.force, noIngest: parsed.noIngest });
+      const rows = await runEval(deps, path.join(config.paths.eval, "cases"), { force: parsed.force, ingest: parsed.ingest, onlyStage: parsed.onlyStage });
       console.log(renderEval(rows));
       process.exit(rows.some((r) => !r.pass) ? 1 : 0);
       return;

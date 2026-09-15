@@ -58,7 +58,7 @@ describe("runEval", () => {
       }),
     );
 
-    const rows = await runEval(deps, caseDir, { force: false, noIngest: true });
+    const rows = await runEval(deps, caseDir, { force: false });
 
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((r) => r.pass)).toBe(true);
@@ -87,7 +87,7 @@ describe("runEval", () => {
       }),
     );
 
-    const rows = await runEval(deps, caseDir, { force: false, noIngest: true });
+    const rows = await runEval(deps, caseDir, { force: false });
 
     const dishCountRow = rows.find((r) => r.videoId === "v2" && r.check === "dishCount") as EvalRow;
     expect(dishCountRow.pass).toBe(false);
@@ -120,11 +120,25 @@ describe("runEval", () => {
       }),
     );
 
-    const rows = await runEval(deps, caseDir, { force: false, noIngest: true });
+    const rows = await runEval(deps, caseDir, { force: false });
 
     const ingredientRow = rows.find((r) => r.check === "ingredient:beetroot") as EvalRow;
     expect(ingredientRow.pass).toBe(false);
     expect(ingredientRow.actual).toBe("null");
+  });
+
+  it("throws an error naming the offending file when a case is malformed", async () => {
+    const { deps, caseDir } = await setup();
+    await writeFile(path.join(caseDir, "broken.json"), "{ not valid json");
+
+    await expect(runEval(deps, caseDir, { force: false })).rejects.toThrow(/^broken\.json:/);
+  });
+
+  it("throws an error naming the offending file when a case fails schema validation", async () => {
+    const { deps, caseDir } = await setup();
+    await writeFile(path.join(caseDir, "invalid-shape.json"), JSON.stringify({ videoId: "v9" }));
+
+    await expect(runEval(deps, caseDir, { force: false })).rejects.toThrow(/^invalid-shape\.json:/);
   });
 });
 

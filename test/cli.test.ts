@@ -12,19 +12,30 @@ describe("parseCliArgs", () => {
     expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: true, onlyStage: "extract" });
   });
 
-  it("parses a bare eval command", () => {
+  it("parses a bare eval command (no ingestion by default)", () => {
     const result = parseCliArgs(["eval"]);
-    expect(result).toEqual({ ok: true, command: "eval", force: false, noIngest: false });
+    expect(result).toEqual({ ok: true, command: "eval", force: false, ingest: false, onlyStage: undefined });
   });
 
-  it("parses eval --force --no-ingest", () => {
-    const result = parseCliArgs(["eval", "--force", "--no-ingest"]);
-    expect(result).toEqual({ ok: true, command: "eval", force: true, noIngest: true });
+  it("parses eval --force --ingest", () => {
+    const result = parseCliArgs(["eval", "--force", "--ingest"]);
+    expect(result).toEqual({ ok: true, command: "eval", force: true, ingest: true, onlyStage: undefined });
   });
 
   it("rejects eval with an extra positional argument", () => {
     const result = parseCliArgs(["eval", "extra"]);
     expect(result.ok).toBe(false);
+  });
+
+  it("rejects eval --only-stage without --ingest", () => {
+    const result = parseCliArgs(["eval", "--only-stage", "extract"]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toMatch(/--ingest/);
+  });
+
+  it("parses eval --ingest --only-stage together", () => {
+    const result = parseCliArgs(["eval", "--ingest", "--only-stage", "extract"]);
+    expect(result).toEqual({ ok: true, command: "eval", force: false, ingest: true, onlyStage: "extract" });
   });
 
   it("rejects no arguments", () => {

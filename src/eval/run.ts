@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import type { IngestDeps } from "../orchestrator/run.js";
+import type { IngestDeps, IngestOptions } from "../orchestrator/run.js";
 import { ingest } from "../orchestrator/run.js";
 
 const CaseSchema = z.object({
@@ -31,20 +31,27 @@ export interface EvalRow {
 
 export interface RunEvalOptions {
   force: boolean;
-  // When true (the default the CLI passes in tests), never calls ingest() for a
-  // video — the eval only reads whatever is already in the catalog. When false,
-  // a missing/stale video is ingested first (real API + yt-dlp calls), so the
-  // eval is free (cache-backed) after the first real run.
-  noIngest?: boolean;
+  // Off by default: runEval never calls ingest() for a video unless this is
+  // explicitly true — the eval only reads whatever is already in the catalog.
+  // When true, a missing/stale video is ingested first (real API + yt-dlp
+  // calls), so the eval is free (cache-backed) after the first real run.
+  ingest?: boolean;
+  onlyStage?: IngestOptions["onlyStage"];
 }
 
 export async function runEval(deps: IngestDeps, caseDir: string, opts: RunEvalOptions): Promise<EvalRow[]> {
   const rows: EvalRow[] = [];
   const files = (await readdir(caseDir)).filter((f) => f.endsWith(".json")).sort();
   for (const f of files) {
-    const c = CaseSchema.parse(JSON.parse(await readFile(path.join(caseDir, f), "utf8")));
-    if (!opts.noIngest) {
-      await ingest(`https://www.youtube.com/watch?v=${c.videoId}`, deps, { force: opts.force });
+    let c: z.infer<typeof CaseSchema>;
+    try {
+      c = CaseSchema.parse(JSON.parse(await readFile(path.join(caseDir, f), "utf8")));
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      throw new Error(`${f}: ${message}`);
+    }
+    if (opts.ingest) {
+      await ingest(`https://www.youtube.com/watch?v=${c.videoId}`, deps, { force: opts.force, onlyStage: opts.onlyStage });
     }
     const recipes = (await deps.catalog.load())
       .filter((r) => r.source.videoId === c.videoId)

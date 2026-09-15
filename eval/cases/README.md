@@ -1,10 +1,13 @@
 # Eval case format
 
 A case is one JSON file in this directory. `npm run eval` reads every `*.json`
-file here (alphabetically), makes sure the video's recipes are in the catalog
-(ingesting it first unless `--no-ingest` is passed), and checks the catalog
-against the case's `expect` block. It's ground truth written by a human who
-watched the video — not a snapshot of whatever the model produced first.
+file here (alphabetically) and checks it against whatever is already in the
+catalog. By default it does not call the pipeline or the API at all — pass
+`--ingest` to run the pipeline for each case's video first (calling the API
+for any video not already cached), which is what you want the first time you
+add a case or after a prompt/vocab change. It's ground truth written by a
+human who watched the video — not a snapshot of whatever the model produced
+first.
 
 ## Shape
 
@@ -58,16 +61,19 @@ recipe are not a failure.
 
 ## Writing a case
 
-1. Run `npm run kambuz -- ingest "https://youtu.be/<videoId>"` for real.
+1. Run `npm run kambuz -- ingest "https://youtu.be/<videoId>"` for real (or
+   `npm run eval -- --ingest` once the case file exists, below).
 2. Watch the video (or at least the segments in question) and write down what
    the chef actually said — dish names, cuisines, meal types, and any
    ingredient quantities you want pinned down.
 3. Write the case file from that ground truth, not from the recipe JSON the
    pipeline produced — the point of the eval is to catch the pipeline being
    wrong, so the case must not just echo its output back at it.
-4. Run `npm run eval` (add `--force` if you changed a prompt and want the eval
-   to re-run the agents instead of reading the cache) and confirm the new
-   case passes for the right reason.
+4. Run `npm run eval -- --ingest` (add `--force` too if you changed a prompt
+   and want the eval to re-run the agents instead of reading the cache) and
+   confirm the new case passes for the right reason. After that, a plain
+   `npm run eval` re-checks every case against the catalog without touching
+   the API.
 
 Required coverage for the suite as a whole (see the task brief): at least one
 video with four or more dishes, one non-recipe vlog (`dishCount: 0`), and one
