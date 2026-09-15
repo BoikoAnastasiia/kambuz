@@ -1,9 +1,24 @@
 import { mkdir, readFile, writeFile, readdir, rename as fsRename } from "node:fs/promises";
 import path from "node:path";
+import { randomBytes } from "node:crypto";
 import { RecipeSchema, type Recipe } from "../schemas/recipe.js";
 
 export class Catalog {
   constructor(private root: string) {}
+
+  // Serializes write/rename/archive so concurrent callers (e.g. the
+  // orchestrator's pLimit pool) can't interleave rebuildIndex() calls and
+  // clobber index.json with a stale snapshot.
+  private queue: Promise<void> = Promise.resolve();
+
+  private enqueue<T>(task: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(task, task);
+    this.queue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
 
   private recipesDir = () => path.join(this.root, "recipes");
   private archiveDir = () => path.join(this.root, "archive");
@@ -16,9 +31,11 @@ export class Catalog {
   }
 
   async write(recipe: Recipe): Promise<void> {
-    await mkdir(this.recipesDir(), { recursive: true });
-    await writeFile(this.file(recipe.id), JSON.stringify(recipe, null, 2));
-    await this.rebuildIndex();
+    return this.enqueue(async () => {
+      await mkdir(this.recipesDir(), { recursive: true });
+      await writeFile(this.file(recipe.id), JSON.stringify(recipe, null, 2));
+      await this.rebuildIndex();
+    });
   }
 
   async rename(recipe: Recipe, nameRu: string): Promise<void> {
@@ -26,10 +43,13 @@ export class Catalog {
   }
 
   async archive(recipe: Recipe): Promise<void> {
-    await mkdir(this.archiveDir(), { recursive: true });
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    await fsRename(this.file(recipe.id), path.join(this.archiveDir(), `${recipe.id}--${stamp}.json`));
-    await this.rebuildIndex();
+    return this.enqueue(async () => {
+      await mkdir(this.archiveDir(), { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const suffix = randomBytes(2).toString("hex");
+      await fsRename(this.file(recipe.id), path.join(this.archiveDir(), `${recipe.id}--${stamp}-${suffix}.json`));
+      await this.rebuildIndex();
+    });
   }
 
   private async rebuildIndex(): Promise<void> {

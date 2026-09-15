@@ -31,4 +31,23 @@ describe("Catalog", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("keeps index.json complete under concurrent writes", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "kambuz-cat-concurrent-"));
+    try {
+      const cat = new Catalog(root);
+      const recipes: Recipe[] = Array.from({ length: 10 }, (_, i) => ({
+        ...base,
+        id: `borscht--v${i}`,
+        dishKey: "borscht",
+        source: { ...base.source, videoId: `v${i}` },
+      }));
+      await Promise.all(recipes.map((r) => cat.write(r)));
+      const index = JSON.parse(await readFile(path.join(root, "index.json"), "utf8"));
+      expect(index).toHaveLength(10);
+      expect(new Set(index.map((e: { id: string }) => e.id))).toEqual(new Set(recipes.map((r) => r.id)));
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });
