@@ -26,14 +26,18 @@ describe("callStructured", () => {
       { parsed_output: null, stop_reason: "end_turn" },
       { parsed_output: null, stop_reason: "end_turn" },
     ]);
-    const llm = createLlmClient(buildConfig({}), new UsageLedger(), client);
+    const ledger = new UsageLedger();
+    const llm = createLlmClient(buildConfig({}), ledger, client);
     await expect(llm.callStructured({ agent: "scout", system: "s", user: "u", schema: Out })).rejects.toBeInstanceOf(LlmParseError);
     expect(parse).toHaveBeenCalledTimes(2);
+    expect(ledger.byAgent().scout.calls).toBe(2);
   });
   it("throws on refusal without retrying", async () => {
     const { client, parse } = fakeAnthropic([{ parsed_output: null, stop_reason: "refusal" }]);
-    const llm = createLlmClient(buildConfig({}), new UsageLedger(), client);
+    const ledger = new UsageLedger();
+    const llm = createLlmClient(buildConfig({}), ledger, client);
     await expect(llm.callStructured({ agent: "scout", system: "s", user: "u", schema: Out })).rejects.toThrow(/refus/i);
     expect(parse).toHaveBeenCalledTimes(1);
+    expect(ledger.byAgent().scout.calls).toBe(1);
   });
 });

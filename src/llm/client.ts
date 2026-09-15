@@ -4,7 +4,14 @@ import type { z } from "zod";
 import type { AgentName, Config } from "../config.js";
 import type { UsageLedger } from "./usage.js";
 
-export class LlmParseError extends Error {}
+export class LlmParseError extends Error {
+  readonly reason: "refusal" | "parse";
+
+  constructor(message: string, reason: "refusal" | "parse") {
+    super(message);
+    this.reason = reason;
+  }
+}
 
 export interface StructuredCall<T> {
   agent: AgentName;
@@ -29,8 +36,8 @@ export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: 
       output_config: { format: zodOutputFormat(opts.schema) },
     });
     ledger.add(opts.agent, model, response.usage);
-    if (response.stop_reason === "refusal") throw new LlmParseError(`${opts.agent}: model refused the request`);
-    if (response.parsed_output == null) throw new LlmParseError(`${opts.agent}: response did not match schema`);
+    if (response.stop_reason === "refusal") throw new LlmParseError(`${opts.agent}: model refused the request`, "refusal");
+    if (response.parsed_output == null) throw new LlmParseError(`${opts.agent}: response did not match schema`, "parse");
     return response.parsed_output as T;
   }
 
@@ -39,7 +46,7 @@ export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: 
       try {
         return await once(opts);
       } catch (e) {
-        if (e instanceof LlmParseError && !/refused/.test(e.message)) return once(opts);
+        if (e instanceof LlmParseError && e.reason === "parse") return once(opts);
         throw e;
       }
     },
