@@ -30,6 +30,41 @@ describe("flagsFromVerification", () => {
       { kind: "step", ref: "2", reason: "action not found in transcript" },
     ]);
   });
+
+  it("flags a stated/inferred ingredient entirely missing from v.ingredients", () => {
+    const flags = flagsFromVerification(draft, {
+      ingredients: [{ rawName: "лук", quote: "нарежем кубиком лук", supported: true }],
+      steps: [{ order: 1, quote: "нарежем", supported: true }, { order: 2, quote: "обжарить", supported: true }],
+      confidence: 0.7,
+    });
+    expect(flags).toEqual([
+      { kind: "ingredient", ref: "фарш", reason: "quantity or presence not supported by transcript" },
+    ]);
+  });
+
+  it("does not flag a step whose order has no counterpart in v.steps", () => {
+    const flags = flagsFromVerification(draft, {
+      ingredients: [
+        { rawName: "лук", quote: "нарежем кубиком лук", supported: true },
+        { rawName: "фарш", quote: "фарш", supported: true },
+      ],
+      steps: [{ order: 1, quote: "нарежем", supported: true }],
+      confidence: 0.7,
+    });
+    expect(flags).toEqual([]);
+  });
+
+  it("matches ingredient rawName case- and whitespace-insensitively across independent LLM outputs", () => {
+    const flags = flagsFromVerification(draft, {
+      ingredients: [
+        { rawName: " Лук ", quote: "нарежем кубиком лук", supported: true },
+        { rawName: "фарш", quote: "фарш", supported: true },
+      ],
+      steps: [{ order: 1, quote: "нарежем", supported: true }, { order: 2, quote: "обжарить", supported: true }],
+      confidence: 0.7,
+    });
+    expect(flags).toEqual([]);
+  });
 });
 
 describe("runVerifier", () => {
