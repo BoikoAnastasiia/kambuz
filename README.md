@@ -41,12 +41,17 @@ Node 22 or newer.
 
 ## Run
 
-The `ingest` command is the next piece to land; see `docs/plans/` for the
-implementation plan. The intended usage:
-
     npm run kambuz -- ingest "https://youtu.be/bskR7LVpF7I"
     npm run kambuz -- ingest "https://www.youtube.com/playlist?list=..."
-    npm run kambuz -- ingest <url> --force --only-stage extract   # rerun extraction after editing vocab
+    npm run kambuz -- ingest <url> --only-stage extract   # rerun extraction after editing vocab
+
+`--only-stage <stage>` re-runs that stage and every stage downstream of it
+(`scout` < `extract` < `verify` < `categorize`); `--force` alone re-runs
+every agent stage. Neither flag re-fetches captions — the `yt-dlp` source
+stage is only re-run when its cache entry is missing.
+
+Each run writes a report to `reports/<timestamp>.md` and prints its path
+and the token-usage table to stdout.
 
 Models: every agent uses `claude-sonnet-5`. Override with `KAMBUZ_MODEL=<id>`
 or per agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
