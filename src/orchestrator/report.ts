@@ -9,11 +9,12 @@ export interface RunReport {
   keptExisting: string[];
   unmapped: Record<string, number>;
   flags: { recipeId: string; kind: string; ref: string; reason: string }[];
+  validationErrors: { recipeId: string; errors: string[] }[];
   usage: string;
 }
 
 export function emptyReport(url: string): RunReport {
-  return { startedAt: new Date().toISOString(), url, videos: [], written: [], archived: [], keptExisting: [], unmapped: {}, flags: [], usage: "" };
+  return { startedAt: new Date().toISOString(), url, videos: [], written: [], archived: [], keptExisting: [], unmapped: {}, flags: [], validationErrors: [], usage: "" };
 }
 
 export function renderReport(r: RunReport): string {
@@ -44,6 +45,10 @@ export function renderReport(r: RunReport): string {
     "## Verifier flags",
     "",
     ...r.flags.map((f) => `- ${f.recipeId}: ${f.kind} "${f.ref}" — ${f.reason}`),
+    "",
+    "## Validation errors (recipe not written)",
+    "",
+    ...r.validationErrors.map((v) => `- ${v.recipeId}: ${v.errors.join("; ")}`),
     "",
     "## Token usage",
     "",

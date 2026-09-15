@@ -6,7 +6,7 @@ import { validateRecipe } from "../vocab/validate.js";
 import { StageCache } from "./cache.js";
 import { Catalog } from "./catalog.js";
 import { assembleRecipe } from "./assemble.js";
-import { emptyReport, type RunReport } from "./report.js";
+import { emptyReport, type RunReport, type VideoStatus } from "./report.js";
 import { fetchVideo as realFetch, expandUrl as realExpand, type FetchResult } from "../fetcher/ytdlp.js";
 import { VideoSourceSchema, type VideoSource } from "../schemas/source.js";
 import { ScoutResultSchema } from "../schemas/scout.js";
@@ -30,12 +30,17 @@ export interface IngestDeps {
   usageText?: () => string;
 }
 
+const STAGE_ORDER = ["scout", "extract", "verify", "categorize"] as const;
+type Stage = (typeof STAGE_ORDER)[number];
+
 export interface IngestOptions {
   force?: boolean;
-  onlyStage?: "scout" | "extract" | "verify" | "categorize";
+  onlyStage?: Stage;
 }
 
 const SkippedSchema = z.object({ videoId: z.string(), skipped: z.literal("no-captions") });
+
+type VideoRow = { videoId: string; title: string; status: VideoStatus; recipes: number; error?: string };
 
 export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions): Promise<RunReport> {
   const { config, llm, vocab, cache, catalog } = deps;
@@ -43,7 +48,14 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
   const expand = deps.expand ?? realExpand;
   const report = emptyReport(url);
   const promptsDir = config.paths.prompts;
-  const forced = (stage: IngestOptions["onlyStage"]) => opts.force && (!opts.onlyStage || opts.onlyStage === stage);
+
+  // --only-stage X (with or without --force) re-runs X and every stage downstream of it.
+  // --force alone (no --only-stage) re-runs every agent stage. The source (yt-dlp) stage
+  // is never forced by either flag.
+  const shouldForce = (stage: Stage): boolean => {
+    if (opts.onlyStage) return STAGE_ORDER.indexOf(stage) >= STAGE_ORDER.indexOf(opts.onlyStage);
+    return !!opts.force;
+  };
 
   async function stage<T>(videoId: string, key: string, schema: z.ZodType<T>, force: boolean | undefined, run: () => Promise<T>): Promise<T> {
     if (!force) {
@@ -55,57 +67,83 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
     return value;
   }
 
-  const videoIds = await expand(url);
-  for (const videoId of videoIds) {
-    let title = videoId;
-    try {
-      const fetched = await stage(videoId, "source", z.union([VideoSourceSchema, SkippedSchema]), false, () => fetch(videoId, path.join(cache.dir(videoId), "yt")));
-      if ("skipped" in fetched) {
-        report.videos.push({ videoId, title, status: "skipped-no-captions", recipes: 0 });
-        continue;
-      }
-      const source: VideoSource = fetched;
-      title = source.title;
-
-      const scout = await stage(videoId, "scout", ScoutResultSchema, forced("scout"), () => runScout(source, llm, promptsDir));
-      if (!scout.isRecipeVideo) {
-        report.videos.push({ videoId, title, status: "not-recipe", recipes: 0 });
-        continue;
-      }
-
-      const limit = pLimit(config.concurrency);
-      const recipes = await Promise.all(
-        scout.segments.map((segment, i) =>
-          limit(async () => {
-            const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, forced("extract"), () => runExtractor(segment, vocab, llm, promptsDir));
-            const verification = await stage(videoId, `verify-${i}`, VerificationSchema, forced("verify") || forced("extract"), () => runVerifier(segment, draft, llm, promptsDir));
-            const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, forced("categorize") || forced("extract"), () => runCategorizer(draft, vocab, llm, promptsDir));
-            for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;
-            return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
-          }),
-        ),
-      );
-
-      // de-duplicate ids within one video (same dishKey twice)
-      const seen = new Map<string, number>();
-      for (const r of recipes) {
-        const n = (seen.get(r.id) ?? 0) + 1;
-        seen.set(r.id, n);
-        if (n > 1) r.id = `${r.id}-${n}`;
-      }
-
-      for (const recipe of recipes) {
-        const errors = validateRecipe(recipe, vocab);
-        if (errors.length) throw new Error(`invalid recipe ${recipe.id}: ${errors.join("; ")}`);
-        for (const f of recipe.flags) report.flags.push({ recipeId: recipe.id, ...f });
-        await placeInCatalog(recipe);
-      }
-      report.videos.push({ videoId, title, status: "done", recipes: recipes.length });
-    } catch (e) {
-      report.videos.push({ videoId, title, status: "error", recipes: 0, error: e instanceof Error ? e.message : String(e) });
-    }
+  // Serializes catalog placement (load -> judge -> write/archive/rename) across videos
+  // running concurrently, so two videos never interleave a catalog.load() with each
+  // other's write — same promise-chain mutex pattern as Catalog's internal queue.
+  let catalogQueue: Promise<void> = Promise.resolve();
+  function withCatalogLock<T>(task: () => Promise<T>): Promise<T> {
+    const result = catalogQueue.then(task, task);
+    catalogQueue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
   }
 
+  const videoIds = await expand(url);
+  const rows: VideoRow[] = new Array(videoIds.length);
+  const videoLimit = pLimit(config.concurrency);
+
+  await Promise.all(
+    videoIds.map((videoId, index) =>
+      videoLimit(async () => {
+        let title = videoId;
+        try {
+          const fetched = await stage(videoId, "source", z.union([VideoSourceSchema, SkippedSchema]), false, () => fetch(videoId, path.join(cache.dir(videoId), "yt")));
+          if ("skipped" in fetched) {
+            rows[index] = { videoId, title, status: "skipped-no-captions", recipes: 0 };
+            return;
+          }
+          const source: VideoSource = fetched;
+          title = source.title;
+
+          const scout = await stage(videoId, "scout", ScoutResultSchema, shouldForce("scout"), () => runScout(source, llm, promptsDir));
+          if (!scout.isRecipeVideo) {
+            rows[index] = { videoId, title, status: "not-recipe", recipes: 0 };
+            return;
+          }
+
+          const segmentLimit = pLimit(config.concurrency);
+          const recipes = await Promise.all(
+            scout.segments.map((segment, i) =>
+              segmentLimit(async () => {
+                const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => runExtractor(segment, vocab, llm, promptsDir));
+                const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => runVerifier(segment, draft, llm, promptsDir));
+                const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => runCategorizer(draft, vocab, llm, promptsDir));
+                for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;
+                return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
+              }),
+            ),
+          );
+
+          // de-duplicate ids within one video (same dishKey twice)
+          const seen = new Map<string, number>();
+          for (const r of recipes) {
+            const n = (seen.get(r.id) ?? 0) + 1;
+            seen.set(r.id, n);
+            if (n > 1) r.id = `${r.id}-${n}`;
+          }
+
+          let placed = 0;
+          for (const recipe of recipes) {
+            const errors = validateRecipe(recipe, vocab);
+            if (errors.length) {
+              report.validationErrors.push({ recipeId: recipe.id, errors });
+              continue;
+            }
+            for (const f of recipe.flags) report.flags.push({ recipeId: recipe.id, ...f });
+            await withCatalogLock(() => placeInCatalog(recipe));
+            placed++;
+          }
+          rows[index] = { videoId, title, status: "done", recipes: placed };
+        } catch (e) {
+          rows[index] = { videoId, title, status: "error", recipes: 0, error: e instanceof Error ? e.message : String(e) };
+        }
+      }),
+    ),
+  );
+
+  report.videos = rows;
   report.usage = deps.usageText?.() ?? "";
   return report;
 
