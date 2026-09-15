@@ -1,0 +1,11 @@
+[
+  { "id": "ukrainian", "nameRu": "Украинская", "nameEn": "Ukrainian" },
+  { "id": "russian", "nameRu": "Русская", "nameEn": "Russian" },
+  { "id": "georgian", "nameRu": "Грузинская", "nameEn": "Georgian" },
+  { "id": "italian", "nameRu": "Итальянская", "nameEn": "Italian" },
+  { "id": "french", "nameRu": "Французская", "nameEn": "French" },
+  { "id": "spanish", "nameRu": "Испанская", "nameEn": "Spanish" },
+  { "id": "turkish", "nameRu": "Турецкая", "nameEn": "Turkish" },
+  { "id": "asian", "nameRu": "Азиатская", "nameEn": "Asian" },
+  { "id": "other", "nameRu": "Другая", "nameEn": "Other" }
+]
