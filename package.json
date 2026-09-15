@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "kambuz": "tsx src/cli.ts"
+    "kambuz": "tsx src/cli.ts",
+    "eval": "tsx src/cli.ts eval"
   },
   "keywords": [],
   "author": "",

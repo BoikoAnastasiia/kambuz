@@ -9,17 +9,22 @@ import { StageCache } from "./orchestrator/cache.js";
 import { Catalog } from "./orchestrator/catalog.js";
 import { ingest, type IngestOptions } from "./orchestrator/run.js";
 import { renderReport } from "./orchestrator/report.js";
+import { runEval, renderEval } from "./eval/run.js";
 
 export const USAGE =
   "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize]\n" +
+  "       kambuz eval [--force] [--no-ingest]\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
-  "  --force               re-run every agent stage (does not re-fetch captions)";
+  "  --force               re-run every agent stage (does not re-fetch captions)\n" +
+  "  --no-ingest           (eval only) never call ingest for a case's video — read the catalog as it stands.\n" +
+  "                         Without this flag, eval calls the real API for any video missing from the cache.";
 
 const STAGES = ["scout", "extract", "verify", "categorize"] as const;
 type Stage = (typeof STAGES)[number];
 
 export type ParsedArgs =
-  | { ok: true; url: string; force: boolean; onlyStage?: Stage }
+  | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage }
+  | { ok: true; command: "eval"; force: boolean; noIngest: boolean }
   | { ok: false; error: string };
 
 function isStage(value: string): value is Stage {
@@ -28,7 +33,7 @@ function isStage(value: string): value is Stage {
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
-  let values: { force?: boolean; "only-stage"?: string };
+  let values: { force?: boolean; "only-stage"?: string; "no-ingest"?: boolean };
   try {
     ({ positionals, values } = parseArgs({
       args: argv,
@@ -36,6 +41,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       options: {
         force: { type: "boolean", default: false },
         "only-stage": { type: "string" },
+        "no-ingest": { type: "boolean", default: false },
       },
     }));
   } catch (e) {
@@ -43,17 +49,29 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
   }
 
   const [command, url] = positionals;
-  if (command !== "ingest" || !url) {
-    return { ok: false, error: "expected: kambuz ingest <url>" };
+
+  if (command === "ingest") {
+    if (!url) {
+      return { ok: false, error: "expected: kambuz ingest <url>" };
+    }
+    if (positionals.length > 2) {
+      return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(2).join(" ")}` };
+    }
+    const onlyStageRaw = values["only-stage"];
+    if (onlyStageRaw !== undefined && !isStage(onlyStageRaw)) {
+      return { ok: false, error: `--only-stage must be one of: ${STAGES.join(", ")} (got "${onlyStageRaw}")` };
+    }
+    return { ok: true, command: "ingest", url, force: values.force ?? false, onlyStage: onlyStageRaw };
   }
-  if (positionals.length > 2) {
-    return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(2).join(" ")}` };
+
+  if (command === "eval") {
+    if (positionals.length > 1) {
+      return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(1).join(" ")}` };
+    }
+    return { ok: true, command: "eval", force: values.force ?? false, noIngest: values["no-ingest"] ?? false };
   }
-  const onlyStageRaw = values["only-stage"];
-  if (onlyStageRaw !== undefined && !isStage(onlyStageRaw)) {
-    return { ok: false, error: `--only-stage must be one of: ${STAGES.join(", ")} (got "${onlyStageRaw}")` };
-  }
-  return { ok: true, url, force: values.force ?? false, onlyStage: onlyStageRaw };
+
+  return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval" };
 }
 
 async function main(): Promise<void> {
@@ -80,15 +98,31 @@ async function main(): Promise<void> {
     catalog: new Catalog(config.paths.catalog),
     usageText: () => ledger.toString(),
   };
-  const opts: IngestOptions = { force: parsed.force, onlyStage: parsed.onlyStage };
 
-  const report = await ingest(parsed.url, deps, opts);
-  await mkdir(config.paths.reports, { recursive: true });
-  const file = path.join(config.paths.reports, `${report.startedAt.replace(/[:.]/g, "-")}.md`);
-  const rendered = renderReport(report);
-  await writeFile(file, rendered);
-  console.log(rendered);
-  console.log(`\nreport: ${file}`);
+  switch (parsed.command) {
+    case "ingest": {
+      const opts: IngestOptions = { force: parsed.force, onlyStage: parsed.onlyStage };
+      const report = await ingest(parsed.url, deps, opts);
+      await mkdir(config.paths.reports, { recursive: true });
+      const file = path.join(config.paths.reports, `${report.startedAt.replace(/[:.]/g, "-")}.md`);
+      const rendered = renderReport(report);
+      await writeFile(file, rendered);
+      console.log(rendered);
+      console.log(`\nreport: ${file}`);
+      return;
+    }
+    case "eval": {
+      const rows = await runEval(deps, path.join(config.paths.eval, "cases"), { force: parsed.force, noIngest: parsed.noIngest });
+      console.log(renderEval(rows));
+      process.exit(rows.some((r) => !r.pass) ? 1 : 0);
+      return;
+    }
+    default: {
+      console.error(USAGE);
+      process.exit(1);
+      return;
+    }
+  }
 }
 
 const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
