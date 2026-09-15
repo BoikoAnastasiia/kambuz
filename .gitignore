@@ -1,0 +1,4 @@
+.cache/
+reports/
+node_modules/
+.env
