@@ -29,6 +29,9 @@ export async function runExtractor(segment: ScoutSegment, vocab: Vocab, llm: Llm
       unmapped.add(ing.rawName);
       return { ...ing, ingredient: null };
     }
+    if (ing.ingredient === null) {
+      unmapped.add(ing.rawName);
+    }
     return ing;
   });
   const steps = [...raw.steps]

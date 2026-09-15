@@ -38,4 +38,16 @@ describe("runExtractor", () => {
     expect(r.steps.map((s) => [s.order, s.timestamp])).toEqual([[1, 30], [2, 90]]);
     expect(llm.callStructured.mock.calls[0][0].agent).toBe("extractor");
   });
+
+  it("includes the rawName of a model-nulled ingredient in unmappedIngredients even when the model omitted it", async () => {
+    const llm = { callStructured: vi.fn(async (_opts: any) => ({
+      nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
+      ingredients: [
+        { ingredient: null, rawName: "неизвестный ингредиент", quantity: null, unit: null, provenance: "unknown", note: null },
+      ],
+      steps: [],
+    })) };
+    const r = await runExtractor(segment, vocab, llm as any, config.paths.prompts);
+    expect(r.unmappedIngredients).toEqual(["неизвестный ингредиент"]);
+  });
 });
