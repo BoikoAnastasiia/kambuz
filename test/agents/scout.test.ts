@@ -40,4 +40,13 @@ describe("runScout", () => {
     const r = await runScout(source, llm as any, config.paths.prompts);
     expect(r.segments).toHaveLength(0);
   });
+  it("empties segments when the model itself says isRecipeVideo is false", async () => {
+    const llm = { callStructured: vi.fn(async () => ({
+      isRecipeVideo: false,
+      segments: [{ workingName: "лазанья", start: 20, end: 80, rawText: "LLM WROTE THIS", cleanText: "Нарежем кубиком лук." }],
+    })) };
+    const r = await runScout(source, llm as any, config.paths.prompts);
+    expect(r.isRecipeVideo).toBe(false);
+    expect(r.segments).toHaveLength(0);
+  });
 });

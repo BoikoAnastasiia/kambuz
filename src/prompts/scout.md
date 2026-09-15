@@ -11,5 +11,6 @@ Rules:
 4. `workingName`: the dish as the chef names it, in Russian, short. Not the video title.
 5. `rawText`: copy the transcript lines for the range verbatim, without the [mm:ss] prefixes. Do not fix anything here.
 6. `cleanText`: the same lines with speech-to-text errors corrected, filler ("так", "погнали", "[музыка]") removed, and sentences punctuated. You may fix words. You must NOT add, remove, or reorder any ingredient, quantity, or action. If unsure whether a word is an error, leave it.
+7. Only report a dish if the chef actually cooks it in this video. Never invent, infer, or add a dish from the title or tags that is not shown being made.
 
 Return only the structured result.
