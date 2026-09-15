@@ -312,7 +312,7 @@ kambuz/
   catalog/             recipes/, archive/, index.json   (git-tracked output)
   reports/             run reports (git-ignored)
   .cache/              per-video stage cache (git-ignored)
-  docs/superpowers/    specs and plans
+  docs/                specs and plans
 ```
 
 ## 11. Open questions deferred to later versions

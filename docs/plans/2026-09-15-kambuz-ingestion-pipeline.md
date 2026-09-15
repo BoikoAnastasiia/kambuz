@@ -1,14 +1,12 @@
 # Kambuz Ingestion Pipeline Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** A CLI that takes a YouTube video or playlist URL and writes one grounded, structured recipe JSON per dish found, via a chain of typed agents.
 
 **Architecture:** Plain-TypeScript orchestrator runs six stages per video (fetcher → scout → extractor per segment → verifier → categorizer → judge). Each agent is a pure function `(typedInput) => Promise<typedOutput>` built on one shared LLM wrapper using structured outputs. Every stage's result is cached on disk per video so runs resume.
 
 **Tech Stack:** Node 22, TypeScript, `tsx`, `@anthropic-ai/sdk` (structured outputs via `client.messages.parse` + `zodOutputFormat`), Zod, Vitest, `yt-dlp` subprocess.
 
-**Spec:** `docs/superpowers/specs/2026-09-15-kambuz-ingestion-pipeline-design.md`
+**Spec:** `docs/specs/2026-09-15-kambuz-ingestion-pipeline-design.md`
 
 ## Global Constraints
 
@@ -2507,7 +2505,7 @@ Models: every agent uses `claude-sonnet-5`. Override with `KAMBUZ_MODEL=<id>` or
 
 ## Design
 
-See `docs/superpowers/specs/2026-09-15-kambuz-ingestion-pipeline-design.md`.
+See `docs/specs/2026-09-15-kambuz-ingestion-pipeline-design.md`.
 ```
 
 - [ ] **Step 3: Typecheck and run the full test suite**
