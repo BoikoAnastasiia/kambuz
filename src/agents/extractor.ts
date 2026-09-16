@@ -6,7 +6,11 @@ import type { Vocab } from "../vocab/load.js";
 import { ingredientPromptList } from "../vocab/validate.js";
 import { formatTimestamp } from "../fetcher/vtt.js";
 
-export function buildExtractorUser(segment: ScoutSegment, vocab: Vocab): string {
+/**
+ * `timedTranscript` is the rendered `[mm:ss] line` slice of the segment's cues. Step
+ * timestamps are read off those markers, so the extractor never has to guess a second.
+ */
+export function buildExtractorUser(segment: ScoutSegment, vocab: Vocab, timedTranscript: string): string {
   return [
     `Dish (working name): ${segment.workingName}`,
     `Segment range: ${formatTimestamp(segment.start)}–${formatTimestamp(segment.end)} (${segment.start}s–${segment.end}s)`,
@@ -14,14 +18,23 @@ export function buildExtractorUser(segment: ScoutSegment, vocab: Vocab): string 
     "Ingredient vocabulary (id — Russian / English (aliases)):",
     ingredientPromptList(vocab),
     "",
-    "Cleaned transcript:",
+    "Timestamped transcript (take every step timestamp from these [mm:ss] markers):",
+    timedTranscript,
+    "",
+    "Cleaned transcript (same lines, speech-to-text errors fixed):",
     segment.cleanText,
   ].join("\n");
 }
 
-export async function runExtractor(segment: ScoutSegment, vocab: Vocab, llm: LlmClient, promptsDir: string): Promise<DraftRecipe> {
+export async function runExtractor(
+  segment: ScoutSegment,
+  vocab: Vocab,
+  llm: LlmClient,
+  promptsDir: string,
+  timedTranscript: string,
+): Promise<DraftRecipe> {
   const system = await loadPrompt("extractor", promptsDir);
-  const raw = await llm.callStructured({ agent: "extractor", system, user: buildExtractorUser(segment, vocab), schema: DraftRecipeSchema });
+  const raw = await llm.callStructured({ agent: "extractor", system, user: buildExtractorUser(segment, vocab, timedTranscript), schema: DraftRecipeSchema });
   const known = new Set(vocab.ingredients.map((i) => i.id));
   const unmapped = new Set(raw.unmappedIngredients);
   const ingredients = raw.ingredients.map((ing) => {

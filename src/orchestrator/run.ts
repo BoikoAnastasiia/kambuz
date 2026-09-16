@@ -8,6 +8,7 @@ import { Catalog } from "./catalog.js";
 import { assembleRecipe } from "./assemble.js";
 import { emptyReport, type RunReport, type VideoStatus } from "./report.js";
 import { fetchVideo as realFetch, expandUrl as realExpand, type FetchResult } from "../fetcher/ytdlp.js";
+import { renderTranscript, sliceCues } from "../fetcher/vtt.js";
 import { VideoSourceSchema, type VideoSource } from "../schemas/source.js";
 import { ScoutResultSchema } from "../schemas/scout.js";
 import { CategorizationSchema, DraftRecipeSchema, VerificationSchema, type Recipe } from "../schemas/recipe.js";
@@ -107,7 +108,8 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
           const recipes = await Promise.all(
             scout.segments.map((segment, i) =>
               segmentLimit(async () => {
-                const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => runExtractor(segment, vocab, llm, promptsDir));
+                const timedTranscript = renderTranscript(sliceCues(source.cues, segment.start, segment.end));
+                const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => runExtractor(segment, vocab, llm, promptsDir, timedTranscript));
                 const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => runVerifier(segment, draft, llm, promptsDir));
                 const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => runCategorizer(draft, vocab, llm, promptsDir));
                 for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;

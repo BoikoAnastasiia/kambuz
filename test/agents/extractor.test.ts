@@ -9,13 +9,21 @@ const vocab: Vocab = {
   ingredients: [{ id: "onion", nameRu: "Лук", nameEn: "Onion", aliases: [] }],
 };
 const segment: ScoutSegment = { workingName: "лазанья", start: 30, end: 200, rawText: "raw", cleanText: "Нарежем кубиком лук. Добавим фарш." };
+const timed = "[00:30] нарежем кубиком лук\n[01:30] добавляем фарш";
 
 describe("buildExtractorUser", () => {
   it("includes working name, range, clean text and the vocabulary", () => {
-    const u = buildExtractorUser(segment, vocab);
+    const u = buildExtractorUser(segment, vocab, timed);
     expect(u).toContain("лазанья");
     expect(u).toContain("onion — Лук / Onion");
     expect(u).toContain("Нарежем кубиком лук");
+  });
+
+  it("carries the timestamped transcript slice so step timestamps are read, not guessed", () => {
+    const u = buildExtractorUser(segment, vocab, timed);
+    expect(u).toContain("[00:30] нарежем кубиком лук");
+    expect(u).toContain("[01:30] добавляем фарш");
+    expect(u).toMatch(/\[\d\d:\d\d\]/);
   });
 });
 
@@ -32,7 +40,7 @@ describe("runExtractor", () => {
         { order: 2, text: "Нарезать лук.", timestamp: 10 },
       ],
     })) };
-    const r = await runExtractor(segment, vocab, llm as any, config.paths.prompts);
+    const r = await runExtractor(segment, vocab, llm as any, config.paths.prompts, timed);
     expect(r.ingredients[1].ingredient).toBeNull();
     expect(r.unmappedIngredients).toEqual(["фарш"]);
     expect(r.steps.map((s) => [s.order, s.timestamp])).toEqual([[1, 30], [2, 90]]);
@@ -47,7 +55,7 @@ describe("runExtractor", () => {
       ],
       steps: [],
     })) };
-    const r = await runExtractor(segment, vocab, llm as any, config.paths.prompts);
+    const r = await runExtractor(segment, vocab, llm as any, config.paths.prompts, timed);
     expect(r.unmappedIngredients).toEqual(["неизвестный ингредиент"]);
   });
 });
