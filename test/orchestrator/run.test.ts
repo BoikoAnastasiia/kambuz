@@ -375,6 +375,50 @@ describe("ingest", () => {
     expect(recipes[0].id).toBe("lasagna-bolognese--v1");
   });
 
+  it("never runs more than `concurrency` LLM calls at once, across videos and segments together", async () => {
+    // Before the fix a per-video limit wrapped a per-segment limit, so the real ceiling
+    // was concurrency² — 4 calls in flight for a configured concurrency of 2.
+    const root = await mkdtemp(path.join(os.tmpdir(), "kambuz-run-"));
+    const config = { ...buildConfig({}), concurrency: 2 };
+    let inFlight = 0;
+    let peak = 0;
+    const llm = {
+      callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        inFlight++;
+        peak = Math.max(peak, inFlight);
+        await new Promise((r) => setTimeout(r, 5));
+        inFlight--;
+        switch (agent) {
+          case "scout": return {
+            isRecipeVideo: true,
+            segments: [0, 1, 2].map((i) => ({ workingName: `dish${i}`, start: i * 100, end: i * 100 + 100, rawText: "", cleanText: `Нарежем лук ${i}.` })),
+          };
+          case "extractor": return { nameRu: `Блюдо ${user.length}`, nameEn: "Dish", servings: null, unmappedIngredients: [],
+            ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+            steps: [{ order: 1, text: "Нарезать лук.", timestamp: 0 }] };
+          case "verifier": return { ingredients: [{ rawName: "лук", quote: "нарежем лук", supported: true }], steps: [{ order: 1, quote: "нарежем лук", supported: true }], confidence: 0.9 };
+          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: `dish-${user.length}` };
+          case "judge": return { relation: "variant", reason: "r", newNameRu: null, existingNameRu: null };
+          default: throw new Error(agent);
+        }
+      }),
+    };
+    const deps = {
+      config,
+      llm,
+      vocab: await loadVocab(config.paths.vocab),
+      cache: new StageCache(path.join(root, "cache")),
+      catalog: new Catalog(path.join(root, "catalog")),
+      fetch: vi.fn(async (videoId: string): Promise<FetchResult> => ({ ...source, videoId })),
+      expand: vi.fn(async () => ["v1", "v2"]),
+    };
+
+    await ingest("https://youtu.be/playlist", deps, {});
+
+    expect(llm.callStructured.mock.calls.length).toBeGreaterThan(6);
+    expect(peak).toBeLessThanOrEqual(2);
+  });
+
   it("processes videos concurrently but keeps report rows in videoIds order regardless of completion order", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "kambuz-run-"));
     const config = buildConfig({});

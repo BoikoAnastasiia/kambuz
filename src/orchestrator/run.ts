@@ -90,14 +90,18 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
     throw new Error(`could not expand ${url}: ${e instanceof Error ? e.message : String(e)}`);
   }
   const rows: VideoRow[] = new Array(videoIds.length);
-  const videoLimit = pLimit(config.concurrency);
+  // One ceiling for every LLM call in the run. A per-segment limit nested inside a
+  // per-video one let concurrency² calls run at once; yt-dlp, which is rate-limited by
+  // YouTube rather than by us, gets its own small limit.
+  const llmLimit = pLimit(config.concurrency);
+  const fetchLimit = pLimit(2);
 
   await Promise.all(
     videoIds.map((videoId, index) =>
-      videoLimit(async () => {
+      (async () => {
         let title = videoId;
         try {
-          const fetched = await stage(videoId, "source", z.union([VideoSourceSchema, SkippedSchema]), false, () => fetch(videoId, path.join(cache.dir(videoId), "yt")));
+          const fetched = await stage(videoId, "source", z.union([VideoSourceSchema, SkippedSchema]), false, () => fetchLimit(() => fetch(videoId, path.join(cache.dir(videoId), "yt"))));
           if ("skipped" in fetched) {
             rows[index] = { videoId, title, status: "skipped-no-captions", recipes: 0 };
             return;
@@ -105,24 +109,21 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
           const source: VideoSource = fetched;
           title = source.title;
 
-          const scout = await stage(videoId, "scout", ScoutResultSchema, shouldForce("scout"), () => runScout(source, llm, promptsDir));
+          const scout = await stage(videoId, "scout", ScoutResultSchema, shouldForce("scout"), () => llmLimit(() => runScout(source, llm, promptsDir)));
           if (!scout.isRecipeVideo) {
             rows[index] = { videoId, title, status: "not-recipe", recipes: 0 };
             return;
           }
 
-          const segmentLimit = pLimit(config.concurrency);
           const recipes = await Promise.all(
-            scout.segments.map((segment, i) =>
-              segmentLimit(async () => {
-                const timedTranscript = renderTranscript(sliceCues(source.cues, segment.start, segment.end));
-                const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => runExtractor(segment, vocab, llm, promptsDir, timedTranscript));
-                const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => runVerifier(segment, draft, llm, promptsDir));
-                const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => runCategorizer(draft, vocab, llm, promptsDir));
-                for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;
-                return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
-              }),
-            ),
+            scout.segments.map(async (segment, i) => {
+              const timedTranscript = renderTranscript(sliceCues(source.cues, segment.start, segment.end));
+              const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => llmLimit(() => runExtractor(segment, vocab, llm, promptsDir, timedTranscript)));
+              const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => llmLimit(() => runVerifier(segment, draft, llm, promptsDir)));
+              const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => llmLimit(() => runCategorizer(draft, vocab, llm, promptsDir)));
+              for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;
+              return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
+            }),
           );
 
           // de-duplicate ids within one video (same dishKey twice)
@@ -155,7 +156,7 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
         } catch (e) {
           rows[index] = { videoId, title, status: "error", recipes: 0, error: e instanceof Error ? e.message : String(e) };
         }
-      }),
+      })(),
     ),
   );
 
@@ -174,7 +175,7 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
       return;
     }
     const existing = candidates[0];
-    const decision = await runJudge(existing, incoming, llm, promptsDir);
+    const decision = await llmLimit(() => runJudge(existing, incoming, llm, promptsDir));
     const result = decide(existing, incoming, decision);
     if (result.action === "replace") {
       await catalog.archive(existing);
