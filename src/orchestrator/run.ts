@@ -81,7 +81,14 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
     return result;
   }
 
-  const videoIds = await expand(url);
+  // yt-dlp failures here (bad URL, private playlist, no network) are the first thing a
+  // run hits; report them as a message instead of an unhandled subprocess rejection.
+  let videoIds: string[];
+  try {
+    videoIds = await expand(url);
+  } catch (e) {
+    throw new Error(`could not expand ${url}: ${e instanceof Error ? e.message : String(e)}`);
+  }
   const rows: VideoRow[] = new Array(videoIds.length);
   const videoLimit = pLimit(config.concurrency);
 

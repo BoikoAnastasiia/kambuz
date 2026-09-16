@@ -1,5 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { parseVideoId, buildSource } from "../../src/fetcher/ytdlp.js";
+import { parseVideoId, buildSource, ytDlpError } from "../../src/fetcher/ytdlp.js";
+
+describe("ytDlpError", () => {
+  it("turns a missing binary into an install hint instead of an ENOENT stack", () => {
+    const enoent = Object.assign(new Error("spawn yt-dlp ENOENT"), { code: "ENOENT" });
+    expect(ytDlpError(enoent).message).toBe("yt-dlp not found. Install it with: brew install yt-dlp");
+  });
+
+  it("passes any other yt-dlp failure through unchanged", () => {
+    const boom = Object.assign(new Error("ERROR: unable to download video data"), { code: 1 });
+    expect(ytDlpError(boom)).toBe(boom);
+  });
+});
 
 describe("parseVideoId", () => {
   it("handles youtu.be, watch, and shorts URLs", () => {

@@ -21,6 +21,14 @@ export const USAGE =
   "  --ingest              (eval only) runs the pipeline for each case's video first (calls the API for\n" +
   "                         uncached videos); without it, eval only reads the existing catalog.";
 
+export const MISSING_API_KEY =
+  "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.";
+
+/** Checked before any client is constructed, so a first run says what to do instead of throwing. */
+export function apiKeyError(env: NodeJS.ProcessEnv): string | null {
+  return env.ANTHROPIC_API_KEY?.trim() ? null : MISSING_API_KEY;
+}
+
 const STAGES = ["scout", "extract", "verify", "categorize"] as const;
 type Stage = (typeof STAGES)[number];
 
@@ -97,6 +105,13 @@ async function main(): Promise<void> {
     return;
   }
 
+  const keyError = apiKeyError(process.env);
+  if (keyError) {
+    console.error(keyError);
+    process.exit(1);
+    return;
+  }
+
   const ledger = new UsageLedger();
   const deps = {
     config,
@@ -136,7 +151,7 @@ async function main(): Promise<void> {
 const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
 if (isMain) {
   main().catch((e) => {
-    console.error(e);
+    console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);
   });
 }

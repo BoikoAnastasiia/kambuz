@@ -1,5 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { parseCliArgs } from "../src/cli.js";
+import { parseCliArgs, apiKeyError } from "../src/cli.js";
+
+describe("apiKeyError", () => {
+  it("explains how to set a missing key instead of letting the SDK throw", () => {
+    // literal envs only — the test never reads the real ANTHROPIC_API_KEY
+    expect(apiKeyError({})).toMatch(/ANTHROPIC_API_KEY is not set.*\.env\.example/s);
+    expect(apiKeyError({ ANTHROPIC_API_KEY: "  " })).not.toBeNull();
+  });
+
+  it("returns null when a key is present", () => {
+    expect(apiKeyError({ ANTHROPIC_API_KEY: "sk-test" })).toBeNull();
+  });
+});
 
 describe("parseCliArgs", () => {
   it("parses a bare ingest command", () => {

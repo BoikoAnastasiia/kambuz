@@ -8,6 +8,23 @@ import { VideoSourceSchema, type TranscriptCue, type VideoSource } from "../sche
 
 const exec = promisify(execFile);
 
+/** yt-dlp is an external binary; a missing one must read as an install hint, not an ENOENT stack. */
+export function ytDlpError(e: unknown): Error {
+  if ((e as NodeJS.ErrnoException | null)?.code === "ENOENT") {
+    return new Error("yt-dlp not found. Install it with: brew install yt-dlp");
+  }
+  return e instanceof Error ? e : new Error(String(e));
+}
+
+async function ytDlp(args: string[]): Promise<string> {
+  try {
+    const { stdout } = await exec("yt-dlp", args, { maxBuffer: 64 * 1024 * 1024 });
+    return stdout;
+  } catch (e) {
+    throw ytDlpError(e);
+  }
+}
+
 export function parseVideoId(url: string): string | null {
   try {
     const u = new URL(url);
@@ -26,7 +43,7 @@ export function parseVideoId(url: string): string | null {
 export async function expandUrl(url: string): Promise<string[]> {
   const single = parseVideoId(url);
   if (single) return [single];
-  const { stdout } = await exec("yt-dlp", ["--flat-playlist", "--print", "%(id)s", url], { maxBuffer: 64 * 1024 * 1024 });
+  const stdout = await ytDlp(["--flat-playlist", "--print", "%(id)s", url]);
   return stdout.split("\n").map((s) => s.trim()).filter(Boolean);
 }
 
@@ -60,14 +77,22 @@ export function buildSource(info: Info, cues: TranscriptCue[]): VideoSource {
 
 export type FetchResult = VideoSource | { videoId: string; skipped: "no-captions" };
 
+export function videoUrl(videoId: string): string {
+  return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
+export function fetchArgs(videoId: string, workDir: string): string[] {
+  return [
+    "--skip-download", "--write-info-json", "--write-auto-subs",
+    "--sub-langs", "ru", "--sub-format", "vtt",
+    "-o", path.join(workDir, "%(id)s.%(ext)s"), videoUrl(videoId),
+  ];
+}
+
 /** Downloads info json + Russian auto-captions into workDir and returns a VideoSource. */
 export async function fetchVideo(videoId: string, workDir: string): Promise<FetchResult> {
   await mkdir(workDir, { recursive: true });
-  const url = `https://www.youtube.com/watch?v=${videoId}`;
-  await exec("yt-dlp", [
-    "--skip-download", "--write-info-json", "--write-auto-subs", "--sub-langs", "ru", "--sub-format", "vtt",
-    "-o", path.join(workDir, "%(id)s.%(ext)s"), url,
-  ], { maxBuffer: 64 * 1024 * 1024 });
+  await ytDlp(fetchArgs(videoId, workDir));
   const files = await readdir(workDir);
   const infoFile = files.find((f) => f === `${videoId}.info.json`);
   if (!infoFile) throw new Error(`yt-dlp produced no info json for ${videoId}`);

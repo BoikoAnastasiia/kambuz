@@ -90,6 +90,14 @@ describe("ingest", () => {
     expect(deps.llm.callStructured).not.toHaveBeenCalled();
   });
 
+  it("turns a playlist-expansion failure into a plain message, not a raw yt-dlp stack", async () => {
+    const deps = await setup();
+    deps.expand = vi.fn(async () => { throw new Error("ERROR: Unable to download API page"); });
+    await expect(ingest("https://www.youtube.com/playlist?list=PL1", deps, {})).rejects.toThrow(
+      /could not expand https:\/\/www\.youtube\.com\/playlist\?list=PL1: ERROR: Unable to download API page/,
+    );
+  });
+
   // --- fix round 1 ---
 
   it("re-running with --only-stage scout re-runs scout and every downstream stage", async () => {
