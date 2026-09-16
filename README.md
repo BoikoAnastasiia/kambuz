@@ -51,6 +51,11 @@ Node 22 or newer.
 every agent stage. Neither flag re-fetches captions — the `yt-dlp` source
 stage is only re-run when its cache entry is missing.
 
+While it runs, `ingest` draws a live tree of every video and its current
+stage (spinner while an agent call is in flight, then elapsed time and
+tokens, or "cached" for a stage served from `.cache/`); pass `--quiet` to
+skip it and just print the final report.
+
 Each run writes a report to `reports/<timestamp>.md` and prints its path
 and the token-usage table to stdout. The report lists what was written,
 what the verifier flagged, which segments failed, and every ingredient the
