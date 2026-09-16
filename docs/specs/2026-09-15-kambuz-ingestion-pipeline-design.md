@@ -75,12 +75,14 @@ Output: a list of dishes found in the video. For each dish:
 
 - `working_name` — the dish as the chef refers to it (not yet canonical).
 - `start`, `end` — timestamp range where this dish is cooked.
-- `raw_text` — the exact transcript slice for that range (copied, not
-  rewritten).
-- `clean_text` — the same slice with obvious speech-to-text errors fixed
+- `clean_text` — the transcript slice for that range with obvious speech-to-text errors fixed
   ("стебля сидений" → "стебля сельдерея"), filler removed, sentences split.
 
 An empty list means "not a recipe video" (vlog, travel, sponsor update).
+
+`raw_text` — the exact transcript slice for the range — is part of the segment
+every downstream stage consumes, but it is not asked of the model: the
+orchestrator cuts it from the cues it already holds.
 
 Rules:
 - Dishes cooked in interleaved fashion (chef starts a soup, then a salad while
@@ -209,7 +211,8 @@ examples. Drift is caught by the regression set.
 
 ## 6. Data shapes
 
-All schemas are Zod, in `src/schemas/`. Summary of the final recipe file:
+All schemas are Zod, in `src/schemas/`. Field names in code and output files are
+camelCase; the snake_case here is illustrative. Summary of the final recipe file:
 
 ```ts
 Recipe {

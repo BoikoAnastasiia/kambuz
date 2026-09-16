@@ -44,6 +44,7 @@ Node 22 or newer.
     npm run kambuz -- ingest "https://youtu.be/bskR7LVpF7I"
     npm run kambuz -- ingest "https://www.youtube.com/playlist?list=..."
     npm run kambuz -- ingest <url> --only-stage extract   # rerun extraction after editing vocab
+    npm run eval                                         # score the catalog against eval/cases
 
 `--only-stage <stage>` re-runs that stage and every stage downstream of it
 (`scout` < `extract` < `verify` < `categorize`); `--force` alone re-runs
@@ -51,10 +52,39 @@ every agent stage. Neither flag re-fetches captions — the `yt-dlp` source
 stage is only re-run when its cache entry is missing.
 
 Each run writes a report to `reports/<timestamp>.md` and prints its path
-and the token-usage table to stdout.
+and the token-usage table to stdout. The report lists what was written,
+what the verifier flagged, which segments failed, and every ingredient the
+extractor could not map to `vocab/ingredients.json`.
 
-Models: every agent uses `claude-sonnet-5`. Override with `KAMBUZ_MODEL=<id>`
-or per agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
+The cache is keyed by video and stage, so nothing short of deleting a file
+re-fetches captions. To start a video over completely — a corrupt download,
+a changed caption track — remove its directory:
+
+    rm -rf .cache/<videoId>
+
+A cache file that is corrupt or no longer matches its schema is ignored with
+a warning and the stage re-runs, so a half-written file cannot wedge a video.
+
+## Eval
+
+    npm run eval              # scores the existing catalog against eval/cases/*.json
+    npm run eval -- --ingest  # ingests each case's video first (real API calls if uncached)
+
+Each case names a video and what the pipeline should find in it (dish count,
+names, cuisines, meal types, and optionally specific ingredients with their
+provenance). The command prints a table and exits non-zero if any check fails,
+so a prompt or vocabulary change can be regression-tested. Without `--ingest`
+it never calls the API — it only reads what is already in `catalog/`.
+
+## Configuration
+
+`.env` (copied from `.env.example`) holds `ANTHROPIC_API_KEY` and, optionally:
+
+- `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-sonnet-5`).
+- `KAMBUZ_MODEL_SCOUT`, `..._EXTRACTOR`, `..._VERIFIER`, `..._CATEGORIZER`,
+  `..._JUDGE` — override one agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
+- `KAMBUZ_CONCURRENCY=<n>` — simultaneous LLM calls across the whole run
+  (default 4).
 
 ## Test
 
