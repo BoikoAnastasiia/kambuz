@@ -1,3 +1,4 @@
+import "./env.js"; // loads .env — must come before anything that reads process.env
 import { parseArgs } from "node:util";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -88,12 +89,6 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
 }
 
 async function main(): Promise<void> {
-  try {
-    process.loadEnvFile(".env");
-  } catch {
-    // no .env file — the API key may already be in the environment
-  }
-
   const parsed = parseCliArgs(process.argv.slice(2));
   if (!parsed.ok) {
     console.error(parsed.error);

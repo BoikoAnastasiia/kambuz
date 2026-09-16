@@ -1,16 +1,24 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+// Importing env.js loads .env; it must happen before buildConfig() reads process.env.
+import { ROOT } from "./env.js";
 
 export const AGENT_NAMES = ["scout", "extractor", "verifier", "categorizer", "judge"] as const;
 export type AgentName = (typeof AGENT_NAMES)[number];
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-export const ROOT = path.resolve(here, "..");
+export { ROOT };
+
+export const DEFAULT_CONCURRENCY = 4;
 
 export interface Config {
   models: Record<AgentName, string>;
   concurrency: number;
   paths: { cache: string; catalog: string; reports: string; vocab: string; prompts: string; eval: string };
+}
+
+/** Empty, non-numeric, fractional-below-one or negative values all fall back. */
+function concurrencyFrom(raw: string | undefined): number {
+  const n = Math.floor(Number(raw));
+  return raw !== undefined && raw.trim() !== "" && Number.isFinite(n) && n >= 1 ? n : DEFAULT_CONCURRENCY;
 }
 
 export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -19,7 +27,7 @@ export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
   ) as Record<AgentName, string>;
   return {
     models,
-    concurrency: Number(env.KAMBUZ_CONCURRENCY ?? 4),
+    concurrency: concurrencyFrom(env.KAMBUZ_CONCURRENCY),
     paths: {
       cache: path.join(ROOT, ".cache"),
       catalog: path.join(ROOT, "catalog"),
