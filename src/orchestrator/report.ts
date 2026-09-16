@@ -43,7 +43,7 @@ export function renderReport(r: RunReport): string {
     `- archived (replaced by a more complete version): ${r.archived.length}`, ...r.archived.map((id) => `  - ${id}`),
     `- kept existing (duplicate not better): ${r.keptExisting.length}`, ...r.keptExisting.map((id) => `  - ${id}`),
     "",
-    "## Unmapped ingredients (add to vocab/ingredients.json, then rerun with --force --only-stage extract)",
+    "## Unmapped ingredients (add to vocab/ingredients.json, then rerun with --only-stage extract)",
     "",
     ...Object.entries(r.unmapped).sort((a, b) => b[1] - a[1]).map(([name, n]) => `- ${name} (${n})`),
     "",

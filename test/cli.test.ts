@@ -34,6 +34,12 @@ describe("parseCliArgs", () => {
     expect(result).toEqual({ ok: true, command: "eval", force: true, ingest: true, onlyStage: undefined });
   });
 
+  it("ignores a bare -- separator, which npm forwards on `npm run eval -- --ingest`", () => {
+    // Without this the flag lands in positionals and the run dies with the usage text.
+    expect(parseCliArgs(["eval", "--", "--ingest"])).toEqual({ ok: true, command: "eval", force: false, ingest: true, onlyStage: undefined });
+    expect(parseCliArgs(["--", "ingest", "https://youtu.be/xyz"])).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined });
+  });
+
   it("rejects eval with an extra positional argument", () => {
     const result = parseCliArgs(["eval", "extra"]);
     expect(result.ok).toBe(false);

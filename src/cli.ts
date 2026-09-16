@@ -2,6 +2,7 @@ import "./env.js"; // loads .env — must come before anything that reads proces
 import { parseArgs } from "node:util";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { config } from "./config.js";
 import { createLlmClient } from "./llm/client.js";
 import { UsageLedger } from "./llm/usage.js";
@@ -44,9 +45,12 @@ function isStage(value: string): value is Stage {
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
   let values: { force?: boolean; "only-stage"?: string; ingest?: boolean };
+  // npm forwards the "--" of `npm run eval -- --ingest` in some setups; left in place it
+  // turns every later flag into a positional and the run dies with the usage text.
+  const args = argv.filter((a) => a !== "--");
   try {
     ({ positionals, values } = parseArgs({
-      args: argv,
+      args,
       allowPositionals: true,
       options: {
         force: { type: "boolean", default: false },
@@ -148,7 +152,8 @@ async function main(): Promise<void> {
   }
 }
 
-const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+// pathToFileURL, not a `file://` template: it escapes spaces and non-ASCII in the path.
+const isMain = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
   main().catch((e) => {
     console.error(e instanceof Error ? e.message : String(e));

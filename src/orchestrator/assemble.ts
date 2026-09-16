@@ -6,12 +6,13 @@ import { completeness } from "../agents/judge.js";
 
 export function assembleRecipe(input: {
   source: VideoSource; segment: ScoutSegment; draft: DraftRecipe; verification: Verification;
-  categorization: Categorization; models: Record<string, string>; now?: Date; idSuffix?: string;
+  categorization: Categorization; models: Record<string, string>; now?: Date;
 }): Recipe {
   const { source, segment, draft, verification, categorization: c } = input;
   const flags = flagsFromVerification(draft, verification);
   return {
-    id: `${c.dishKey}--${source.videoId}${input.idSuffix ?? ""}`,
+    // Two segments of one video can share a dishKey; the orchestrator disambiguates.
+    id: `${c.dishKey}--${source.videoId}`,
     nameRu: draft.nameRu,
     nameEn: draft.nameEn,
     dishKey: c.dishKey,
