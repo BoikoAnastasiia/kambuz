@@ -12,13 +12,15 @@ import { Catalog } from "./orchestrator/catalog.js";
 import { ingest, type IngestOptions } from "./orchestrator/run.js";
 import { renderReport } from "./orchestrator/report.js";
 import { runEval, renderEval } from "./eval/run.js";
+import { createProgressRenderer } from "./cli/progress.js";
 
 export const USAGE =
-  "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize]\n" +
+  "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize] [--quiet]\n" +
   "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
   "  --force               re-run every agent stage (does not re-fetch captions)\n" +
+  "  --quiet               (ingest only) don't draw the live per-video progress tree, just print the final report\n" +
   "  --ingest              (eval only) runs the pipeline for each case's video first (calls the API for\n" +
   "                         uncached videos); without it, eval only reads the existing catalog.";
 
@@ -34,7 +36,7 @@ const STAGES = ["scout", "extract", "verify", "categorize"] as const;
 type Stage = (typeof STAGES)[number];
 
 export type ParsedArgs =
-  | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage }
+  | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage; quiet: boolean }
   | { ok: true; command: "eval"; force: boolean; ingest: boolean; onlyStage?: Stage }
   | { ok: false; error: string };
 
@@ -44,7 +46,7 @@ function isStage(value: string): value is Stage {
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
-  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean };
+  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean };
   // npm forwards the "--" of `npm run eval -- --ingest` in some setups; left in place it
   // turns every later flag into a positional and the run dies with the usage text.
   const args = argv.filter((a) => a !== "--");
@@ -56,6 +58,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         force: { type: "boolean", default: false },
         "only-stage": { type: "string" },
         ingest: { type: "boolean", default: false },
+        quiet: { type: "boolean", default: false },
       },
     }));
   } catch (e) {
@@ -75,7 +78,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     if (onlyStageRaw !== undefined && !isStage(onlyStageRaw)) {
       return { ok: false, error: `--only-stage must be one of: ${STAGES.join(", ")} (got "${onlyStageRaw}")` };
     }
-    return { ok: true, command: "ingest", url, force: values.force ?? false, onlyStage: onlyStageRaw };
+    return { ok: true, command: "ingest", url, force: values.force ?? false, onlyStage: onlyStageRaw, quiet: values.quiet ?? false };
   }
 
   if (command === "eval") {
@@ -129,7 +132,13 @@ async function main(): Promise<void> {
   switch (parsed.command) {
     case "ingest": {
       const opts: IngestOptions = { force: parsed.force, onlyStage: parsed.onlyStage };
-      const report = await ingest(parsed.url, deps, opts);
+      const renderer = parsed.quiet ? null : createProgressRenderer(ledger);
+      const ingestDeps = renderer ? { ...deps, onEvent: renderer.onEvent } : deps;
+      // Runs side by side rather than one after the other: the renderer's finish()
+      // only resolves once every video's listr task has been resolved by a
+      // video:done event from ingest() itself, so the tree is fully drawn (and
+      // torn down) before the report prints below.
+      const [report] = await Promise.all([ingest(parsed.url, ingestDeps, opts), renderer?.finish() ?? Promise.resolve()]);
       await mkdir(config.paths.reports, { recursive: true });
       const file = path.join(config.paths.reports, `${report.startedAt.replace(/[:.]/g, "-")}.md`);
       const rendered = renderReport(report);
