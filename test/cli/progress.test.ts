@@ -94,6 +94,35 @@ describe("createProgressRenderer", () => {
     expect(output).toContain("extract [лазанья]: 0.5s · — tok");
     expect(output).toContain("extract [суп]: 0.4s · 80 tok");
   });
+
+  it("releases inFlight on stage:error, so a solo call for the same agent right after a failed one still gets its real token count (fix round 2, #3)", async () => {
+    // Reviewer's repro: stage:start -> (the call throws) -> segment:error for v1's
+    // extractor, with no stage:done ever firing for it, followed by a solo extractor
+    // call for v2. Before this fix inFlight for "extractor" stayed stuck at 1 forever
+    // (only stage:done decremented it), so v2's own solo call also read as "overlapping"
+    // and showed "— tok" instead of its real count.
+    const ledger = new UsageLedger();
+    let list: any;
+    const renderer = createProgressRenderer(ledger, { renderer: "silent", onListCreated: (l) => { list = l; } });
+
+    renderer.onEvent({ type: "videos", videoIds: ["v1", "v2"] });
+    renderer.onEvent({ type: "video:start", videoId: "v1" });
+    renderer.onEvent({ type: "stage:start", videoId: "v1", stage: "extract", segmentIndex: 0, workingName: "лазанья" });
+    renderer.onEvent({ type: "stage:error", videoId: "v1", stage: "extract", segmentIndex: 0, error: "extractor blew up on this segment" });
+    renderer.onEvent({ type: "segment:error", videoId: "v1", segmentIndex: 0, error: "extractor blew up on this segment" });
+    renderer.onEvent({ type: "video:done", videoId: "v1", status: "error", recipes: 0 });
+
+    renderer.onEvent({ type: "video:start", videoId: "v2" });
+    renderer.onEvent({ type: "stage:start", videoId: "v2", stage: "extract", segmentIndex: 0, workingName: "суп" });
+    ledger.add("extractor", "claude-sonnet-5", { input_tokens: 50, output_tokens: 5 });
+    renderer.onEvent({ type: "stage:done", videoId: "v2", stage: "extract", segmentIndex: 0, ms: 300 });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const v2Output = list.tasks[1].output as string;
+    expect(v2Output).toContain("extract [суп]: 0.3s · 55 tok");
+    expect(v2Output).not.toContain("— tok");
+  });
 });
 
 describe("stageLine", () => {

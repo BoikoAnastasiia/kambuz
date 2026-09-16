@@ -203,6 +203,15 @@ export function createProgressRenderer(ledger: UsageLedger, options: ProgressRen
       }
     }
 
+    // A stage that threw never gets a stage:done, so inFlight has to be released here
+    // too — otherwise every later solo call for this agent would be stuck looking like
+    // an overlap and show "— tok" forever. reduceProgress() above already marked the
+    // stage itself "error"; there's no token count to attribute to a failed call.
+    if (event.type === "stage:error") {
+      const agent = STAGE_AGENT[event.stage];
+      if (agent) inFlight.set(agent, Math.max(0, (inFlight.get(agent) ?? 0) - 1));
+    }
+
     if ("videoId" in event) refresh(event.videoId);
 
     if (event.type === "video:done") {

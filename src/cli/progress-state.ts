@@ -85,9 +85,19 @@ export function reduceProgress(state: ProgressState, event: IngestEvent): Progre
       video.stages.set(key, { ...previous, state: "done", ms: event.ms });
       return state;
     }
+    case "stage:error": {
+      const video = ensureVideo(state, event.videoId);
+      const key = stageKey(event.stage, event.segmentIndex);
+      const previous = video.stages.get(key);
+      video.stages.set(key, { ...previous, state: "error", error: event.error });
+      return state;
+    }
     case "segment:error": {
-      // The event doesn't say which named stage was in flight when the segment
-      // failed, so mark whichever of this segment's stages was still running.
+      // stage:error already marks the specific stage that failed (if the failure
+      // happened inside stage()); this is a fallback for whichever of the segment's
+      // stages is still "running" — normally a no-op once stage:error has fired,
+      // but it also covers a rejection that didn't come from inside stage() at all
+      // (e.g. assembleRecipe itself throwing after every stage already succeeded).
       const video = ensureVideo(state, event.videoId);
       for (const [key, info] of video.stages) {
         if (info.state === "running" && key.endsWith(`-${event.segmentIndex}`)) {

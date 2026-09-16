@@ -53,6 +53,25 @@ describe("reduceProgress", () => {
     expect(state.videos.get("v1")?.stages.get("extract-1")).toEqual({ state: "running", workingName: "суп" });
   });
 
+  it("marks a stage as error from its own stage:error event, keeping its workingName (fix round 2, #3)", () => {
+    const state = apply([
+      { type: "videos", videoIds: ["v1"] },
+      { type: "stage:start", videoId: "v1", stage: "extract", segmentIndex: 1, workingName: "суп" },
+      { type: "stage:error", videoId: "v1", stage: "extract", segmentIndex: 1, error: "extractor blew up on this segment" },
+    ]);
+    expect(state.videos.get("v1")?.stages.get("extract-1")).toEqual({ state: "error", error: "extractor blew up on this segment", workingName: "суп" });
+  });
+
+  it("leaves a stage already marked error by stage:error alone when the segment-level segment:error follows", () => {
+    const state = apply([
+      { type: "videos", videoIds: ["v1"] },
+      { type: "stage:start", videoId: "v1", stage: "extract", segmentIndex: 1 },
+      { type: "stage:error", videoId: "v1", stage: "extract", segmentIndex: 1, error: "extractor blew up on this segment" },
+      { type: "segment:error", videoId: "v1", segmentIndex: 1, error: "extractor blew up on this segment" },
+    ]);
+    expect(state.videos.get("v1")?.stages.get("extract-1")).toEqual({ state: "error", error: "extractor blew up on this segment" });
+  });
+
   it("marks the segment's still-running stage as an error, leaving other segments untouched", () => {
     const state = apply([
       { type: "videos", videoIds: ["v1"] },

@@ -585,4 +585,33 @@ describe("ingest", () => {
     expect(placements.map((p) => p.recipeId).sort()).toEqual(["lasagna-bolognese--v1", "soup--v1"]);
     expect(placements.map((p) => p.action).sort()).toEqual(["kept-both", "written"]);
   });
+
+  it("emits stage:error (then segment:error) when an agent call throws, without a stage:done for that stage (fix round 2, #3)", async () => {
+    const deps = await setup();
+    deps.llm = twoSegmentLlm((user) => user.includes("Dish (working name): суп"));
+
+    const events: IngestEvent[] = [];
+    const report = await ingest("https://youtu.be/v1", { ...deps, onEvent: (e) => events.push(e) }, {});
+
+    expect(report.videos[0].status).toBe("done");
+    expect(report.videos[0].recipes).toBe(1);
+
+    // The failing segment (index 1, "суп") gets stage:start -> stage:error for extract,
+    // and nothing else for that stage — no stage:done, no stage:cached, no verify/categorize
+    // (the segment's own async chain never gets there).
+    const segment1 = events.filter((e): e is Extract<IngestEvent, { type: "stage:start" | "stage:done" | "stage:error" }> => (e.type === "stage:start" || e.type === "stage:done" || e.type === "stage:error") && e.segmentIndex === 1);
+    expect(segment1.map((e) => e.type)).toEqual(["stage:start", "stage:error"]);
+    expect(segment1[1]).toMatchObject({ type: "stage:error", videoId: "v1", stage: "extract", segmentIndex: 1, error: "extractor blew up on this segment" });
+
+    // stage:error for that stage comes before the segment-level segment:error.
+    const stageErrorIdx = events.findIndex((e) => e.type === "stage:error");
+    const segmentErrorIdx = events.findIndex((e) => e.type === "segment:error");
+    expect(stageErrorIdx).toBeGreaterThanOrEqual(0);
+    expect(segmentErrorIdx).toBeGreaterThan(stageErrorIdx);
+    expect(events[segmentErrorIdx]).toEqual({ type: "segment:error", videoId: "v1", segmentIndex: 1, error: "extractor blew up on this segment" });
+
+    // The healthy segment (index 0) is unaffected: full start/done chain, no stage:error.
+    const segment0Types = events.filter((e): e is Extract<IngestEvent, { type: "stage:start" | "stage:done" | "stage:error" }> => (e.type === "stage:start" || e.type === "stage:done" || e.type === "stage:error") && e.segmentIndex === 0).map((e) => e.type);
+    expect(segment0Types).toEqual(["stage:start", "stage:done", "stage:start", "stage:done", "stage:start", "stage:done"]);
+  });
 });

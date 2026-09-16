@@ -90,7 +90,16 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
     }
     emit({ type: "stage:start", videoId, stage: stageName, segmentIndex, workingName });
     const startedAt = Date.now();
-    const value = await run();
+    let value: T;
+    try {
+      value = await run();
+    } catch (e) {
+      // Not cached, not swallowed: a listener sees the stage ended (so it can, say,
+      // stop counting this call as in-flight), and the failure still propagates to
+      // whatever awaits this segment/video exactly as before this event existed.
+      emit({ type: "stage:error", videoId, stage: stageName, segmentIndex, error: e instanceof Error ? e.message : String(e) });
+      throw e;
+    }
     await cache.set(videoId, key, value);
     emit({ type: "stage:done", videoId, stage: stageName, segmentIndex, ms: Date.now() - startedAt });
     return value;
