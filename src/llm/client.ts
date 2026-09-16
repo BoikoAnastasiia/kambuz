@@ -39,6 +39,10 @@ export interface LlmClient {
   callStructured<T>(opts: StructuredCall<T>): Promise<T>;
 }
 
+// The SDK refuses non-streaming calls whose max_tokens implies more than ten minutes
+// unless a timeout is given explicitly; the scout's 32k cap trips that guard.
+const REQUEST_TIMEOUT_MS = 20 * 60 * 1000;
+
 export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: Anthropic = new Anthropic()): LlmClient {
   async function once<T>(opts: StructuredCall<T>): Promise<T> {
     const model = config.models[opts.agent];
@@ -51,7 +55,7 @@ export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: 
         system: opts.system,
         messages: [{ role: "user", content: opts.user }],
         output_config: { format: zodOutputFormat(opts.schema) },
-      });
+      }, { timeout: REQUEST_TIMEOUT_MS });
     } catch (e) {
       // The throw carries no message, so this attempt's usage is not knowable.
       if (isParseFailure(e)) throw new LlmParseError(`${opts.agent}: ${(e as Error).message}`, "parse");
