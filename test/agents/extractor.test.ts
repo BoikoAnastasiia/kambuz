@@ -47,6 +47,18 @@ describe("runExtractor", () => {
     expect(llm.callStructured.mock.calls[0][0].agent).toBe("extractor");
   });
 
+  it("forces provenance to unknown when quantity is null, regardless of what the model said", async () => {
+    const llm = { callStructured: vi.fn(async (_opts: any) => ({
+      nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
+      ingredients: [
+        { ingredient: "onion", rawName: "лук", quantity: null, unit: null, provenance: "stated", note: null },
+      ],
+      steps: [],
+    })) };
+    const r = await runExtractor(segment, vocab, llm as any, config.paths.prompts, timed);
+    expect(r.ingredients[0].provenance).toBe("unknown");
+  });
+
   it("includes the rawName of a model-nulled ingredient in unmappedIngredients even when the model omitted it", async () => {
     const llm = { callStructured: vi.fn(async (_opts: any) => ({
       nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],

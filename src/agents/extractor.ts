@@ -38,14 +38,17 @@ export async function runExtractor(
   const known = new Set(vocab.ingredients.map((i) => i.id));
   const unmapped = new Set(raw.unmappedIngredients);
   const ingredients = raw.ingredients.map((ing) => {
+    // Provenance is a claim about a number: without a quantity there's nothing "stated"
+    // or "inferred" about it, whatever the model said, so a null quantity always wins.
+    const provenance = ing.quantity === null ? "unknown" : ing.provenance;
     if (ing.ingredient !== null && !known.has(ing.ingredient)) {
       unmapped.add(ing.rawName);
-      return { ...ing, ingredient: null };
+      return { ...ing, ingredient: null, provenance };
     }
     if (ing.ingredient === null) {
       unmapped.add(ing.rawName);
     }
-    return ing;
+    return { ...ing, provenance };
   });
   const steps = [...raw.steps]
     .map((s) => ({ ...s, timestamp: Math.max(segment.start, s.timestamp) }))
