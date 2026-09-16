@@ -5,8 +5,31 @@ function toSeconds(ts: string): number {
   return Number(h) * 3600 + Number(m) * 60 + Number(s);
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", "#39": "'",
+};
+
+/** YouTube escapes caption text, so "&nbsp;" and "&amp;" reach us literally. */
+function decodeEntities(text: string): string {
+  return text.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (whole, name: string) => {
+    const named = NAMED_ENTITIES[name.toLowerCase()];
+    if (named !== undefined) return named;
+    if (name.startsWith("#x") || name.startsWith("#X")) {
+      const code = Number.parseInt(name.slice(2), 16);
+      return Number.isNaN(code) ? whole : String.fromCodePoint(code);
+    }
+    if (name.startsWith("#")) {
+      const code = Number(name.slice(1));
+      return Number.isNaN(code) ? whole : String.fromCodePoint(code);
+    }
+    return whole;
+  });
+}
+
+// Tags are stripped first (so a decoded "&lt;" is never mistaken for one) and
+// whitespace is collapsed last (so a decoded &nbsp; folds into a normal space).
 function cleanLine(line: string): string {
-  return line.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  return decodeEntities(line.replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
 }
 
 /** Parse YouTube auto-caption VTT into de-duplicated cues. */
