@@ -3,6 +3,7 @@ import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { ingest } from "../../src/orchestrator/run.js";
+import type { IngestEvent } from "../../src/orchestrator/events.js";
 import { StageCache } from "../../src/orchestrator/cache.js";
 import { Catalog } from "../../src/orchestrator/catalog.js";
 import { buildConfig } from "../../src/config.js";
@@ -506,5 +507,82 @@ describe("ingest", () => {
 
     expect(report.videos.map((v) => v.videoId)).toEqual(["v1", "v2"]);
     expect(report.videos.every((v) => v.status === "not-recipe")).toBe(true);
+  });
+
+  // --- progress events ---
+
+  it("emits a stage:cached progress event for every stage on a cached re-run of one video", async () => {
+    const deps = await setup();
+    await ingest("https://youtu.be/v1", deps, {});
+
+    const events: IngestEvent[] = [];
+    const report = await ingest("https://youtu.be/v1", { ...deps, onEvent: (e) => events.push(e) }, {});
+
+    expect(report.videos[0].status).toBe("done");
+    expect(events.map((e) => e.type)).toEqual([
+      "videos",
+      "video:start",
+      "stage:cached",
+      "video:title",
+      "stage:cached",
+      "stage:cached",
+      "stage:cached",
+      "stage:cached",
+      "placement",
+      "video:done",
+    ]);
+    expect(events[0]).toEqual({ type: "videos", videoIds: ["v1"] });
+    expect(events[1]).toEqual({ type: "video:start", videoId: "v1" });
+    expect(events[2]).toEqual({ type: "stage:cached", videoId: "v1", stage: "source" });
+    expect(events[3]).toEqual({ type: "video:title", videoId: "v1", title: "Лазанья" });
+    expect(events[4]).toEqual({ type: "stage:cached", videoId: "v1", stage: "scout" });
+    expect(events[5]).toEqual({ type: "stage:cached", videoId: "v1", stage: "extract", segmentIndex: 0 });
+    expect(events[6]).toEqual({ type: "stage:cached", videoId: "v1", stage: "verify", segmentIndex: 0 });
+    expect(events[7]).toEqual({ type: "stage:cached", videoId: "v1", stage: "categorize", segmentIndex: 0 });
+    expect(events[8]).toEqual({ type: "placement", videoId: "v1", recipeId: "lasagna-bolognese--v1", action: "kept-existing" });
+    expect(events[9]).toEqual({ type: "video:done", videoId: "v1", status: "done", recipes: 1 });
+  });
+
+  it("emits ordered stage:start/stage:done events per segment for a live two-segment video, ending in two placements and video:done", async () => {
+    const deps = await setup();
+    deps.llm = twoSegmentLlm(() => false);
+    // Both segments' fake extractor output the same single ingredient, so the two
+    // recipes look like candidates of each other (jaccard match) even though their
+    // dishKeys differ; force the judge to treat them as distinct dishes so both land
+    // in the catalog, one via "written" and the other via the keep-both path.
+    const baseCallStructured = deps.llm.callStructured;
+    deps.llm.callStructured = vi.fn(async (args: any): Promise<any> =>
+      args.agent === "judge" ? { relation: "variant", reason: "two different dishes", newNameRu: null, existingNameRu: null } : baseCallStructured(args),
+    );
+
+    const events: IngestEvent[] = [];
+    const report = await ingest("https://youtu.be/v1", { ...deps, onEvent: (e) => events.push(e) }, {});
+
+    expect(report.videos[0].status).toBe("done");
+    expect(report.videos[0].recipes).toBe(2);
+    expect(events[0]).toEqual({ type: "videos", videoIds: ["v1"] });
+    expect(events[1]).toEqual({ type: "video:start", videoId: "v1" });
+    expect(events.at(-1)).toEqual({ type: "video:done", videoId: "v1", status: "done", recipes: 2 });
+
+    const sourceStartIdx = events.findIndex((e) => e.type === "stage:start" && e.stage === "source");
+    const sourceDoneIdx = events.findIndex((e) => e.type === "stage:done" && e.stage === "source");
+    const scoutStartIdx = events.findIndex((e) => e.type === "stage:start" && e.stage === "scout");
+    expect(sourceStartIdx).toBeGreaterThanOrEqual(0);
+    expect(sourceDoneIdx).toBeGreaterThan(sourceStartIdx);
+    expect(scoutStartIdx).toBeGreaterThan(sourceDoneIdx);
+
+    // Each segment runs extract -> verify -> categorize in order; the two segments
+    // run concurrently with each other, so only the per-segment order is asserted.
+    for (const segmentIndex of [0, 1]) {
+      const seq = events
+        .filter((e): e is Extract<IngestEvent, { type: "stage:start" | "stage:done" }> => (e.type === "stage:start" || e.type === "stage:done") && e.segmentIndex === segmentIndex)
+        .map((e) => `${e.type}:${e.stage}`);
+      expect(seq).toEqual(["stage:start:extract", "stage:done:extract", "stage:start:verify", "stage:done:verify", "stage:start:categorize", "stage:done:categorize"]);
+    }
+
+    const placements = events.filter((e): e is Extract<IngestEvent, { type: "placement" }> => e.type === "placement");
+    expect(placements).toHaveLength(2);
+    expect(placements.map((p) => p.recipeId).sort()).toEqual(["lasagna-bolognese--v1", "soup--v1"]);
+    expect(placements.map((p) => p.action).sort()).toEqual(["kept-both", "written"]);
   });
 });

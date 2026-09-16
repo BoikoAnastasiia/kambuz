@@ -7,6 +7,7 @@ import { StageCache } from "./cache.js";
 import { Catalog } from "./catalog.js";
 import { assembleRecipe } from "./assemble.js";
 import { emptyReport, type RunReport, type VideoStatus } from "./report.js";
+import type { IngestEvent, StageName } from "./events.js";
 import { fetchVideo as realFetch, expandUrl as realExpand, type FetchResult } from "../fetcher/ytdlp.js";
 import { renderTranscript, sliceCues } from "../fetcher/vtt.js";
 import { VideoSourceSchema, type VideoSource } from "../schemas/source.js";
@@ -29,10 +30,20 @@ export interface IngestDeps {
   fetch?: (videoId: string, workDir: string) => Promise<FetchResult>;
   expand?: (url: string) => Promise<string[]>;
   usageText?: () => string;
+  onEvent?: (e: IngestEvent) => void;
 }
 
 const STAGE_ORDER = ["scout", "extract", "verify", "categorize"] as const;
 type Stage = (typeof STAGE_ORDER)[number];
+
+// Cache keys are either a bare stage name ("source", "scout") or a stage name
+// plus the segment it belongs to ("extract-0"); this recovers the two parts
+// so stage() can report them separately on IngestEvent.
+function parseStageKey(key: string): { stage: StageName; segmentIndex?: number } {
+  const m = /^([a-z]+)-(\d+)$/.exec(key);
+  if (m) return { stage: m[1] as StageName, segmentIndex: Number(m[2]) };
+  return { stage: key as StageName };
+}
 
 export interface IngestOptions {
   force?: boolean;
@@ -58,13 +69,30 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
     return !!opts.force;
   };
 
-  async function stage<T>(videoId: string, key: string, schema: z.ZodType<T>, force: boolean | undefined, run: () => Promise<T>): Promise<T> {
+  // Emitting a progress event must never break the pipeline: onEvent is owned
+  // by a renderer that has no business taking down a run if it throws.
+  function emit(e: IngestEvent): void {
+    try {
+      deps.onEvent?.(e);
+    } catch {
+      // ignored — see comment above
+    }
+  }
+
+  async function stage<T>(videoId: string, key: string, schema: z.ZodType<T>, force: boolean | undefined, run: () => Promise<T>, workingName?: string): Promise<T> {
+    const { stage: stageName, segmentIndex } = parseStageKey(key);
     if (!force) {
       const hit = await cache.get(videoId, key, schema);
-      if (hit) return hit;
+      if (hit) {
+        emit({ type: "stage:cached", videoId, stage: stageName, segmentIndex });
+        return hit;
+      }
     }
+    emit({ type: "stage:start", videoId, stage: stageName, segmentIndex, workingName });
+    const startedAt = Date.now();
     const value = await run();
     await cache.set(videoId, key, value);
+    emit({ type: "stage:done", videoId, stage: stageName, segmentIndex, ms: Date.now() - startedAt });
     return value;
   }
 
@@ -89,7 +117,12 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
   } catch (e) {
     throw new Error(`could not expand ${url}: ${e instanceof Error ? e.message : String(e)}`);
   }
+  emit({ type: "videos", videoIds });
   const rows: VideoRow[] = new Array(videoIds.length);
+  function finishVideo(index: number, row: VideoRow): void {
+    rows[index] = row;
+    emit({ type: "video:done", videoId: row.videoId, status: row.status, recipes: row.recipes });
+  }
   // One ceiling for every LLM call in the run. A per-segment limit nested inside a
   // per-video one let concurrency² calls run at once; yt-dlp, which is rate-limited by
   // YouTube rather than by us, gets its own small limit.
@@ -100,18 +133,20 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
     videoIds.map((videoId, index) =>
       (async () => {
         let title = videoId;
+        emit({ type: "video:start", videoId });
         try {
           const fetched = await stage(videoId, "source", z.union([VideoSourceSchema, SkippedSchema]), false, () => fetchLimit(() => fetch(videoId, path.join(cache.dir(videoId), "yt"))));
           if ("skipped" in fetched) {
-            rows[index] = { videoId, title, status: "skipped-no-captions", recipes: 0 };
+            finishVideo(index, { videoId, title, status: "skipped-no-captions", recipes: 0 });
             return;
           }
           const source: VideoSource = fetched;
           title = source.title;
+          emit({ type: "video:title", videoId, title });
 
           const scout = await stage(videoId, "scout", ScoutResultSchema, shouldForce("scout"), () => llmLimit(() => runScout(source, llm, promptsDir)));
           if (!scout.isRecipeVideo) {
-            rows[index] = { videoId, title, status: "not-recipe", recipes: 0 };
+            finishVideo(index, { videoId, title, status: "not-recipe", recipes: 0 });
             return;
           }
 
@@ -120,9 +155,9 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
           const settled = await Promise.allSettled(
             scout.segments.map(async (segment, i) => {
               const timedTranscript = renderTranscript(sliceCues(source.cues, segment.start, segment.end));
-              const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => llmLimit(() => runExtractor(segment, vocab, llm, promptsDir, timedTranscript)));
-              const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => llmLimit(() => runVerifier(segment, draft, llm, promptsDir)));
-              const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => llmLimit(() => runCategorizer(draft, vocab, llm, promptsDir)));
+              const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => llmLimit(() => runExtractor(segment, vocab, llm, promptsDir, timedTranscript)), segment.workingName);
+              const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => llmLimit(() => runVerifier(segment, draft, llm, promptsDir)), segment.workingName);
+              const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => llmLimit(() => runCategorizer(draft, vocab, llm, promptsDir)), segment.workingName);
               for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;
               return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
             }),
@@ -136,12 +171,13 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
             }
             const error = outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason);
             report.segmentErrors.push({ videoId, segmentIndex: i, workingName: scout.segments[i].workingName, error });
+            emit({ type: "segment:error", videoId, segmentIndex: i, error });
           });
 
           if (recipes.length === 0 && settled.length > 0) {
             const first = settled.find((o) => o.status === "rejected") as PromiseRejectedResult | undefined;
             const error = first ? (first.reason instanceof Error ? first.reason.message : String(first.reason)) : "no segments produced a recipe";
-            rows[index] = { videoId, title, status: "error", recipes: 0, error };
+            finishVideo(index, { videoId, title, status: "error", recipes: 0, error });
             return;
           }
 
@@ -165,15 +201,16 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
             ];
             if (errors.length) {
               report.validationErrors.push({ recipeId: recipe.id, errors });
+              emit({ type: "placement", videoId, recipeId: recipe.id, action: "invalid" });
               continue;
             }
             for (const f of recipe.flags) report.flags.push({ recipeId: recipe.id, ...f });
             await withCatalogLock(() => placeInCatalog(recipe));
             placed++;
           }
-          rows[index] = { videoId, title, status: "done", recipes: placed };
+          finishVideo(index, { videoId, title, status: "done", recipes: placed });
         } catch (e) {
-          rows[index] = { videoId, title, status: "error", recipes: 0, error: e instanceof Error ? e.message : String(e) };
+          finishVideo(index, { videoId, title, status: "error", recipes: 0, error: e instanceof Error ? e.message : String(e) });
         }
       })(),
     ),
@@ -184,13 +221,19 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
   return report;
 
   async function placeInCatalog(incoming: Recipe): Promise<void> {
+    const videoId = incoming.source.videoId;
     const existingAll = (await catalog.load()).filter((r) => r.id !== incoming.id);
     const candidates = findCandidates(incoming, existingAll);
     const self = (await catalog.load()).find((r) => r.id === incoming.id);
     if (candidates.length === 0) {
-      if (self && self.completeness >= incoming.completeness) { report.keptExisting.push(self.id); return; }
+      if (self && self.completeness >= incoming.completeness) {
+        report.keptExisting.push(self.id);
+        emit({ type: "placement", videoId, recipeId: self.id, action: "kept-existing" });
+        return;
+      }
       await catalog.write(incoming);
       report.written.push(incoming.id);
+      emit({ type: "placement", videoId, recipeId: incoming.id, action: "written" });
       return;
     }
     const existing = candidates[0];
@@ -201,11 +244,14 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
       report.archived.push(existing.id);
       await catalog.write(result.incoming);
       report.written.push(result.incoming.id);
+      emit({ type: "placement", videoId, recipeId: result.incoming.id, action: "replaced" });
     } else if (result.action === "keep-existing") {
       report.keptExisting.push(existing.id);
+      emit({ type: "placement", videoId, recipeId: existing.id, action: "kept-existing" });
     } else {
       if (result.existing.nameRu !== existing.nameRu) await catalog.rename(existing, result.existing.nameRu);
       await catalog.write(result.incoming);
+      emit({ type: "placement", videoId, recipeId: result.incoming.id, action: "kept-both" });
       report.written.push(result.incoming.id);
     }
   }
