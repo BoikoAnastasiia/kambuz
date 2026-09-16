@@ -1,5 +1,27 @@
 import { describe, it, expect } from "vitest";
-import { parseVideoId, buildSource, ytDlpError } from "../../src/fetcher/ytdlp.js";
+import { parseVideoId, buildSource, ytDlpError, fetchArgs, pickCaptionFile } from "../../src/fetcher/ytdlp.js";
+
+describe("fetchArgs", () => {
+  it("asks for ru-orig as well as ru, since YouTube names the original track ru-orig", () => {
+    const args = fetchArgs("abc", "/tmp/work");
+    expect(args[args.indexOf("--sub-langs") + 1]).toBe("ru-orig,ru");
+    expect(args).toContain("--write-auto-subs");
+    expect(args.at(-1)).toBe("https://www.youtube.com/watch?v=abc");
+  });
+});
+
+describe("pickCaptionFile", () => {
+  it("prefers the ru-orig track when yt-dlp wrote both", () => {
+    const files = ["abc.info.json", "abc.ru.vtt", "abc.ru-orig.vtt"];
+    expect(pickCaptionFile(files, "abc")).toBe("abc.ru-orig.vtt");
+    expect(pickCaptionFile([...files].reverse(), "abc")).toBe("abc.ru-orig.vtt");
+  });
+
+  it("falls back to any ru track, and returns null when there is none", () => {
+    expect(pickCaptionFile(["abc.ru.vtt"], "abc")).toBe("abc.ru.vtt");
+    expect(pickCaptionFile(["abc.info.json", "abc.en.vtt"], "abc")).toBeNull();
+  });
+});
 
 describe("ytDlpError", () => {
   it("turns a missing binary into an install hint instead of an ENOENT stack", () => {

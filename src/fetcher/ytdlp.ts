@@ -84,9 +84,17 @@ export function videoUrl(videoId: string): string {
 export function fetchArgs(videoId: string, workDir: string): string[] {
   return [
     "--skip-download", "--write-info-json", "--write-auto-subs",
-    "--sub-langs", "ru", "--sub-format", "vtt",
+    // YouTube labels the original auto-caption track "ru-orig" and the machine
+    // translation into Russian "ru"; asking for "ru" alone misses whole channels.
+    "--sub-langs", "ru-orig,ru", "--sub-format", "vtt",
     "-o", path.join(workDir, "%(id)s.%(ext)s"), videoUrl(videoId),
   ];
+}
+
+/** The original track wins over a translated one when yt-dlp downloaded both. */
+export function pickCaptionFile(files: string[], videoId: string): string | null {
+  const vtts = files.filter((f) => f.startsWith(`${videoId}.ru`) && f.endsWith(".vtt")).sort();
+  return vtts.find((f) => f.startsWith(`${videoId}.ru-orig`)) ?? vtts[0] ?? null;
 }
 
 /** Downloads info json + Russian auto-captions into workDir and returns a VideoSource. */
@@ -97,7 +105,7 @@ export async function fetchVideo(videoId: string, workDir: string): Promise<Fetc
   const infoFile = files.find((f) => f === `${videoId}.info.json`);
   if (!infoFile) throw new Error(`yt-dlp produced no info json for ${videoId}`);
   const info = InfoSchema.parse(JSON.parse(await readFile(path.join(workDir, infoFile), "utf8")));
-  const vttFile = files.find((f) => f.startsWith(`${videoId}.ru`) && f.endsWith(".vtt"));
+  const vttFile = pickCaptionFile(files, videoId);
   if (!vttFile) return { videoId, skipped: "no-captions" };
   const cues = parseVtt(await readFile(path.join(workDir, vttFile), "utf8"));
   return buildSource(info, cues);
