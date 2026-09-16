@@ -7,6 +7,10 @@ export interface StageProgress {
   state: StageRunState;
   ms?: number;
   tokens?: number;
+  // Set when a token count could have been attributed to this stage (its
+  // stage:done fired) but wasn't, because more than one call for the same
+  // agent was in flight at once — see attributeTokens() in progress.ts.
+  tokensUncertain?: boolean;
   workingName?: string;
   error?: string;
 }
