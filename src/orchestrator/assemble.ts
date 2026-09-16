@@ -26,7 +26,7 @@ export function assembleRecipe(input: {
     ingredients: draft.ingredients,
     steps: draft.steps,
     flags,
-    completeness: completeness({ ingredients: draft.ingredients, flags, steps: draft.steps, rawTextLength: segment.rawText.length }),
+    completeness: completeness({ ingredients: draft.ingredients, flags, steps: draft.steps }),
     source: {
       videoId: source.videoId, url: source.url, videoTitle: source.title, channel: source.channel, channelId: source.channelId,
       segmentStart: segment.start, segmentEnd: segment.end, language: "ru",

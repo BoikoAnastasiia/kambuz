@@ -22,7 +22,10 @@ describe("assembleRecipe", () => {
       { kind: "ingredient", ref: "свёкла", reason: "quantity or presence not supported by transcript" },
       { kind: "step", ref: "1", reason: "action not found in transcript" },
     ]);
-    expect(r.completeness).toBeCloseTo(1 - 0.2 + 0.005 + 0.02);
+    // 1 ingredient, 1 step: ingredientScore = 1/5 = 0.2, stepScore = 1/6 = 0.16667,
+    // cookability = 0.03333 (weighted 0.03), quantified = 1 (inferred, weighted 0.1),
+    // minus 2 flags * 0.1 = 0.2 -> 0.13 - 0.2 clamps to 0.
+    expect(r.completeness).toBe(0);
     expect(r.source).toMatchObject({ videoId: "v1", videoTitle: "T", segmentStart: 10, segmentEnd: 90 });
     expect(r.extractedAt).toBe("2026-01-01T00:00:00.000Z");
   });

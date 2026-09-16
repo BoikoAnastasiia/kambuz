@@ -163,10 +163,17 @@ Runs when a recipe is about to be written to the catalog.
 
 1. **Candidate lookup (code):** existing catalog recipes with the same
    `dish_key`, or with canonical-ingredient Jaccard overlap ≥ 0.6.
-2. **Completeness score (code):**
-   - share of ingredients with provenance `stated` or `inferred`
-   - minus a penalty per verifier flag
-   - plus a small bonus for step count and `raw_text` length
+2. **Completeness score (code):** this chef rarely states amounts unless
+   baking — knowing the ingredients and the steps IS the recipe, so
+   "cookable" (enough ingredients and enough steps) dominates the score;
+   stated/inferred quantities are a minor bonus on top.
+   - `ingredient_score = min(1, ingredient_count / 5)`
+   - `step_score = min(1, step_count / 6)`
+   - `cookability = ingredient_score * step_score` (both required, so
+     multiplied rather than averaged)
+   - `quantified = share of ingredients with provenance stated or inferred`
+     (0 when there are no ingredients)
+   - `score = clamp01(0.9 * cookability + 0.1 * quantified - 0.1 * flag_count)`
    The exact weights are constants in one file, covered by unit tests.
 3. **Same-or-variant decision (LLM), only when a candidate exists:** given
    old and new, answer `same` or `variant` with a one-sentence reason.

@@ -36,12 +36,41 @@ describe("findCandidates", () => {
 });
 
 describe("completeness", () => {
-  it("is the share of quantified ingredients minus flags plus small bonuses, clamped", () => {
-    const ing = (p: "stated" | "inferred" | "unknown") => ({ ingredient: null, rawName: "r", quantity: null, unit: null, provenance: p, note: null });
-    expect(completeness({ ingredients: [ing("stated"), ing("unknown")], flags: [], steps: [], rawTextLength: 0 })).toBeCloseTo(0.5);
-    expect(completeness({ ingredients: [ing("stated")], flags: [{ kind: "step", ref: "1", reason: "" }], steps: [], rawTextLength: 0 })).toBeCloseTo(0.9);
-    expect(completeness({ ingredients: [ing("stated")], flags: [], steps: new Array(20), rawTextLength: 10000 })).toBeCloseTo(1);
-    expect(completeness({ ingredients: [], flags: [], steps: [], rawTextLength: 0 })).toBe(0);
+  const ing = (p: "stated" | "inferred" | "unknown") => ({ ingredient: null, rawName: "r", quantity: null, unit: null, provenance: p, note: null });
+
+  it("rewards cookability (having enough ingredients AND steps) far more than stated quantities", () => {
+    // 9 ingredients (all unknown provenance) + 11 steps + no flags: cookability maxes out,
+    // no ingredient is quantified — full cookability weight, zero quantity weight.
+    expect(
+      completeness({ ingredients: new Array(9).fill(ing("unknown")), flags: [], steps: new Array(11) }),
+    ).toBeCloseTo(0.9);
+  });
+
+  it("scores a one-ingredient recipe low even with plenty of steps — the owner's 'Тефтели с сыром' case", () => {
+    // 1 ingredient, 5 steps: ingredientScore = 1/5 = 0.2, stepScore = 5/6 = 0.8333,
+    // cookability = 0.2 * 0.8333 = 0.16667, weighted 0.9 * 0.16667 = 0.15.
+    expect(completeness({ ingredients: [ing("unknown")], flags: [], steps: new Array(5) })).toBeCloseTo(0.15);
+  });
+
+  it("adds the quantity bonus on top of a maxed-out cookability score", () => {
+    // 12 ingredients (5 quantified), 18 steps, no flags: cookability maxes at 1 (both
+    // over their full-score thresholds), plus 0.1 * (5/12) for the quantified share.
+    const ingredients = [...new Array(5).fill(ing("stated")), ...new Array(7).fill(ing("unknown"))];
+    expect(completeness({ ingredients, flags: [], steps: new Array(18) })).toBeCloseTo(0.9 + 0.1 * (5 / 12));
+  });
+
+  it("subtracts 0.1 per verifier flag", () => {
+    const base = completeness({ ingredients: new Array(12).fill(ing("unknown")), flags: [], steps: new Array(18) });
+    const flagged = completeness({
+      ingredients: new Array(12).fill(ing("unknown")),
+      flags: [{ kind: "step", ref: "1", reason: "" }, { kind: "step", ref: "2", reason: "" }],
+      steps: new Array(18),
+    });
+    expect(base - flagged).toBeCloseTo(0.2);
+  });
+
+  it("is 0 for a recipe with no ingredients", () => {
+    expect(completeness({ ingredients: [], flags: [], steps: [] })).toBe(0);
   });
 });
 

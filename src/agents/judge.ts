@@ -5,10 +5,15 @@ import type { DraftIngredient, Recipe, RecipeFlag } from "../schemas/recipe.js";
 
 export const JACCARD_THRESHOLD = 0.6;
 export const FLAG_PENALTY = 0.1;
-export const STEP_BONUS_PER_STEP = 0.005;
-export const STEP_BONUS_MAX = 0.05;
-export const TEXT_BONUS_PER_1000_CHARS = 0.01;
-export const TEXT_BONUS_MAX = 0.05;
+
+// A recipe is cookable once it names enough ingredients AND enough steps — that's
+// the owner's real bar ("this chef rarely states amounts unless baking; knowing the
+// ingredients and the steps IS the recipe"). Stated/inferred quantities are a minor
+// bonus on top, not a requirement.
+export const INGREDIENTS_FOR_FULL_SCORE = 5;
+export const STEPS_FOR_FULL_SCORE = 6;
+export const COOKABILITY_WEIGHT = 0.9;
+export const QUANTITY_WEIGHT = 0.1;
 
 export function jaccard(a: string[], b: string[]): number {
   const A = new Set(a);
@@ -28,13 +33,14 @@ export function findCandidates(recipe: Pick<Recipe, "dishKey" | "ingredients">, 
   return catalog.filter((r) => r.dishKey === recipe.dishKey || jaccard(mine, ids(r.ingredients)) >= JACCARD_THRESHOLD);
 }
 
-export function completeness(input: { ingredients: DraftIngredient[]; flags: RecipeFlag[]; steps: unknown[]; rawTextLength: number }): number {
+export function completeness(input: { ingredients: DraftIngredient[]; flags: RecipeFlag[]; steps: unknown[] }): number {
   if (input.ingredients.length === 0) return 0;
+  const ingredientScore = Math.min(1, input.ingredients.length / INGREDIENTS_FOR_FULL_SCORE);
+  const stepScore = Math.min(1, input.steps.length / STEPS_FOR_FULL_SCORE);
+  const cookability = ingredientScore * stepScore; // both are required, so multiply rather than average
   const quantified = input.ingredients.filter((i) => i.provenance !== "unknown").length / input.ingredients.length;
   const penalty = input.flags.length * FLAG_PENALTY;
-  const stepBonus = Math.min(STEP_BONUS_MAX, input.steps.length * STEP_BONUS_PER_STEP);
-  const textBonus = Math.min(TEXT_BONUS_MAX, (input.rawTextLength / 1000) * TEXT_BONUS_PER_1000_CHARS);
-  return Math.max(0, Math.min(1, quantified - penalty + stepBonus + textBonus));
+  return Math.max(0, Math.min(1, COOKABILITY_WEIGHT * cookability + QUANTITY_WEIGHT * quantified - penalty));
 }
 
 function describeRecipe(r: Recipe): string {
