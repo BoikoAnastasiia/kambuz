@@ -4,6 +4,7 @@ export interface RunReport {
   startedAt: string;
   url: string;
   videos: { videoId: string; title: string; status: VideoStatus; recipes: number; error?: string }[];
+  segmentErrors: { videoId: string; segmentIndex: number; workingName: string; error: string }[];
   written: string[];
   archived: string[];
   keptExisting: string[];
@@ -14,7 +15,7 @@ export interface RunReport {
 }
 
 export function emptyReport(url: string): RunReport {
-  return { startedAt: new Date().toISOString(), url, videos: [], written: [], archived: [], keptExisting: [], unmapped: {}, flags: [], validationErrors: [], usage: "" };
+  return { startedAt: new Date().toISOString(), url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [], unmapped: {}, flags: [], validationErrors: [], usage: "" };
 }
 
 export function renderReport(r: RunReport): string {
@@ -31,6 +32,10 @@ export function renderReport(r: RunReport): string {
     "| video | title | status | recipes |",
     "|---|---|---|---|",
     ...r.videos.map((v) => `| ${v.videoId} | ${v.title.replace(/\|/g, "/")} | ${v.status}${v.error ? ` (${v.error})` : ""} | ${v.recipes} |`),
+    "",
+    "## Failed segments (the rest of the video was kept)",
+    "",
+    ...r.segmentErrors.map((s) => `- ${s.videoId} segment ${s.segmentIndex} "${s.workingName}": ${s.error}`),
     "",
     "## Catalog changes",
     "",

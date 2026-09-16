@@ -90,6 +90,64 @@ describe("ingest", () => {
     expect(deps.llm.callStructured).not.toHaveBeenCalled();
   });
 
+  function twoSegmentLlm(failOn: (user: string) => boolean) {
+    return {
+      callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        switch (agent) {
+          case "scout": return {
+            isRecipeVideo: true,
+            segments: [
+              { workingName: "лазанья", start: 0, end: 150, rawText: "a".repeat(50), cleanText: "Нарежем лук." },
+              { workingName: "суп", start: 150, end: 300, rawText: "b".repeat(50), cleanText: "Сварим суп." },
+            ],
+          };
+          case "extractor": {
+            if (failOn(user as string)) throw new Error("extractor blew up on this segment");
+            const isSoup = (user as string).includes("Dish (working name): суп");
+            return { nameRu: isSoup ? "Суп" : "Лазанья с соусом болоньезе", nameEn: isSoup ? "Soup" : "Lasagna", servings: null, unmappedIngredients: [],
+              ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+              steps: [{ order: 1, text: "Нарезать лук.", timestamp: isSoup ? 150 : 0 }] };
+          }
+          case "verifier": return { ingredients: [{ rawName: "лук", quote: "нарежем лук", supported: true }], steps: [{ order: 1, quote: "нарежем лук", supported: true }], confidence: 0.9 };
+          case "categorizer": {
+            const isSoup = (user as string).includes("Суп");
+            return isSoup
+              ? { cuisine: "russian", mealTypes: ["lunch"], category: "soup", activeMinutes: 20, totalMinutes: 40, richness: "light", dishKey: "soup" }
+              : { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+          }
+          case "judge": return { relation: "same", reason: "r", newNameRu: null, existingNameRu: null };
+          default: throw new Error(agent);
+        }
+      }),
+    };
+  }
+
+  it("keeps the recipes of a video's good segments when one segment fails", async () => {
+    const deps = await setup();
+    deps.llm = twoSegmentLlm((user) => user.includes("Dish (working name): суп"));
+
+    const report = await ingest("https://youtu.be/v1", deps, {});
+
+    expect(report.videos[0].status).toBe("done");
+    expect(report.videos[0].recipes).toBe(1);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.segmentErrors).toEqual([
+      { videoId: "v1", segmentIndex: 1, workingName: "суп", error: "extractor blew up on this segment" },
+    ]);
+  });
+
+  it("marks the video as an error only when every segment failed", async () => {
+    const deps = await setup();
+    deps.llm = twoSegmentLlm(() => true);
+
+    const report = await ingest("https://youtu.be/v1", deps, {});
+
+    expect(report.videos[0].status).toBe("error");
+    expect(report.videos[0].recipes).toBe(0);
+    expect(report.segmentErrors).toHaveLength(2);
+    expect(report.written).toEqual([]);
+  });
+
   it("reports a recipe that fails the strict persisted schema instead of writing it", async () => {
     // The categorizer's wire schema can't enforce the dishKey pattern, so a model answer
     // of "!!!" slugifies to "" — caught by RecipeSchema before the file is written.
@@ -307,9 +365,8 @@ describe("ingest", () => {
 
   it("skips an invalid recipe (unmapped cuisine) but still writes its sibling from the same video", async () => {
     // runExtractor already sanitizes unknown ingredient ids to null before a draft can reach
-    // validateRecipe, and runCategorizer already throws on an unknown *category* before returning
-    // — so neither ingredient nor category can reach validateRecipe invalid. Cuisine is the one
-    // field that slips through: runCategorizer only coerces an unmapped cuisine to "other", it
+    // validateRecipe, so an ingredient cannot get there invalid. Cuisine is another field that
+    // slips through: runCategorizer only coerces an unmapped cuisine to "other", it
     // doesn't verify "other" itself is in the vocab. A vocab whose cuisines list has a real entry
     // ("italian") but no "other" catch-all fails validateRecipe only for the recipe whose
     // categorizer output falls back to "other" (cuisine "russian", not in this trimmed list) —

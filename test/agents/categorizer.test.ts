@@ -42,9 +42,12 @@ describe("runCategorizer", () => {
     expect(c.dishKey).toBe("lasagna-bolognese");
     expect(llm.callStructured.mock.calls[0][0].agent).toBe("categorizer");
   });
-  it("throws on unknown category", async () => {
+  it("keeps an unknown category instead of throwing, so only that recipe is rejected later", async () => {
+    // Throwing here killed the whole video; validateRecipe reports the bad category and
+    // the orchestrator drops just this recipe.
     const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", category: "casserole", dishKey: "x" })) };
-    await expect(runCategorizer(draft, vocab, llm as any, config.paths.prompts)).rejects.toThrow(/unknown category/);
+    const c = await runCategorizer(draft, vocab, llm as any, config.paths.prompts);
+    expect(c.category).toBe("casserole");
   });
 
   it("asks the model for a loose dishKey and slugifies the answer itself", async () => {

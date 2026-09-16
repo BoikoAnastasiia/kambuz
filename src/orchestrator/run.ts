@@ -115,7 +115,9 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
             return;
           }
 
-          const recipes = await Promise.all(
+          // One bad segment (a refusal, a truncated answer, a schema miss) must not throw
+          // away the dishes that did come out of the same video.
+          const settled = await Promise.allSettled(
             scout.segments.map(async (segment, i) => {
               const timedTranscript = renderTranscript(sliceCues(source.cues, segment.start, segment.end));
               const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => llmLimit(() => runExtractor(segment, vocab, llm, promptsDir, timedTranscript)));
@@ -125,6 +127,23 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
               return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
             }),
           );
+
+          const recipes: Recipe[] = [];
+          settled.forEach((outcome, i) => {
+            if (outcome.status === "fulfilled") {
+              recipes.push(outcome.value);
+              return;
+            }
+            const error = outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason);
+            report.segmentErrors.push({ videoId, segmentIndex: i, workingName: scout.segments[i].workingName, error });
+          });
+
+          if (recipes.length === 0 && settled.length > 0) {
+            const first = settled.find((o) => o.status === "rejected") as PromiseRejectedResult | undefined;
+            const error = first ? (first.reason instanceof Error ? first.reason.message : String(first.reason)) : "no segments produced a recipe";
+            rows[index] = { videoId, title, status: "error", recipes: 0, error };
+            return;
+          }
 
           // de-duplicate ids within one video (same dishKey twice)
           const seen = new Map<string, number>();

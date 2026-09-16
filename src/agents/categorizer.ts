@@ -25,6 +25,7 @@ export async function runCategorizer(draft: DraftRecipe, vocab: Vocab, llm: LlmC
   const system = await loadPrompt("categorizer", promptsDir);
   const raw = await llm.callStructured({ agent: "categorizer", system, user: buildCategorizerUser(draft, vocab), schema: CategorizationWireSchema });
   const cuisine = vocab.cuisines.some((c) => c.id === raw.cuisine) ? raw.cuisine : "other";
-  if (!vocab.categories.some((c) => c.id === raw.category)) throw new Error(`categorizer returned unknown category: ${raw.category}`);
+  // An off-vocabulary category is kept as-is: validateRecipe reports it and the
+  // orchestrator drops that one recipe, rather than a throw killing the whole video.
   return { ...raw, cuisine, dishKey: slugify(raw.dishKey) };
 }
