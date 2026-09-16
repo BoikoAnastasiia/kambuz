@@ -17,9 +17,20 @@ export class StageCache {
     try { await access(this.file(videoId, stage)); return true; } catch { return false; }
   }
 
+  /**
+   * A cache file that is truncated (an interrupted run) or no longer matches its schema
+   * (a shape change between runs) reads as a miss, so the stage simply runs again — a
+   * corrupt file must never wedge a video permanently.
+   */
   async get<T>(videoId: string, stage: string, schema: z.ZodType<T>): Promise<T | null> {
     if (!(await this.has(videoId, stage))) return null;
-    return schema.parse(JSON.parse(await readFile(this.file(videoId, stage), "utf8")));
+    try {
+      return schema.parse(JSON.parse(await readFile(this.file(videoId, stage), "utf8")));
+    } catch (e) {
+      const reason = e instanceof Error ? e.message.split("\n")[0] : String(e);
+      console.warn(`cache: ignoring unusable ${stage}.json for ${videoId} (${reason}); re-running the stage`);
+      return null;
+    }
   }
 
   async set(videoId: string, stage: string, value: unknown): Promise<void> {

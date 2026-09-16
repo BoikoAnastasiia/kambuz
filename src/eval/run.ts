@@ -42,6 +42,8 @@ export interface RunEvalOptions {
 export async function runEval(deps: IngestDeps, caseDir: string, opts: RunEvalOptions): Promise<EvalRow[]> {
   const rows: EvalRow[] = [];
   const files = (await readdir(caseDir)).filter((f) => f.endsWith(".json")).sort();
+  // Zero cases is a setup mistake, not a passing regression run.
+  if (files.length === 0) throw new Error(`no cases in ${caseDir}`);
   for (const f of files) {
     let c: z.infer<typeof CaseSchema>;
     try {

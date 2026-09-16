@@ -127,6 +127,11 @@ describe("runEval", () => {
     expect(ingredientRow.actual).toBe("null");
   });
 
+  it("fails instead of reporting success when the case directory holds no cases", async () => {
+    const { deps, caseDir } = await setup();
+    await expect(runEval(deps, caseDir, { force: false })).rejects.toThrow(/no cases in .*cases/);
+  });
+
   it("throws an error naming the offending file when a case is malformed", async () => {
     const { deps, caseDir } = await setup();
     await writeFile(path.join(caseDir, "broken.json"), "{ not valid json");
