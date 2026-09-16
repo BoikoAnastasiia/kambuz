@@ -8,10 +8,12 @@ export type AgentName = (typeof AGENT_NAMES)[number];
 export { ROOT };
 
 export const DEFAULT_CONCURRENCY = 4;
+export const DEFAULT_MIN_COMPLETENESS = 0.3;
 
 export interface Config {
   models: Record<AgentName, string>;
   concurrency: number;
+  minCompleteness: number;
   paths: { cache: string; catalog: string; reports: string; vocab: string; prompts: string; eval: string };
 }
 
@@ -21,6 +23,12 @@ function concurrencyFrom(raw: string | undefined): number {
   return raw !== undefined && raw.trim() !== "" && Number.isFinite(n) && n >= 1 ? n : DEFAULT_CONCURRENCY;
 }
 
+/** Empty, non-numeric or outside [0, 1] all fall back — a recipe below this score isn't written. */
+function minCompletenessFrom(raw: string | undefined): number {
+  const n = Number(raw);
+  return raw !== undefined && raw.trim() !== "" && Number.isFinite(n) && n >= 0 && n <= 1 ? n : DEFAULT_MIN_COMPLETENESS;
+}
+
 export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const models = Object.fromEntries(
     AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? env.KAMBUZ_MODEL ?? "claude-sonnet-5"]),
@@ -28,6 +36,7 @@ export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     models,
     concurrency: concurrencyFrom(env.KAMBUZ_CONCURRENCY),
+    minCompleteness: minCompletenessFrom(env.KAMBUZ_MIN_COMPLETENESS),
     paths: {
       cache: path.join(ROOT, ".cache"),
       catalog: path.join(ROOT, "catalog"),

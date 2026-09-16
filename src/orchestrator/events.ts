@@ -4,7 +4,7 @@ import type { VideoStatus } from "./report.js";
 // fetch; the rest are the LLM agent stages from STAGE_ORDER in run.ts.
 export type StageName = "source" | "scout" | "extract" | "verify" | "categorize";
 
-export type PlacementAction = "written" | "replaced" | "kept-existing" | "kept-both" | "invalid";
+export type PlacementAction = "written" | "replaced" | "kept-existing" | "kept-both" | "invalid" | "too-thin";
 
 /**
  * Progress events emitted by ingest() as a run proceeds. Consumers (the CLI's

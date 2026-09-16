@@ -11,11 +11,16 @@ export interface RunReport {
   unmapped: Record<string, number>;
   flags: { recipeId: string; kind: string; ref: string; reason: string }[];
   validationErrors: { recipeId: string; errors: string[] }[];
+  tooThin: { recipeId: string; completeness: number; ingredients: number; steps: number }[];
+  minCompleteness: number;
   usage: string;
 }
 
-export function emptyReport(url: string): RunReport {
-  return { startedAt: new Date().toISOString(), url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [], unmapped: {}, flags: [], validationErrors: [], usage: "" };
+export function emptyReport(url: string, minCompleteness = 0.3): RunReport {
+  return {
+    startedAt: new Date().toISOString(), url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [],
+    unmapped: {}, flags: [], validationErrors: [], tooThin: [], minCompleteness, usage: "",
+  };
 }
 
 export function renderReport(r: RunReport): string {
@@ -54,6 +59,10 @@ export function renderReport(r: RunReport): string {
     "## Validation errors (recipe not written)",
     "",
     ...r.validationErrors.map((v) => `- ${v.recipeId}: ${v.errors.join("; ")}`),
+    "",
+    `## Too thin to keep (score below ${r.minCompleteness})`,
+    "",
+    ...r.tooThin.map((t) => `- ${t.recipeId}: ${t.completeness.toFixed(2)} (${t.ingredients} ingredient${t.ingredients === 1 ? "" : "s"}, ${t.steps} step${t.steps === 1 ? "" : "s"})`),
     "",
     "## Token usage",
     "",

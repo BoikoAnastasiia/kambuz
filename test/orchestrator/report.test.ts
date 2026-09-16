@@ -21,4 +21,17 @@ describe("renderReport", () => {
     expect(md).toContain("skipped-no-captions");
     expect(md).toContain("scout: 1200 tokens");
   });
+
+  it("renders too-thin recipes with the threshold, score and counts", () => {
+    const r = emptyReport("https://youtu.be/v1", 0.3);
+    r.tooThin.push({ recipeId: "meatballs-with-cheese--v1", completeness: 0.15, ingredients: 1, steps: 5 });
+
+    const md = renderReport(r);
+
+    expect(md).toContain("## Too thin to keep (score below 0.3)");
+    expect(md).toContain("meatballs-with-cheese--v1");
+    expect(md).toContain("0.15");
+    expect(md).toMatch(/1 ingredient/);
+    expect(md).toMatch(/5 steps/);
+  });
 });

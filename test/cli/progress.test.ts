@@ -37,6 +37,7 @@ describe("createProgressRenderer", () => {
       { type: "stage:start", videoId: "v1", stage: "extract", segmentIndex: 0, workingName: "лазанья" } as const,
       { type: "segment:error", videoId: "v1", segmentIndex: 0, error: "extractor blew up" } as const,
       { type: "placement", videoId: "v2", recipeId: "soup--v2", action: "written" } as const,
+      { type: "placement", videoId: "v1", recipeId: "meatballs-with-cheese--v1", action: "too-thin" } as const,
       { type: "video:done", videoId: "v1", status: "error", recipes: 0 } as const,
       { type: "video:done", videoId: "v2", status: "done", recipes: 1 } as const,
     ]) {

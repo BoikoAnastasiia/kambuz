@@ -112,6 +112,14 @@ describe("reduceProgress", () => {
     expect(state.videos.get("v1")).toEqual({ title: "v1", stages: new Map() });
   });
 
+  it("ignores a too-thin placement event the same way as any other action", () => {
+    const state = apply([
+      { type: "videos", videoIds: ["v1"] },
+      { type: "placement", videoId: "v1", recipeId: "meatballs-with-cheese--v1", action: "too-thin" },
+    ]);
+    expect(state.videos.get("v1")).toEqual({ title: "v1", stages: new Map() });
+  });
+
   it("folds a full one-video, one-segment run into the expected final shape", () => {
     const state = apply([
       { type: "videos", videoIds: ["v1"] },

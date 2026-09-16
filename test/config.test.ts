@@ -20,6 +20,20 @@ describe("config", () => {
     expect(buildConfig({ KAMBUZ_CONCURRENCY: "2.7" }).concurrency).toBe(2);
   });
 
+  it("falls back to minCompleteness 0.3 for an empty, non-numeric or out-of-range KAMBUZ_MIN_COMPLETENESS", () => {
+    expect(buildConfig({ KAMBUZ_MIN_COMPLETENESS: "" }).minCompleteness).toBe(0.3);
+    expect(buildConfig({ KAMBUZ_MIN_COMPLETENESS: "lots" }).minCompleteness).toBe(0.3);
+    expect(buildConfig({ KAMBUZ_MIN_COMPLETENESS: "-0.1" }).minCompleteness).toBe(0.3);
+    expect(buildConfig({ KAMBUZ_MIN_COMPLETENESS: "1.1" }).minCompleteness).toBe(0.3);
+    expect(buildConfig({}).minCompleteness).toBe(0.3);
+  });
+
+  it("uses a valid KAMBUZ_MIN_COMPLETENESS in [0, 1]", () => {
+    expect(buildConfig({ KAMBUZ_MIN_COMPLETENESS: "0.5" }).minCompleteness).toBe(0.5);
+    expect(buildConfig({ KAMBUZ_MIN_COMPLETENESS: "0" }).minCompleteness).toBe(0);
+    expect(buildConfig({ KAMBUZ_MIN_COMPLETENESS: "1" }).minCompleteness).toBe(1);
+  });
+
   it("lets KAMBUZ_MODEL_SCOUT override one agent", async () => {
     process.env.KAMBUZ_MODEL_SCOUT = "claude-opus-5";
     const { buildConfig } = await import("../src/config.js");

@@ -58,7 +58,7 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
   const { config, llm, vocab, cache, catalog } = deps;
   const fetch = deps.fetch ?? realFetch;
   const expand = deps.expand ?? realExpand;
-  const report = emptyReport(url);
+  const report = emptyReport(url, config.minCompleteness);
   const promptsDir = config.paths.prompts;
 
   // --only-stage X (with or without --force) re-runs X and every stage downstream of it.
@@ -211,6 +211,13 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
             if (errors.length) {
               report.validationErrors.push({ recipeId: recipe.id, errors });
               emit({ type: "placement", videoId, recipeId: recipe.id, action: "invalid" });
+              continue;
+            }
+            // Below the write threshold: not enough ingredients/steps to be cookable. The
+            // stage cache is untouched, so a prompt fix can rescue it with --only-stage extract.
+            if (recipe.completeness < config.minCompleteness) {
+              report.tooThin.push({ recipeId: recipe.id, completeness: recipe.completeness, ingredients: recipe.ingredients.length, steps: recipe.steps.length });
+              emit({ type: "placement", videoId, recipeId: recipe.id, action: "too-thin" });
               continue;
             }
             for (const f of recipe.flags) report.flags.push({ recipeId: recipe.id, ...f });
