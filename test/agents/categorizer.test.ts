@@ -46,4 +46,13 @@ describe("runCategorizer", () => {
     const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", category: "casserole", dishKey: "x" })) };
     await expect(runCategorizer(draft, vocab, llm as any, config.paths.prompts)).rejects.toThrow(/unknown category/);
   });
+
+  it("asks the model for a loose dishKey and slugifies the answer itself", async () => {
+    const llm = { callStructured: vi.fn(async (_opts: any) => ({ ...base, cuisine: "italian", dishKey: "Lasagna Bolognese!" })) };
+    const c = await runCategorizer(draft, vocab, llm as any, config.paths.prompts);
+    expect(c.dishKey).toBe("lasagna-bolognese");
+    // a regex the SDK cannot enforce would make messages.parse() throw instead
+    const schema = llm.callStructured.mock.calls[0][0].schema;
+    expect(schema.safeParse({ ...base, cuisine: "italian", dishKey: "Lasagna Bolognese!" }).success).toBe(true);
+  });
 });

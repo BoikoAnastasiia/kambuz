@@ -11,7 +11,7 @@ import { fetchVideo as realFetch, expandUrl as realExpand, type FetchResult } fr
 import { renderTranscript, sliceCues } from "../fetcher/vtt.js";
 import { VideoSourceSchema, type VideoSource } from "../schemas/source.js";
 import { ScoutResultSchema } from "../schemas/scout.js";
-import { CategorizationSchema, DraftRecipeSchema, VerificationSchema, type Recipe } from "../schemas/recipe.js";
+import { CategorizationSchema, DraftRecipeSchema, RecipeSchema, VerificationSchema, type Recipe } from "../schemas/recipe.js";
 import { runScout } from "../agents/scout.js";
 import { runExtractor } from "../agents/extractor.js";
 import { runVerifier } from "../agents/verifier.js";
@@ -135,7 +135,14 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
 
           let placed = 0;
           for (const recipe of recipes) {
-            const errors = validateRecipe(recipe, vocab);
+            // The agents' wire schemas are deliberately loose (structured outputs can't
+            // enforce a pattern or a range), so the strict shape is checked here, once,
+            // before anything is written.
+            const shape = RecipeSchema.safeParse(recipe);
+            const errors = [
+              ...(shape.success ? [] : shape.error.issues.map((i) => `invalid ${i.path.join(".") || "recipe"}: ${i.message}`)),
+              ...validateRecipe(recipe, vocab),
+            ];
             if (errors.length) {
               report.validationErrors.push({ recipeId: recipe.id, errors });
               continue;

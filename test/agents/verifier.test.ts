@@ -76,4 +76,15 @@ describe("runVerifier", () => {
     expect(call.user).toContain("нарежем кубиком лук");
     expect(call.user).toContain("Обжарить фарш");
   });
+
+  it("asks for an unbounded confidence and clamps it into 0–1 itself", async () => {
+    const llm = { callStructured: vi.fn(async (_opts: any) => ({ ingredients: [], steps: [], confidence: 1.4 })) };
+    expect((await runVerifier(segment, draft, llm as any, config.paths.prompts)).confidence).toBe(1);
+    // a min/max the SDK cannot enforce would make messages.parse() throw instead
+    const schema = llm.callStructured.mock.calls[0][0].schema;
+    expect(schema.safeParse({ ingredients: [], steps: [], confidence: 1.4 }).success).toBe(true);
+
+    const low = { callStructured: vi.fn(async (_opts: any) => ({ ingredients: [], steps: [], confidence: -2 })) };
+    expect((await runVerifier(segment, draft, low as any, config.paths.prompts)).confidence).toBe(0);
+  });
 });

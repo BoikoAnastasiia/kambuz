@@ -1,6 +1,6 @@
 import type { LlmClient } from "../llm/client.js";
 import { loadPrompt } from "../prompts/load.js";
-import { VerificationSchema, type DraftRecipe, type RecipeFlag, type Verification } from "../schemas/recipe.js";
+import { VerificationWireSchema, type DraftRecipe, type RecipeFlag, type Verification } from "../schemas/recipe.js";
 import type { ScoutSegment } from "../schemas/scout.js";
 
 export function buildVerifierUser(segment: ScoutSegment, draft: DraftRecipe): string {
@@ -13,7 +13,8 @@ export function buildVerifierUser(segment: ScoutSegment, draft: DraftRecipe): st
 
 export async function runVerifier(segment: ScoutSegment, draft: DraftRecipe, llm: LlmClient, promptsDir: string): Promise<Verification> {
   const system = await loadPrompt("verifier", promptsDir);
-  return llm.callStructured({ agent: "verifier", system, user: buildVerifierUser(segment, draft), schema: VerificationSchema });
+  const raw = await llm.callStructured({ agent: "verifier", system, user: buildVerifierUser(segment, draft), schema: VerificationWireSchema });
+  return { ...raw, confidence: Math.max(0, Math.min(1, raw.confidence)) };
 }
 
 function normalizeName(s: string): string {

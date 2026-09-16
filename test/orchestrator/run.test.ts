@@ -90,6 +90,30 @@ describe("ingest", () => {
     expect(deps.llm.callStructured).not.toHaveBeenCalled();
   });
 
+  it("reports a recipe that fails the strict persisted schema instead of writing it", async () => {
+    // The categorizer's wire schema can't enforce the dishKey pattern, so a model answer
+    // of "!!!" slugifies to "" — caught by RecipeSchema before the file is written.
+    const deps = await setup();
+    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+      switch (agent) {
+        case "scout": return { isRecipeVideo: true, segments: [{ workingName: "лазанья", start: 0, end: 300, rawText: "", cleanText: "Нарежем лук." }] };
+        case "extractor": return { nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
+          ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+          steps: [{ order: 1, text: "Нарезать лук.", timestamp: 100 }] };
+        case "verifier": return { ingredients: [{ rawName: "лук", quote: "нарежем лук", supported: true }], steps: [{ order: 1, quote: "нарежем лук", supported: true }], confidence: 0.9 };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "!!!" };
+        default: throw new Error(agent);
+      }
+    });
+
+    const report = await ingest("https://youtu.be/v1", deps, {});
+
+    expect(report.written).toEqual([]);
+    expect(report.validationErrors).toHaveLength(1);
+    expect(report.validationErrors[0].errors.join(" ")).toMatch(/dishKey/);
+    expect(await deps.catalog.load()).toHaveLength(0);
+  });
+
   it("turns a playlist-expansion failure into a plain message, not a raw yt-dlp stack", async () => {
     const deps = await setup();
     deps.expand = vi.fn(async () => { throw new Error("ERROR: Unable to download API page"); });

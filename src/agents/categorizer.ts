@@ -1,6 +1,6 @@
 import type { LlmClient } from "../llm/client.js";
 import { loadPrompt } from "../prompts/load.js";
-import { CategorizationSchema, type Categorization, type DraftRecipe } from "../schemas/recipe.js";
+import { CategorizationWireSchema, type Categorization, type DraftRecipe } from "../schemas/recipe.js";
 import type { Vocab } from "../vocab/load.js";
 
 export function slugify(s: string): string {
@@ -23,7 +23,7 @@ export function buildCategorizerUser(draft: DraftRecipe, vocab: Vocab): string {
 
 export async function runCategorizer(draft: DraftRecipe, vocab: Vocab, llm: LlmClient, promptsDir: string): Promise<Categorization> {
   const system = await loadPrompt("categorizer", promptsDir);
-  const raw = await llm.callStructured({ agent: "categorizer", system, user: buildCategorizerUser(draft, vocab), schema: CategorizationSchema });
+  const raw = await llm.callStructured({ agent: "categorizer", system, user: buildCategorizerUser(draft, vocab), schema: CategorizationWireSchema });
   const cuisine = vocab.cuisines.some((c) => c.id === raw.cuisine) ? raw.cuisine : "other";
   if (!vocab.categories.some((c) => c.id === raw.category)) throw new Error(`categorizer returned unknown category: ${raw.category}`);
   return { ...raw, cuisine, dishKey: slugify(raw.dishKey) };

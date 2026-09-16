@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { DraftRecipeSchema, CategorizationSchema } from "../../src/schemas/recipe.js";
+import {
+  DraftRecipeSchema,
+  CategorizationSchema,
+  CategorizationWireSchema,
+  VerificationSchema,
+  VerificationWireSchema,
+} from "../../src/schemas/recipe.js";
 
 describe("DraftRecipeSchema", () => {
   it("accepts a minimal valid draft", () => {
@@ -28,5 +34,24 @@ describe("CategorizationSchema", () => {
     const base = { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
     expect(() => CategorizationSchema.parse({ ...base, dishKey: "Lasagna Bolognese" })).toThrow();
     expect(CategorizationSchema.parse({ ...base, dishKey: "lasagna-bolognese" }).dishKey).toBe("lasagna-bolognese");
+  });
+});
+
+// The SDK cannot express `pattern`/`minimum`/`maximum` in a structured-output schema:
+// it drops them into the field description and messages.parse() THROWS when the model
+// writes something the Zod schema then rejects. The wire schemas are what the model is
+// asked for; the agents normalize, and the strict schemas guard what is persisted.
+describe("wire schemas for structured output", () => {
+  const base = { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
+
+  it("accepts an un-slugified dishKey that the strict schema rejects", () => {
+    expect(CategorizationWireSchema.parse({ ...base, dishKey: "Lasagna Bolognese!" }).dishKey).toBe("Lasagna Bolognese!");
+    expect(CategorizationSchema.safeParse({ ...base, dishKey: "Lasagna Bolognese!" }).success).toBe(false);
+  });
+
+  it("accepts a confidence outside 0–1 that the strict schema rejects", () => {
+    const v = { ingredients: [], steps: [], confidence: 1.5 };
+    expect(VerificationWireSchema.parse(v).confidence).toBe(1.5);
+    expect(VerificationSchema.safeParse(v).success).toBe(false);
   });
 });

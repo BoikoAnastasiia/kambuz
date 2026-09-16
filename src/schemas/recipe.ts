@@ -37,6 +37,14 @@ export const VerificationSchema = z.object({
 });
 export type Verification = z.infer<typeof VerificationSchema>;
 
+// Wire schema: what the model is asked for. Structured outputs cannot enforce a
+// numeric range — the SDK moves min/max into the field description, and
+// messages.parse() throws outright when the answer falls outside it. runVerifier
+// clamps into the strict range instead.
+export const VerificationWireSchema = VerificationSchema.extend({
+  confidence: z.number().describe("0 = nothing supported, 1 = everything supported"),
+});
+
 export const MealTypeSchema = z.enum(["breakfast", "lunch", "dinner"]);
 export const RichnessSchema = z.enum(["light", "medium", "hearty"]);
 export const DishKeySchema = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -51,6 +59,14 @@ export const CategorizationSchema = z.object({
   dishKey: DishKeySchema,
 });
 export type Categorization = z.infer<typeof CategorizationSchema>;
+
+// Wire schema: the dishKey pattern is unenforceable in a structured output (the SDK
+// drops the regex into the description), and a model answer that breaks it would make
+// messages.parse() throw. runCategorizer slugifies the answer; the strict schema above
+// and RecipeSchema below guard what reaches the catalog.
+export const CategorizationWireSchema = CategorizationSchema.extend({
+  dishKey: z.string().describe("English slug of the dish: lowercase letters, digits and single dashes"),
+});
 
 export const RecipeFlagSchema = z.object({ kind: z.enum(["ingredient", "step"]), ref: z.string(), reason: z.string() });
 export type RecipeFlag = z.infer<typeof RecipeFlagSchema>;
