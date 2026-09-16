@@ -17,8 +17,12 @@ describe("assembleRecipe", () => {
       now: new Date("2026-01-01T00:00:00Z"),
     });
     expect(r.id).toBe("borscht--v1");
-    expect(r.flags).toHaveLength(1);
-    expect(r.completeness).toBeCloseTo(1 - 0.1 + 0.005 + 0.02);
+    // one unsupported ingredient, plus the step the verification never reported on
+    expect(r.flags).toEqual([
+      { kind: "ingredient", ref: "свёкла", reason: "quantity or presence not supported by transcript" },
+      { kind: "step", ref: "1", reason: "action not found in transcript" },
+    ]);
+    expect(r.completeness).toBeCloseTo(1 - 0.2 + 0.005 + 0.02);
     expect(r.source).toMatchObject({ videoId: "v1", videoTitle: "T", segmentStart: 10, segmentEnd: 90 });
     expect(r.extractedAt).toBe("2026-01-01T00:00:00.000Z");
   });

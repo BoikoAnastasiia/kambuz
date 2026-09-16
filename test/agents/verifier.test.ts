@@ -42,7 +42,8 @@ describe("flagsFromVerification", () => {
     ]);
   });
 
-  it("does not flag a step whose order has no counterpart in v.steps", () => {
+  it("flags a step whose order has no counterpart in v.steps, like a missing ingredient", () => {
+    // A step the verifier never reported on is unverified, not verified-good.
     const flags = flagsFromVerification(draft, {
       ingredients: [
         { rawName: "лук", quote: "нарежем кубиком лук", supported: true },
@@ -51,7 +52,7 @@ describe("flagsFromVerification", () => {
       steps: [{ order: 1, quote: "нарежем", supported: true }],
       confidence: 0.7,
     });
-    expect(flags).toEqual([]);
+    expect(flags).toEqual([{ kind: "step", ref: "2", reason: "action not found in transcript" }]);
   });
 
   it("matches ingredient rawName case- and whitespace-insensitively across independent LLM outputs", () => {

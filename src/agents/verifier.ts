@@ -29,8 +29,10 @@ export function flagsFromVerification(draft: DraftRecipe, v: Verification): Reci
     if (!entry || !entry.supported) flags.push({ kind: "ingredient", ref: ing.rawName, reason: "quantity or presence not supported by transcript" });
   }
   for (const step of draft.steps) {
+    // A step the verifier said nothing about is unverified, which is not the same as
+    // verified-good — flag it exactly like an ingredient it skipped.
     const entry = v.steps.find((e) => e.order === step.order);
-    if (entry && !entry.supported) flags.push({ kind: "step", ref: String(step.order), reason: "action not found in transcript" });
+    if (!entry || !entry.supported) flags.push({ kind: "step", ref: String(step.order), reason: "action not found in transcript" });
   }
   return flags;
 }
