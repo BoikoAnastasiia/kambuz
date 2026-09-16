@@ -4,13 +4,27 @@ import type { z } from "zod";
 import type { AgentName, Config } from "../config.js";
 import type { UsageLedger } from "./usage.js";
 
-export class LlmParseError extends Error {
-  readonly reason: "refusal" | "parse";
+export type LlmParseReason = "refusal" | "parse" | "truncated";
 
-  constructor(message: string, reason: "refusal" | "parse") {
+export class LlmParseError extends Error {
+  readonly reason: LlmParseReason;
+
+  constructor(message: string, reason: LlmParseReason) {
     super(message);
+    this.name = "LlmParseError";
     this.reason = reason;
   }
+}
+
+/**
+ * messages.parse() throws instead of returning `parsed_output: null` when the content
+ * doesn't satisfy the schema — the SDK wraps the Zod failure in an AnthropicError whose
+ * message starts with this. That is the retryable case, so it has to be caught, not awaited.
+ */
+const PARSE_FAILURE = "Failed to parse structured output";
+
+function isParseFailure(e: unknown): boolean {
+  return e instanceof Error && e.message.startsWith(PARSE_FAILURE);
 }
 
 export interface StructuredCall<T> {
@@ -28,15 +42,28 @@ export interface LlmClient {
 export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: Anthropic = new Anthropic()): LlmClient {
   async function once<T>(opts: StructuredCall<T>): Promise<T> {
     const model = config.models[opts.agent];
-    const response = await anthropic.messages.parse({
-      model,
-      max_tokens: opts.maxTokens ?? 16000,
-      system: opts.system,
-      messages: [{ role: "user", content: opts.user }],
-      output_config: { format: zodOutputFormat(opts.schema) },
-    });
+    const maxTokens = opts.maxTokens ?? 16000;
+    let response;
+    try {
+      response = await anthropic.messages.parse({
+        model,
+        max_tokens: maxTokens,
+        system: opts.system,
+        messages: [{ role: "user", content: opts.user }],
+        output_config: { format: zodOutputFormat(opts.schema) },
+      });
+    } catch (e) {
+      // The throw carries no message, so this attempt's usage is not knowable.
+      if (isParseFailure(e)) throw new LlmParseError(`${opts.agent}: ${(e as Error).message}`, "parse");
+      throw e;
+    }
     ledger.add(opts.agent, model, response.usage);
     if (response.stop_reason === "refusal") throw new LlmParseError(`${opts.agent}: model refused the request`, "refusal");
+    // A truncated answer is checked before parsed_output: retrying with the same cap
+    // would only burn the same tokens again, so it is reported, not retried.
+    if (response.stop_reason === "max_tokens") {
+      throw new LlmParseError(`${opts.agent}: response hit max_tokens=${maxTokens} and was truncated; raise the limit or shorten the input`, "truncated");
+    }
     if (response.parsed_output == null) throw new LlmParseError(`${opts.agent}: response did not match schema`, "parse");
     return response.parsed_output as T;
   }
