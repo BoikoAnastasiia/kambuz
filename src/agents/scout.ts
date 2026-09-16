@@ -1,6 +1,6 @@
 import type { LlmClient } from "../llm/client.js";
 import { loadPrompt } from "../prompts/load.js";
-import { ScoutResultSchema, type ScoutResult } from "../schemas/scout.js";
+import { ScoutWireResultSchema, type ScoutResult } from "../schemas/scout.js";
 import type { VideoSource } from "../schemas/source.js";
 import { renderTranscript, sliceCues } from "../fetcher/vtt.js";
 
@@ -19,7 +19,7 @@ export function buildScoutUser(source: VideoSource): string {
 
 export async function runScout(source: VideoSource, llm: LlmClient, promptsDir: string): Promise<ScoutResult> {
   const system = await loadPrompt("scout", promptsDir);
-  const raw = await llm.callStructured({ agent: "scout", system, user: buildScoutUser(source), schema: ScoutResultSchema, maxTokens: 32000 });
+  const raw = await llm.callStructured({ agent: "scout", system, user: buildScoutUser(source), schema: ScoutWireResultSchema, maxTokens: 32000 });
   const segments = raw.isRecipeVideo
     ? raw.segments
         .map((s) => {

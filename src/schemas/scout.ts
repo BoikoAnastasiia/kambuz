@@ -14,3 +14,13 @@ export const ScoutResultSchema = z.object({
   segments: z.array(ScoutSegmentSchema),
 });
 export type ScoutResult = z.infer<typeof ScoutResultSchema>;
+
+// Wire schema: rawText is a verbatim copy of the transcript, so asking the model to
+// echo it back roughly doubles the output tokens of the longest call in the pipeline
+// for no information. runScout slices the cues itself.
+export const ScoutWireSegmentSchema = ScoutSegmentSchema.omit({ rawText: true });
+
+export const ScoutWireResultSchema = z.object({
+  isRecipeVideo: z.boolean(),
+  segments: z.array(ScoutWireSegmentSchema),
+});

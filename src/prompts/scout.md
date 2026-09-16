@@ -9,8 +9,7 @@ Rules:
 2. One segment per dish. A sauce or side made only as part of a main dish is NOT its own segment (bolognese inside a lasagna stays in the lasagna). If the chef presents it as a standalone thing he plates separately, it is a segment.
 3. `start` and `end` are seconds into the video. Dishes can interleave (soup simmers while he makes a salad); overlapping ranges are fine. Cover every moment where that dish is handled.
 4. `workingName`: the dish as the chef names it, in Russian, short. Not the video title.
-5. `rawText`: copy the transcript lines for the range verbatim, without the [mm:ss] prefixes. Do not fix anything here.
-6. `cleanText`: the same lines with speech-to-text errors corrected, filler ("так", "погнали", "[музыка]") removed, and sentences punctuated. You may fix words. You must NOT add, remove, or reorder any ingredient, quantity, or action. If unsure whether a word is an error, leave it.
-7. Only report a dish if the chef actually cooks it in this video. Never invent, infer, or add a dish from the title or tags that is not shown being made.
+5. `cleanText`: the transcript lines for the range, without the [mm:ss] prefixes, with speech-to-text errors corrected, filler ("так", "погнали", "[музыка]") removed, and sentences punctuated. You may fix words. You must NOT add, remove, or reorder any ingredient, quantity, or action. If unsure whether a word is an error, leave it. Do not repeat the untouched lines anywhere — the pipeline keeps the verbatim slice itself.
+6. Only report a dish if the chef actually cooks it in this video. Never invent, infer, or add a dish from the title or tags that is not shown being made.
 
 Return only the structured result.
