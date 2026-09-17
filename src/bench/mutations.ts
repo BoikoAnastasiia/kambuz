@@ -46,7 +46,14 @@ export const EXTRA_STEPS: ReadonlyArray<{ text: string; keys: string[] }> = [
   { text: "Посыпать рублеными грецкими орехами.", keys: ["орех", "грецкий"] },
 ];
 
-const UNIT_SWAPS: Record<string, string> = { g: "ml", ml: "g", kg: "l", l: "kg", tbsp: "tsp", tsp: "tbsp" };
+/**
+ * Swaps that change the amount by a clear factor. g↔ml is left out: for butter, oil or honey a
+ * cook may write either, so the verifier could fairly accept it.
+ */
+const UNIT_SWAPS: Record<string, string> = { g: "kg", kg: "g", ml: "l", l: "ml", tbsp: "tsp", tsp: "tbsp" };
+
+/** An amount that reads naturally for a unit, for a planted ingredient whose donor gave none. */
+const DEFAULT_AMOUNT: Record<string, number> = { g: 200, kg: 1, ml: 200, l: 1, pc: 2, tbsp: 2, tsp: 1, clove: 2 };
 
 function normalize(s: string): string {
   return s.toLowerCase().replace(/ё/g, "е");
@@ -65,8 +72,7 @@ const VOWELS = "аеиоуыэюяй";
  * matching сливочное.
  */
 function wordPattern(word: string): string {
-  let stem = normalize(word).replace(/[аеиоуыэюяйь]+$/, "");
-  if (stem.length < 3) stem = normalize(word);
+  const stem = stemOf(word);
   const n = stem.length;
   const last = stem[n - 1];
   const prev = stem[n - 2];
@@ -82,11 +88,32 @@ function wordPattern(word: string): string {
   return `(?<![а-яa-z0-9])${body}`;
 }
 
-/** Whether any word (3+ letters) of `phrase` occurs in `text` in some inflected form, at a word start. */
+/**
+ * Diminutive and colloquial forms a chef uses that inflection alone does not reach, keyed by the
+ * stem wordPattern derives (лавровый → лавров). The extractor maps these forms too.
+ */
+const COLLOQUIAL: Record<string, string[]> = {
+  лавров: ["лаврушк"],
+  орех: ["орешк", "орешек"],
+  чеснок: ["чесноч"],
+  лук: ["лучок", "лучк"],
+  морков: ["морковочк", "морковк"],
+  сливк: ["сливочк"],
+};
+
+function stemOf(word: string): string {
+  const stem = normalize(word).replace(/[аеиоуыэюяйь]+$/, "");
+  return stem.length < 3 ? normalize(word) : stem;
+}
+
+/** Whether any word (3+ letters) of `phrase` occurs in `text` in some inflected or colloquial form, at a word start. */
 export function mentions(text: string, phrase: string): boolean {
   const t = normalize(text);
   const words = normalize(phrase).split(/[^а-яa-z0-9]+/).filter((w) => w.length >= 3);
-  return words.some((w) => new RegExp(wordPattern(w)).test(t));
+  return words.some((w) => {
+    const patterns = [wordPattern(w), ...(COLLOQUIAL[stemOf(w)] ?? []).map((form) => `(?<![а-яa-z0-9])${form}`)];
+    return patterns.some((p) => new RegExp(p).test(t));
+  });
 }
 
 /**
@@ -127,18 +154,39 @@ function pick<T>(items: readonly T[], seed: string): T {
 
 const nameKey = (s: string) => normalize(s.trim());
 
-/** ×1.5, rounded to a step a cook would write (5 from 20 up, 0.5 from 5 up, else 0.25); never the original. */
+/**
+ * ×1.5, rounded the way a cook would write it: below 1 to two significant digits (0.05 → 0.075),
+ * otherwise to a step of 5 (from 20), 0.5 (from 5) or 0.25. Never 0 and never the original.
+ */
 export function scaleQuantity(q: number): number {
   const x = q * 1.5;
+  if (q < 1) {
+    const rounded = Number(x.toPrecision(2));
+    return rounded > 0 && rounded !== q ? rounded : x;
+  }
   const step = x >= 20 ? 5 : x >= 5 ? 0.5 : 0.25;
   const rounded = Math.round(x / step) * step;
   return rounded !== q ? rounded : q + step;
 }
 
-/** A different number of the same scale that the transcript does not contain, so the change is unsupported. */
+export type PluralClass = "one" | "few" | "many";
+
+/** Russian number agreement: 1 час, 2–4 часа, 5–20 часов; 21 час, 22 часа, 11–14 always часов. */
+export function pluralClass(n: number): PluralClass {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "one";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "few";
+  return "many";
+}
+
+/**
+ * A different number of the same scale and the same plural class (so "3 часа" stays grammatical)
+ * that the transcript does not contain, so the change is unsupported.
+ */
 function otherNumber(n: number, transcript: string, seed: string): number | null {
-  const raw = n >= 100 ? [n + 20, n + 40, n - 20] : n >= 10 ? [n * 2, n + 10, n - 5] : [n + 2, n * 3, n + 5];
-  const candidates = raw.filter((c) => c > 0 && c !== n && !containsNumber(transcript, String(c)));
+  const raw = n >= 100 ? [n + 20, n + 40, n - 20, n + 50, n + 60] : n >= 10 ? [n * 2, n + 10, n + 5, n - 5, n + 20] : [n + 1, n - 1, n + 2, n * 2, n + 5, n + 10];
+  const candidates = [...new Set(raw)].filter((c) => c > 0 && c !== n && pluralClass(c) === pluralClass(n) && !containsNumber(transcript, String(c)));
   return candidates.length ? pick(candidates, seed) : null;
 }
 
@@ -169,6 +217,16 @@ function extraIngredient(seed: string, input: BenchSegment, ctx: MutationContext
   };
 
   const others = ctx.segments.filter((s) => !(s.videoId === input.videoId && s.segmentIndex === input.segmentIndex));
+  // A planted ingredient must look like its neighbours: in a draft where most amounts are unknown,
+  // a "200 g" line would give it away.
+  const unknownCount = draft.ingredients.filter((i) => i.provenance === "unknown").length;
+  const mostlyUnknown = unknownCount > draft.ingredients.length - unknownCount;
+  const shaped = (base: { ingredient: string | null; rawName: string }, quantity: number | null, unit: string | null): DraftIngredient => {
+    if (mostlyUnknown) return { ...base, quantity: null, unit: null, provenance: "unknown", note: null };
+    if (quantity !== null && quantity > 0 && unit !== null) return { ...base, quantity, unit, provenance: "stated", note: null };
+    const u = unit !== null && unit in DEFAULT_AMOUNT ? unit : "g";
+    return { ...base, quantity: DEFAULT_AMOUNT[u], unit: u, provenance: "stated", note: null };
+  };
   // Donors keep their own amount when they had one. Preferring those was tried and left too few
   // candidates on the real cache (one odd rawName planted in 5 of 13 segments), so all mix.
   const fromDrafts = (pool: BenchSegment[]): DraftIngredient[] => {
@@ -179,9 +237,7 @@ function extraIngredient(seed: string, input: BenchSegment, ctx: MutationContext
         // Unmapped rawNames include verbs and fragments ("подсолить"), which would not read as an ingredient.
         if (i.ingredient === null || seen.has(nameKey(i.rawName)) || !absent(i.rawName, i.ingredient)) continue;
         seen.add(nameKey(i.rawName));
-        const hasAmount = i.quantity !== null && i.quantity > 0 && i.unit !== null;
-        const base = { ingredient: i.ingredient, rawName: i.rawName, provenance: "stated" as const, note: null };
-        out.push(hasAmount ? { ...base, quantity: i.quantity, unit: i.unit } : { ...base, quantity: 200, unit: "g" });
+        out.push(shaped({ ingredient: i.ingredient, rawName: i.rawName }, i.quantity, i.unit));
       }
     }
     return out;
@@ -191,7 +247,7 @@ function extraIngredient(seed: string, input: BenchSegment, ctx: MutationContext
     fromDrafts(others),
     ctx.vocab.ingredients
       .filter((v) => absent(v.nameRu, v.id))
-      .map((v) => ({ ingredient: v.id, rawName: v.nameRu, quantity: 200, unit: "g", provenance: "stated" as const, note: null })),
+      .map((v) => shaped({ ingredient: v.id, rawName: v.nameRu }, null, null)),
   ];
   const tier = tiers.find((t) => t.length > 0);
   if (!tier) return null;
