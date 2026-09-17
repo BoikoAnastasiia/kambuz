@@ -1,6 +1,7 @@
 import { flagsFromVerification, normalizeName } from "../agents/verifier.js";
 import type { DraftRecipe, RecipeFlag, Verification } from "../schemas/recipe.js";
 import { segmentKey } from "./inputs.js";
+import type { CaseUsage } from "./usage.js";
 import { MODIFIES_EXISTING, PLANTED_KINDS, type FlagTarget, type MutationKind, type PlantedKind } from "./mutations.js";
 import { mean, proportion, type Proportion } from "./stats.js";
 
@@ -14,6 +15,8 @@ interface CaseBase {
   /** The exact draft the verifier saw, so a report can be re-scored without regenerating it. */
   draft: DraftRecipe;
   ms: number;
+  /** Tokens and cost of this case's API attempts (absent in hand-built test cases). */
+  usage?: CaseUsage;
 }
 /** `flags` is stored for people reading the JSON; scoring always re-derives it from draft + verification. */
 export type VerifierCase = CaseBase & ({ ok: true; verification: Verification; flags?: RecipeFlag[] } | { ok: false; error: string });

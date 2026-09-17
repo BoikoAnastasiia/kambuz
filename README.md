@@ -132,6 +132,12 @@ calls nothing; with it, it writes `reports/bench-<agent>-<timestamp>.json` and
   entry is reported separately. Detection is shown next to the false-positive
   rate on the untouched drafts.
 
+The JSON keeps every case's exact input draft, raw model output and token
+usage, plus hashes of the prompt and vocabulary, so a saved run can be
+re-scored after a scoring change without calling the API:
+
+    npm run kambuz -- bench rescore reports/bench-verifier-<timestamp>.json
+
 Every rate counts failed calls as misses and shows hits/total with a 95%
 Wilson interval; with a dozen segments those intervals are wide, so use
 `--repeat 3` or more before choosing a model.

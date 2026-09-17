@@ -1,4 +1,5 @@
 import "./env.js"; // loads .env — must come before anything that reads process.env
+import Anthropic from "@anthropic-ai/sdk";
 import { parseArgs } from "node:util";
 import { mkdir, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
@@ -16,13 +17,14 @@ import { renderReportHtml } from "./orchestrator/report-html.js";
 import { spendEntry, appendSpend, readSpendTotal } from "./cli/spend.js";
 import { runEval, renderEval } from "./eval/run.js";
 import { createProgressRenderer } from "./cli/progress.js";
-import { BENCH_AGENTS, benchCommand, type BenchAgent } from "./bench/run.js";
+import { BENCH_AGENTS, benchCommand, rescoreCommand, type BenchAgent } from "./bench/run.js";
 import { parseVariants, type Variant } from "./bench/variants.js";
 
 export const USAGE =
   "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize] [--quiet] [--open]\n" +
   "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
   "       kambuz bench <categorizer|verifier> --models <model[:effort],...> [--repeat N] [--yes] [--open]\n" +
+  "       kambuz bench rescore <bench-report.json> [--open]\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
   "  --force               re-run every agent stage (does not re-fetch captions)\n" +
@@ -60,6 +62,7 @@ export type ParsedArgs =
   | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage; quiet: boolean; open: boolean }
   | { ok: true; command: "eval"; force: boolean; ingest: boolean; onlyStage?: Stage }
   | { ok: true; command: "bench"; agent: BenchAgent; variants: Variant[]; repeat: number; yes: boolean; open: boolean }
+  | { ok: true; command: "bench-rescore"; file: string; open: boolean }
   | { ok: false; error: string };
 
 function isStage(value: string): value is Stage {
@@ -126,6 +129,11 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     return { ok: true, command: "eval", force: values.force ?? false, ingest: ingestFlag, onlyStage };
   }
 
+  if (command === "bench" && positionals[1] === "rescore") {
+    if (positionals.length !== 3) return { ok: false, error: "expected: kambuz bench rescore <bench-report.json>" };
+    return { ok: true, command: "bench-rescore", file: positionals[2], open: values.open ?? false };
+  }
+
   if (command === "bench") {
     const agent = positionals[1];
     if (!agent || !(BENCH_AGENTS as readonly string[]).includes(agent)) {
@@ -156,6 +164,13 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (parsed.command === "bench-rescore") {
+    // Reads the saved JSON only: no key, no client, no call.
+    const { html } = await rescoreCommand(parsed.file, (line) => console.log(line));
+    if (parsed.open) await openInBrowser(html);
+    return;
+  }
+
   if (parsed.command === "bench") {
     // A dry run needs no key: it builds no client and makes no call.
     const keyError = parsed.yes ? apiKeyError(process.env) : null;
@@ -167,9 +182,16 @@ async function main(): Promise<void> {
     // The bench sets effort per variant; a KAMBUZ_EFFORT_* from .env must not leak into
     // a variant written without one.
     const benchConfig = { ...config, effort: {} };
+    let anthropic: Anthropic | undefined;
     const { result, files } = await benchCommand(
       { agent: parsed.agent, variants: parsed.variants, repeat: parsed.repeat, yes: parsed.yes },
-      { config: benchConfig, vocab: await loadVocab(config.paths.vocab), makeLlm: (ledger) => createLlmClient(benchConfig, ledger) },
+      {
+        config: benchConfig,
+        vocab: await loadVocab(config.paths.vocab),
+        // One SDK client shared by every case (each case still gets its own ledger); built on
+        // first use, so a dry run never constructs it.
+        makeLlm: (ledger) => createLlmClient(benchConfig, ledger, (anthropic ??= new Anthropic())),
+      },
       (line) => console.log(line),
       process.stderr.isTTY ? (done, total) => process.stderr.write(`\r${done}/${total} calls${done === total ? "\n" : ""}`) : undefined,
     );

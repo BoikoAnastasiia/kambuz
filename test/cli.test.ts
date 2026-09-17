@@ -125,5 +125,10 @@ describe("parseCliArgs", () => {
     expect(parseCliArgs(["bench", "verifier", "--models", "a:turbo"]).ok).toBe(false);
     expect(parseCliArgs(["bench", "verifier", "extra", "--models", "a"]).ok).toBe(false);
   });
-});
 
+  it("parses bench rescore <file>", () => {
+    expect(parseCliArgs(["bench", "rescore", "reports/bench-verifier-x.json", "--open"])).toEqual({ ok: true, command: "bench-rescore", file: "reports/bench-verifier-x.json", open: true });
+    expect(parseCliArgs(["bench", "rescore"]).ok).toBe(false);
+    expect(parseCliArgs(["bench", "rescore", "a.json", "b.json"]).ok).toBe(false);
+  });
+});

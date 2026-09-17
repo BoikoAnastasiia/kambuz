@@ -3,6 +3,7 @@ import { z } from "zod";
 import { MealTypeSchema, type Categorization } from "../schemas/recipe.js";
 import type { Vocab } from "../vocab/load.js";
 import { segmentKey } from "./inputs.js";
+import type { CaseUsage } from "./usage.js";
 import { mean, proportion, type Proportion } from "./stats.js";
 
 type MealType = z.infer<typeof MealTypeSchema>;
@@ -72,6 +73,8 @@ interface CaseBase {
   segmentIndex: number;
   /** Wall time of the agent call, parse retries included. */
   ms: number;
+  /** Tokens and cost of this case's API attempts (absent in hand-built test cases). */
+  usage?: CaseUsage;
 }
 export type CategorizerCase = CaseBase & ({ ok: true; output: Categorization; rawCuisine: string } | { ok: false; error: string });
 

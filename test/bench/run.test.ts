@@ -5,7 +5,7 @@ import path from "node:path";
 import { buildConfig, type Config } from "../../src/config.js";
 import type { LlmClient, StructuredCall } from "../../src/llm/client.js";
 import type { UsageLedger } from "../../src/llm/usage.js";
-import { benchCommand, type BenchDeps } from "../../src/bench/run.js";
+import { benchCommand, rescoreCommand, type BenchDeps } from "../../src/bench/run.js";
 import { parseVariants } from "../../src/bench/variants.js";
 import { makeCache, vocab, lasagnaDraft, soupDraft, lasagnaSegment, soupSegment } from "./fixtures.js";
 
@@ -115,7 +115,7 @@ describe("benchCommand categorizer", () => {
     expect(text).toMatch(/row 4 .*klingon/);
     expect(text).toMatch(/v2#0: labeled but has no cached draft/);
 
-    expect(makeLlm).toHaveBeenCalledTimes(3); // one client, one ledger, per variant
+    expect(makeLlm).toHaveBeenCalledTimes(12); // one client and ledger per case, so each case's usage is stored
     expect(calls.filter((c) => c.effort === "low")).toHaveLength(4);
     expect(calls.filter((c) => c.model === "claude-sonnet-5" && c.effort === undefined)).toHaveLength(4);
 
@@ -139,6 +139,9 @@ describe("benchCommand categorizer", () => {
     expect(r.usage["claude-haiku-4-5:low"]).toMatchObject({ calls: 0, costUsd: 0 });
 
     const json = JSON.parse(await readFile(out.files!.json, "utf8"));
+    expect(json.promptsHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(json.vocabHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(json.cases.find((c: any) => c.variant === "claude-haiku-4-5" && c.ok)).toMatchObject({ rawCuisine: "other", usage: { model: "claude-haiku-4-5", calls: 1, input: 100, output: 10 } });
     expect(path.basename(out.files!.json)).toMatch(/^bench-categorizer-.+\.json$/);
     expect(json.cases).toHaveLength(12);
     const html = await readFile(out.files!.html, "utf8");
@@ -203,5 +206,32 @@ describe("benchCommand verifier", () => {
     expect(html).toContain("changed-step-number");
     expect(html).toContain("omitted");
     expect(html).toContain("pre-flagged (excluded)");
+
+    // everything needed to re-score is in the JSON: drafts, verifier output, per-case usage
+    const saved = JSON.parse(await readFile(out.files!.json, "utf8"));
+    expect(saved.cases.find((c: any) => c.mutation === "unit-swap").draft.ingredients.some((i: any) => i.unit === "ml")).toBe(true);
+    expect(saved.cases.find((c: any) => c.ok).usage).toMatchObject({ calls: 1, input: 100, output: 10 });
+  });
+
+  it("rescores a saved report from the JSON alone to the same numbers, with no client", async () => {
+    const config = await setup(LABELS);
+    const deps = (m: ReturnType<typeof fakeLlmFactory>) => ({ config, vocab, makeLlm: m.makeLlm });
+    for (const agent of ["verifier", "categorizer"] as const) {
+      const live = await benchCommand({ agent, variants: variants("claude-sonnet-5,claude-haiku-4-5,claude-haiku-4-5:low"), repeat: 2, yes: true }, deps(fakeLlmFactory()), () => {});
+      const lines: string[] = [];
+      const { result, html } = await rescoreCommand(live.files!.json, (l) => lines.push(l));
+      expect(result.scores).toEqual(live.result!.scores);
+      expect(result.usage).toEqual(live.result!.usage);
+      expect(html).toMatch(/\.rescored\.html$/);
+      expect(await readFile(html, "utf8")).toContain("<!doctype html>");
+      expect(lines.join("\n")).toContain("claude-sonnet-5");
+    }
+  });
+
+  it("refuses a file that is not a bench report", async () => {
+    const config = await setup([]);
+    const file = path.join(config.paths.eval, "not-a-report.json");
+    await writeFile(file, JSON.stringify({ hello: 1 }));
+    await expect(rescoreCommand(file, () => {})).rejects.toThrow(/not a bench report/);
   });
 });
