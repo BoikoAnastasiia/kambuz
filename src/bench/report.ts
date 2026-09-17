@@ -239,7 +239,7 @@ export function renderBenchHtml(result: BenchResult): string {
 </head>
 <body>
   <h1>Kambuz bench: ${e(result.agent)}</h1>
-  <p class="meta">Started ${e(result.startedAt)} · finished ${e(result.finishedAt)} · ${result.repeat} repeat${result.repeat === 1 ? "" : "s"}</p>
+  <p class="meta">Started ${e(result.startedAt)} · finished ${e(result.finishedAt)} · ${result.repeat} repeat${result.repeat === 1 ? "" : "s"}${result.donorPoolHash ? ` · donor pool ${e(result.donorPoolHash.slice(0, 12))}` : ""}</p>
   <div class="tiles">
     <div class="tile"><div class="n">${result.variants.length}</div><div class="label">variants</div></div>
     <div class="tile"><div class="n">${result.segments.length}</div><div class="label">segments</div></div>

@@ -13,7 +13,7 @@ import { UsageLedger } from "../llm/usage.js";
 import type { Categorization, DraftRecipe, Verification } from "../schemas/recipe.js";
 import type { Vocab } from "../vocab/load.js";
 import { loadCategorizerTruth, scoreCategorizer, type CategorizerCase, type CategorizerLabel, type CategorizerVariantScore, type DishKeyAgreement } from "./categorizer.js";
-import { loadBenchInputs, segmentKey, type BenchSegment } from "./inputs.js";
+import { donorPoolHash, loadBenchInputs, segmentKey, type BenchSegment } from "./inputs.js";
 import { generateMutations, PLANTED_KINDS, type FlagTarget, type Mutation, type MutationKind } from "./mutations.js";
 import { renderBenchConsole, renderBenchHtml } from "./report.js";
 import { aggregateUsage, type CaseUsage, type VariantUsage } from "./usage.js";
@@ -24,6 +24,13 @@ import { scoreVerifier, type VerifierCase, type VerifierVariantScore } from "./v
 
 export const BENCH_AGENTS = ["categorizer", "verifier"] as const;
 export type BenchAgent = (typeof BENCH_AGENTS)[number];
+
+/**
+ * Bumped whenever a stored report's shape changes in a way that would make rescoring an older
+ * report silently wrong (a missing field scoring as 0% rather than failing loudly). `rescore`
+ * refuses any file whose version does not match.
+ */
+export const BENCH_SCHEMA_VERSION = 2;
 
 export interface BenchOptions {
   agent: BenchAgent;
@@ -66,12 +73,17 @@ export interface BenchPlan extends BenchOptions {
   skipped: string[];
   truthErrors: string[];
   jobs: Job[];
+  /** sha256 of the segments a planted extra-ingredient could be drawn from; null for the categorizer, which plants nothing. */
+  donorPoolHash: string | null;
 }
 
 interface ResultBase {
+  schemaVersion: number;
   /** sha256 of the agent's prompt file and of the vocabulary: two reports are comparable only when these match. */
   promptsHash: string;
   vocabHash: string;
+  /** sha256 of the donor pool (see BenchPlan.donorPoolHash): planted errors are comparable across reports only when this also matches. */
+  donorPoolHash: string | null;
   startedAt: string;
   finishedAt: string;
   repeat: number;
@@ -140,7 +152,7 @@ export async function planBench(opts: BenchOptions, deps: Pick<BenchDeps, "confi
       );
     }
   }
-  return { ...opts, segments, skipped, truthErrors, jobs };
+  return { ...opts, segments, skipped, truthErrors, jobs, donorPoolHash: opts.agent === "verifier" ? donorPoolHash(inputs) : null };
 }
 
 export function planSummary(plan: BenchPlan): string {
@@ -221,7 +233,8 @@ export async function executeBench(plan: BenchPlan, deps: BenchDeps, onProgress?
 
   const base = (job: Job) => ({ variant: job.variant.id, repeat: job.repeat, videoId: job.input.videoId, segmentIndex: job.input.segmentIndex });
   const common = () => ({
-    promptsHash, vocabHash, startedAt, finishedAt: new Date().toISOString(), repeat: plan.repeat, variants: plan.variants,
+    schemaVersion: BENCH_SCHEMA_VERSION, promptsHash, vocabHash, donorPoolHash: plan.donorPoolHash,
+    startedAt, finishedAt: new Date().toISOString(), repeat: plan.repeat, variants: plan.variants,
     segments: plan.segments, skipped: plan.skipped, truthErrors: plan.truthErrors, usage: {},
   });
 
@@ -251,15 +264,35 @@ export async function executeBench(plan: BenchPlan, deps: BenchDeps, onProgress?
 }
 
 /**
+ * Guards `rescore` against a shape it cannot safely re-score: a missing field would otherwise
+ * either crash deep inside scoring or, worse, silently score as 0%/undefined instead of failing.
+ */
+function assertRescorable(raw: unknown, file: string): asserts raw is BenchResult {
+  const r = raw as (Partial<BenchResult> & { cases?: Array<Record<string, unknown>> }) | null;
+  if (!r || !(BENCH_AGENTS as readonly string[]).includes(r.agent as string) || !Array.isArray(r.cases) || !Array.isArray(r.variants) || !Array.isArray(r.segments)) {
+    throw new Error(`${file} is not a bench report (expected agent, variants, segments and cases)`);
+  }
+  if (r.schemaVersion !== BENCH_SCHEMA_VERSION) {
+    throw new Error(
+      `${file} is schema version ${r.schemaVersion ?? "1 (before usage/draft/rawCuisine were stored)"}; this build only rescores version ${BENCH_SCHEMA_VERSION} reports. Re-run the bench to get one.`,
+    );
+  }
+  for (const c of r.cases) {
+    const where = `variant ${c.variant}, ${c.videoId}#${c.segmentIndex} repeat ${c.repeat}`;
+    if (c.usage === undefined) throw new Error(`${file}: case has no stored usage, cannot rescore (${where})`);
+    if (r.agent === "verifier" && c.draft === undefined) throw new Error(`${file}: verifier case has no stored draft, cannot rescore (${where})`);
+    if (r.agent === "categorizer" && c.ok === true && c.rawCuisine === undefined) throw new Error(`${file}: categorizer case has no stored rawCuisine, cannot rescore (${where})`);
+  }
+}
+
+/**
  * `kambuz bench rescore <json>`: re-scores a saved report with the current scoring code.
  * Reads only the file; no client, no call. Writes <json stem>.rescored.html beside it.
  */
 export async function rescoreCommand(file: string, log: (line: string) => void): Promise<{ result: BenchResult; html: string }> {
-  const raw = JSON.parse(await readFile(file, "utf8")) as Partial<BenchResult>;
-  if (!raw || !(BENCH_AGENTS as readonly string[]).includes(raw.agent as string) || !Array.isArray(raw.cases) || !Array.isArray(raw.variants) || !Array.isArray(raw.segments)) {
-    throw new Error(`${file} is not a bench report (expected agent, variants, segments and cases)`);
-  }
-  const result = rescoreResult(raw as BenchResult);
+  const raw: unknown = JSON.parse(await readFile(file, "utf8"));
+  assertRescorable(raw, file);
+  const result = rescoreResult(raw);
   const html = file.replace(/\.json$/, "") + ".rescored.html";
   await writeFile(html, renderBenchHtml(result));
   log(renderBenchConsole(result));

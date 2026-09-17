@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
@@ -17,6 +18,16 @@ const CachedCategorySchema = z.object({ category: z.string() });
 
 export function segmentKey(s: { videoId: string; segmentIndex: number }): string {
   return `${s.videoId}#${s.segmentIndex}`;
+}
+
+/**
+ * sha256 of the sorted `videoId#segmentIndex:category` rows of the segments a verifier bench run
+ * could draw a planted extra-ingredient donor from. Two reports plant comparable errors only when
+ * this matches; it is stored so that can be checked by eye, not compared automatically.
+ */
+export function donorPoolHash(segments: readonly BenchSegment[]): string {
+  const rows = segments.map((s) => `${segmentKey(s)}:${s.category ?? ""}`).sort();
+  return createHash("sha256").update(rows.join("\n")).digest("hex");
 }
 
 type Read<T> = { value: T } | { missing: true } | { error: string };

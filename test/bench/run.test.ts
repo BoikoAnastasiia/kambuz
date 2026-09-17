@@ -5,7 +5,8 @@ import path from "node:path";
 import { buildConfig, type Config } from "../../src/config.js";
 import type { LlmClient, StructuredCall } from "../../src/llm/client.js";
 import type { UsageLedger } from "../../src/llm/usage.js";
-import { benchCommand, rescoreCommand, type BenchDeps } from "../../src/bench/run.js";
+import { benchCommand, BENCH_SCHEMA_VERSION, rescoreCommand, type BenchDeps } from "../../src/bench/run.js";
+import { donorPoolHash } from "../../src/bench/inputs.js";
 import { parseVariants } from "../../src/bench/variants.js";
 import { makeCache, vocab, lasagnaDraft, soupDraft, lasagnaSegment, soupSegment } from "./fixtures.js";
 
@@ -149,6 +150,9 @@ describe("benchCommand categorizer", () => {
     const json = JSON.parse(await readFile(out.files!.json, "utf8"));
     expect(json.promptsHash).toMatch(/^[0-9a-f]{64}$/);
     expect(json.vocabHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(json.schemaVersion).toBe(2);
+    // the categorizer plants nothing, so there is no donor pool to hash
+    expect(json.donorPoolHash).toBeNull();
     expect(json.cases.find((c: any) => c.variant === "claude-haiku-4-5" && c.ok)).toMatchObject({ rawCuisine: "other", usage: { model: "claude-haiku-4-5", calls: 1, input: 100, output: 10 } });
     expect(path.basename(out.files!.json)).toMatch(/^bench-categorizer-.+\.json$/);
     expect(json.cases).toHaveLength(12);
@@ -219,9 +223,14 @@ describe("benchCommand verifier", () => {
     expect(html).toContain("claude-sonnet-5 (default effort: high)");
     expect(html).toMatch(/≥\$0\.\d+/);
 
+    // the donor pool (v1#0 pasta, v1#1 no category) is recorded so two reports' planted errors can be compared by eye
+    expect(html).toMatch(new RegExp(`donor pool ${donorPoolHash([{ videoId: "v1", segmentIndex: 0, category: "pasta" } as any, { videoId: "v1", segmentIndex: 1, category: null } as any]).slice(0, 12)}`));
+
     // everything needed to re-score is in the JSON: drafts, verifier output, per-case usage
     const saved = JSON.parse(await readFile(out.files!.json, "utf8"));
-    expect(saved.cases.find((c: any) => c.mutation === "unit-swap").draft.ingredients.some((i: any) => i.unit === "ml")).toBe(true);
+    expect(saved.schemaVersion).toBe(BENCH_SCHEMA_VERSION);
+    expect(saved.donorPoolHash).toBe(donorPoolHash([{ videoId: "v1", segmentIndex: 0, category: "pasta" } as any, { videoId: "v1", segmentIndex: 1, category: null } as any]));
+    expect(saved.cases.find((c: any) => c.mutation === "unit-swap").draft.ingredients.some((i: any) => i.unit === "kg")).toBe(true);
     expect(saved.cases.find((c: any) => c.ok).usage).toMatchObject({ calls: 1, input: 100, output: 10 });
   });
 
@@ -245,5 +254,33 @@ describe("benchCommand verifier", () => {
     const file = path.join(config.paths.eval, "not-a-report.json");
     await writeFile(file, JSON.stringify({ hello: 1 }));
     await expect(rescoreCommand(file, () => {})).rejects.toThrow(/not a bench report/);
+  });
+
+  it("refuses a report with an unknown or missing schema version rather than scoring it wrong", async () => {
+    const config = await setup([]);
+    const shape = { agent: "verifier", variants: [], segments: [], cases: [] };
+    const legacy = path.join(config.paths.eval, "legacy.json"); // pre-versioning report: no schemaVersion at all
+    await writeFile(legacy, JSON.stringify(shape));
+    await expect(rescoreCommand(legacy, () => {})).rejects.toThrow(/schema version/);
+
+    const future = path.join(config.paths.eval, "future.json");
+    await writeFile(future, JSON.stringify({ ...shape, schemaVersion: 99 }));
+    await expect(rescoreCommand(future, () => {})).rejects.toThrow(/schema version/);
+  });
+
+  it("refuses a report whose cases are missing usage, draft or rawCuisine", async () => {
+    const config = await setup([]);
+    const usage = { model: "m", calls: 1, input: 1, output: 1, costUsd: 0, unbilled: 0 };
+    const base = { schemaVersion: BENCH_SCHEMA_VERSION, variants: [{ id: "v", model: "m" }], segments: [] };
+    const write = (name: string, body: unknown) => writeFile(path.join(config.paths.eval, name), JSON.stringify(body));
+
+    await write("no-usage.json", { ...base, agent: "verifier", cases: [{ variant: "v", repeat: 0, videoId: "v1", segmentIndex: 0, ok: true, draft: soupDraft }] });
+    await expect(rescoreCommand(path.join(config.paths.eval, "no-usage.json"), () => {})).rejects.toThrow(/no stored usage/);
+
+    await write("no-draft.json", { ...base, agent: "verifier", cases: [{ variant: "v", repeat: 0, videoId: "v1", segmentIndex: 0, ok: true, usage }] });
+    await expect(rescoreCommand(path.join(config.paths.eval, "no-draft.json"), () => {})).rejects.toThrow(/no stored draft/);
+
+    await write("no-rawcuisine.json", { ...base, agent: "categorizer", cases: [{ variant: "v", repeat: 0, videoId: "v1", segmentIndex: 0, ok: true, usage, output: {} }] });
+    await expect(rescoreCommand(path.join(config.paths.eval, "no-rawcuisine.json"), () => {})).rejects.toThrow(/no stored rawCuisine/);
   });
 });
