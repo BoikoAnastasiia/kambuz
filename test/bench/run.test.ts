@@ -192,7 +192,8 @@ describe("benchCommand verifier", () => {
     for (const kind of ["extra-ingredient", "quantity-x1.5", "unit-swap", "changed-step-number", "extra-step"] as const) {
       expect(sonnet.detection[kind].detection.rate).toBe(1);
     }
-    expect(sonnet.falsePositives.ingredients).toMatchObject({ hits: 0, total: 2 });
+    // лук, фарш, соль and картошка: unknown-provenance ingredients are presence-checked too
+    expect(sonnet.falsePositives.ingredients).toMatchObject({ hits: 0, total: 4 });
 
     // omitting the planted entries gets them flagged by flagsFromVerification, but is not detection
     const haiku = by("claude-haiku-4-5");
@@ -201,7 +202,7 @@ describe("benchCommand verifier", () => {
     // flagging everything: every addition caught, every clean item a false positive, modified items pre-flagged
     const opus = by("claude-opus-5");
     expect(opus.overall).toMatchObject({ rejected: 4, excluded: 3, detection: { hits: 4, total: 4 } });
-    expect(opus.falsePositives.ingredients).toMatchObject({ hits: 2, total: 2, rate: 1 });
+    expect(opus.falsePositives.ingredients).toMatchObject({ hits: 4, total: 4, rate: 1 });
     expect(opus.falsePositives.steps).toMatchObject({ hits: 3, total: 3, rate: 1 });
 
     const failing = by("claude-haiku-4-5:low");

@@ -24,9 +24,12 @@ export function normalizeName(s: string): string {
 export function flagsFromVerification(draft: DraftRecipe, v: Verification): RecipeFlag[] {
   const flags: RecipeFlag[] = [];
   for (const ing of draft.ingredients) {
-    if (ing.provenance === "unknown") continue;
+    // Presence is checked for every ingredient. An unknown-provenance one has no amount to
+    // check, but an invented ingredient without an amount is still invented.
     const entry = v.ingredients.find((e) => normalizeName(e.rawName) === normalizeName(ing.rawName));
-    if (!entry || !entry.supported) flags.push({ kind: "ingredient", ref: ing.rawName, reason: "quantity or presence not supported by transcript" });
+    if (entry?.supported) continue;
+    const reason = ing.provenance === "unknown" ? "presence not found in transcript" : "quantity or presence not supported by transcript";
+    flags.push({ kind: "ingredient", ref: ing.rawName, reason });
   }
   for (const step of draft.steps) {
     // A step the verifier said nothing about is unverified, which is not the same as

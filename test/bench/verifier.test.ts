@@ -80,7 +80,7 @@ describe("scoreVerifier", () => {
 
   it("reports false positives on clean drafts and noise against the same repeat's clean run", () => {
     const a = by("a");
-    expect(a.falsePositives.ingredients).toMatchObject({ hits: 1, total: 4 });
+    expect(a.falsePositives.ingredients).toMatchObject({ hits: 1, total: 6 });
     expect(a.falsePositives.steps).toMatchObject({ hits: 1, total: 4 });
     expect(a.cleanFlagsMean).toBe(1);
     // noise: r0 extra-ingredient 0, quantity 1 (лук), step-number 0, extra-step 0; r1 extra-ingredient 0
@@ -99,7 +99,8 @@ describe("scoreVerifier", () => {
 
   it("makes a flag-everything variant's false-positive rate visible", () => {
     const c = by("c");
-    expect(c.falsePositives.ingredients).toMatchObject({ hits: 2, total: 2, rate: 1 });
+    // unknown-provenance соль is presence-checked too
+    expect(c.falsePositives.ingredients).toMatchObject({ hits: 3, total: 3, rate: 1 });
     expect(c.falsePositives.steps).toMatchObject({ hits: 2, total: 2, rate: 1 });
   });
 });

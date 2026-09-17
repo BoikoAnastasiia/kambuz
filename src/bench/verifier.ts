@@ -55,7 +55,7 @@ export interface VerifierVariantScore {
   errors: number;
   detection: Record<PlantedKind, KindScore>;
   overall: KindScore;
-  /** On clean drafts: share of stated/inferred ingredients, and of steps, that got flagged. */
+  /** On clean drafts: share of ingredients, and of steps, that got flagged. */
   falsePositives: { ingredients: Proportion; steps: Proportion };
   /** Mean number of flags on the unmodified draft. */
   cleanFlagsMean: number | null;
@@ -102,7 +102,7 @@ export function scoreVerifier(cases: VerifierCase[], variants: string[]): Verifi
     for (const c of cleanOk) {
       const flags = flagsOf.get(c)!;
       ingFlagged += flags.filter((f) => f.kind === "ingredient").length;
-      ingTotal += c.draft.ingredients.filter((i) => i.provenance !== "unknown").length;
+      ingTotal += c.draft.ingredients.length;
       stepFlagged += flags.filter((f) => f.kind === "step").length;
       stepTotal += c.draft.steps.length;
     }

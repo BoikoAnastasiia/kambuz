@@ -130,8 +130,12 @@ Input: the segment's `raw_text` and the `DraftRecipe`.
 
 Output: `Verification`:
 
-- For every ingredient with provenance `inferred` or `stated`: the supporting
-  transcript quote, or a flag `unsupported`.
+- For every ingredient: the supporting transcript quote, or a flag
+  `unsupported`. Presence is always checked; the quantity is checked too when
+  provenance is `inferred` or `stated`. An `unknown`-provenance ingredient with
+  no supporting quote (or no verifier entry at all) is flagged as "presence
+  not found in transcript" — an invented ingredient without an amount is still
+  invented.
 - For every step: the supporting quote, or a flag.
 - `confidence` — overall 0–1.
 

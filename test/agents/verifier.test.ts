@@ -16,11 +16,12 @@ const draft: DraftRecipe = {
 const segment: ScoutSegment = { workingName: "лазанья", start: 0, end: 100, rawText: "нарежем кубиком лук добавляем фарш", cleanText: "" };
 
 describe("flagsFromVerification", () => {
-  it("flags unsupported stated/inferred ingredients and steps, never unknown ones", () => {
+  it("flags unsupported stated/inferred ingredients and steps", () => {
     const flags = flagsFromVerification(draft, {
       ingredients: [
         { rawName: "лук", quote: "нарежем кубиком лук", supported: true },
         { rawName: "фарш", quote: null, supported: false },
+        { rawName: "соль", quote: "соль", supported: true },
       ],
       steps: [{ order: 1, quote: "нарежем", supported: true }, { order: 2, quote: null, supported: false }],
       confidence: 0.7,
@@ -31,9 +32,35 @@ describe("flagsFromVerification", () => {
     ]);
   });
 
+  it("flags an unknown-provenance ingredient the verifier rejects: presence is always checked", () => {
+    const flags = flagsFromVerification(draft, {
+      ingredients: [
+        { rawName: "лук", quote: "лук", supported: true },
+        { rawName: "фарш", quote: "фарш", supported: true },
+        { rawName: "соль", quote: null, supported: false },
+      ],
+      steps: [{ order: 1, quote: "нарежем", supported: true }, { order: 2, quote: "обжарить", supported: true }],
+      confidence: 0.7,
+    });
+    expect(flags).toEqual([{ kind: "ingredient", ref: "соль", reason: "presence not found in transcript" }]);
+  });
+
+  it("flags an unknown-provenance ingredient missing from the verification", () => {
+    const flags = flagsFromVerification(draft, {
+      ingredients: [
+        { rawName: "лук", quote: "лук", supported: true },
+        { rawName: "фарш", quote: "фарш", supported: true },
+      ],
+      steps: [{ order: 1, quote: "нарежем", supported: true }, { order: 2, quote: "обжарить", supported: true }],
+      confidence: 0.7,
+    });
+    expect(flags).toEqual([{ kind: "ingredient", ref: "соль", reason: "presence not found in transcript" }]);
+  });
+
   it("flags a stated/inferred ingredient entirely missing from v.ingredients", () => {
     const flags = flagsFromVerification(draft, {
-      ingredients: [{ rawName: "лук", quote: "нарежем кубиком лук", supported: true }],
+      ingredients: [
+        { rawName: "соль", quote: "соль", supported: true },{ rawName: "лук", quote: "нарежем кубиком лук", supported: true }],
       steps: [{ order: 1, quote: "нарежем", supported: true }, { order: 2, quote: "обжарить", supported: true }],
       confidence: 0.7,
     });
@@ -46,6 +73,7 @@ describe("flagsFromVerification", () => {
     // A step the verifier never reported on is unverified, not verified-good.
     const flags = flagsFromVerification(draft, {
       ingredients: [
+        { rawName: "соль", quote: "соль", supported: true },
         { rawName: "лук", quote: "нарежем кубиком лук", supported: true },
         { rawName: "фарш", quote: "фарш", supported: true },
       ],
@@ -58,6 +86,7 @@ describe("flagsFromVerification", () => {
   it("matches ingredient rawName case- and whitespace-insensitively across independent LLM outputs", () => {
     const flags = flagsFromVerification(draft, {
       ingredients: [
+        { rawName: "соль", quote: "соль", supported: true },
         { rawName: " Лук ", quote: "нарежем кубиком лук", supported: true },
         { rawName: "фарш", quote: "фарш", supported: true },
       ],
