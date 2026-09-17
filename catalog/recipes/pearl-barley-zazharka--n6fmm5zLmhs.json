@@ -1,0 +1,128 @@
+{
+  "id": "pearl-barley-zazharka--n6fmm5zLmhs",
+  "nameRu": "Перловка с зажаркой",
+  "nameEn": "Pearl barley with sautéed vegetables",
+  "dishKey": "pearl-barley-zazharka",
+  "cuisine": "russian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "side",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 60,
+  "ingredients": [
+    {
+      "ingredient": null,
+      "rawName": "перловка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Pearl barley (перловка) has no matching id in the vocabulary; amount never stated."
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чеснок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Chef says he will peel garlic but never states how much."
+    },
+    {
+      "ingredient": "potato",
+      "rawName": "картошка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Chef says he will peel potatoes but never states how much."
+    },
+    {
+      "ingredient": "water",
+      "rawName": "вода",
+      "quantity": null,
+      "unit": null,
+      "provenance": "inferred",
+      "note": "Chef states ratio of water to barley as 1:2, but since barley amount is unknown, absolute water quantity cannot be determined."
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Начистить чеснок.",
+      "timestamp": 1496
+    },
+    {
+      "order": 2,
+      "text": "Начистить картошку.",
+      "timestamp": 1501
+    },
+    {
+      "order": 3,
+      "text": "Промыть перловку и залить водой в пропорции один к двум.",
+      "timestamp": 1514
+    },
+    {
+      "order": 4,
+      "text": "Поставить кастрюлю на плиту, накрыть крышкой.",
+      "timestamp": 1524
+    },
+    {
+      "order": 5,
+      "text": "После закипания убавить огонь до минимума.",
+      "timestamp": 1527
+    },
+    {
+      "order": 6,
+      "text": "Варить перловку, пока вода не выкипит.",
+      "timestamp": 1529
+    },
+    {
+      "order": 7,
+      "text": "Включить духовку.",
+      "timestamp": 1536
+    },
+    {
+      "order": 8,
+      "text": "Приготовить зажарку поэтапно.",
+      "timestamp": 1544
+    },
+    {
+      "order": 9,
+      "text": "Достать перловку.",
+      "timestamp": 1565
+    }
+  ],
+  "flags": [
+    {
+      "kind": "step",
+      "ref": "3",
+      "reason": "action not found in transcript"
+    },
+    {
+      "kind": "step",
+      "ref": "9",
+      "reason": "action not found in transcript"
+    }
+  ],
+  "completeness": 0.5450000000000002,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1493,
+    "segmentEnd": 1568,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-17T11:50:10.326Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

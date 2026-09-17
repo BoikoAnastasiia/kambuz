@@ -1,0 +1,209 @@
+{
+  "id": "eggs-benedict--n6fmm5zLmhs",
+  "nameRu": "Яйца Бенедикт",
+  "nameEn": "Eggs Benedict",
+  "dishKey": "eggs-benedict",
+  "cuisine": "french",
+  "mealTypes": [
+    "breakfast"
+  ],
+  "category": "breakfast-dish",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 30,
+  "totalMinutes": 40,
+  "ingredients": [
+    {
+      "ingredient": "butter",
+      "rawName": "сливочное масло",
+      "quantity": 250,
+      "unit": "g",
+      "provenance": "stated",
+      "note": "Изначально упомянуто 50 г для растапливания, позже уточнено общее количество 250 г для соуса (на желтки)."
+    },
+    {
+      "ingredient": "egg",
+      "rawName": "желтки",
+      "quantity": 5,
+      "unit": "pc",
+      "provenance": "stated",
+      "note": "Использованы только желтки для голландского соуса, добавлено 5 штук так как они мелкие."
+    },
+    {
+      "ingredient": "water",
+      "rawName": "вода",
+      "quantity": 4,
+      "unit": "tbsp",
+      "provenance": "stated",
+      "note": "По одной столовой ложке воды на каждый желток, всего 4 ст.л."
+    },
+    {
+      "ingredient": "egg",
+      "rawName": "яйца",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Целые яйца для яиц пашот, количество не указано."
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Соль добавлена и в соус, и в воду для варки яиц, количество не указано."
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Добавлен в соус, количество не указано."
+    },
+    {
+      "ingredient": "lemon",
+      "rawName": "сок половины лимона",
+      "quantity": 0.5,
+      "unit": "pc",
+      "provenance": "stated",
+      "note": "Использован сок половины лимона в соусе."
+    },
+    {
+      "ingredient": "vinegar",
+      "rawName": "уксус",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Добавлено немного уксуса в воду для варки яиц пашот, точное количество не указано."
+    },
+    {
+      "ingredient": "bacon",
+      "rawName": "бекон",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Бекон запекается в духовке вместе с тостами, количество не указано."
+    },
+    {
+      "ingredient": "bread",
+      "rawName": "тосты",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Хлеб для тостов, количество не указано."
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Положить сливочное масло в кастрюлю и поставить на плиту растапливаться.",
+      "timestamp": 87
+    },
+    {
+      "order": 2,
+      "text": "Поставить бекон и тосты в духовку запекаться.",
+      "timestamp": 121
+    },
+    {
+      "order": 3,
+      "text": "Разложить тосты и бекон в духовке, следить, чтобы не передержать до румяной корочки.",
+      "timestamp": 196
+    },
+    {
+      "order": 4,
+      "text": "Взять желтки для голландского соуса (примерно на 250 г масла).",
+      "timestamp": 291
+    },
+    {
+      "order": 5,
+      "text": "Добавить пять мелких желтков в отдельную ёмкость.",
+      "timestamp": 313
+    },
+    {
+      "order": 6,
+      "text": "Добавить по одной столовой ложке воды на каждый желток (всего четыре ложки).",
+      "timestamp": 317
+    },
+    {
+      "order": 7,
+      "text": "Взять венчик и поставить смесь желтков на плиту.",
+      "timestamp": 349
+    },
+    {
+      "order": 8,
+      "text": "Хорошо помешивая, прогреть смесь, не допуская температуры выше 60°C.",
+      "timestamp": 369
+    },
+    {
+      "order": 9,
+      "text": "Если рука не выдерживает жар, снять кастрюлю с плиты и продолжать мешать до загустения соуса.",
+      "timestamp": 385
+    },
+    {
+      "order": 10,
+      "text": "Отставить соус в сторону.",
+      "timestamp": 464
+    },
+    {
+      "order": 11,
+      "text": "Убрать пенку с растопленного сливочного масла.",
+      "timestamp": 472
+    },
+    {
+      "order": 12,
+      "text": "Тонкой струйкой влить растопленное масло в желтковую смесь, постоянно перемешивая.",
+      "timestamp": 485
+    },
+    {
+      "order": 13,
+      "text": "Добавить соль, перец и сок половины лимона в соус.",
+      "timestamp": 545
+    },
+    {
+      "order": 14,
+      "text": "Приступить к приготовлению яиц пашот.",
+      "timestamp": 628
+    },
+    {
+      "order": 15,
+      "text": "В кипящую воду добавить соль и немного уксуса.",
+      "timestamp": 631
+    },
+    {
+      "order": 16,
+      "text": "Сделать воронку в воде, опустить яйца и варить не более трёх минут для жидкого желтка.",
+      "timestamp": 645
+    },
+    {
+      "order": 17,
+      "text": "Выложить яйца на бумажное полотенце, чтобы стекла лишняя влага.",
+      "timestamp": 655
+    },
+    {
+      "order": 18,
+      "text": "Собрать блюдо: тост, бекон, яйцо пашот и голландский соус.",
+      "timestamp": 713
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9400000000000001,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 66,
+    "segmentEnd": 737,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-17T11:50:10.325Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

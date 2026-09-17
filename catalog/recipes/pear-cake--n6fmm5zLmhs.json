@@ -1,0 +1,196 @@
+{
+  "id": "pear-cake--n6fmm5zLmhs",
+  "nameRu": "Грушевый кекс",
+  "nameEn": "Pear cake",
+  "dishKey": "pear-cake",
+  "cuisine": "other",
+  "mealTypes": [
+    "breakfast"
+  ],
+  "category": "dessert",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 65,
+  "ingredients": [
+    {
+      "ingredient": "sugar",
+      "rawName": "сахар",
+      "quantity": 300,
+      "unit": "g",
+      "provenance": "stated",
+      "note": null
+    },
+    {
+      "ingredient": "butter",
+      "rawName": "сливочное масло",
+      "quantity": 250,
+      "unit": "g",
+      "provenance": "stated",
+      "note": "used for cake batter, melted/mixed with sugar"
+    },
+    {
+      "ingredient": "egg",
+      "rawName": "яйца",
+      "quantity": 4,
+      "unit": "pc",
+      "provenance": "stated",
+      "note": null
+    },
+    {
+      "ingredient": "milk",
+      "rawName": "молоко",
+      "quantity": 250,
+      "unit": "ml",
+      "provenance": "stated",
+      "note": null
+    },
+    {
+      "ingredient": "flour",
+      "rawName": "мука",
+      "quantity": 500,
+      "unit": "g",
+      "provenance": "stated",
+      "note": "полкило муки"
+    },
+    {
+      "ingredient": null,
+      "rawName": "разрыхлитель",
+      "quantity": 2,
+      "unit": "tsp",
+      "provenance": "stated",
+      "note": "not in vocabulary list"
+    },
+    {
+      "ingredient": null,
+      "rawName": "корица",
+      "quantity": 2,
+      "unit": "tsp",
+      "provenance": "stated",
+      "note": "not in vocabulary list"
+    },
+    {
+      "ingredient": null,
+      "rawName": "груши",
+      "quantity": 4,
+      "unit": "pc",
+      "provenance": "stated",
+      "note": "about 600 g total, pear not in vocabulary"
+    },
+    {
+      "ingredient": null,
+      "rawName": "сахарная пудра",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "used for dusting, no amount stated, not in vocabulary"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать сливочное масло небольшими кубиками для удобства перемешивания с сахаром.",
+      "timestamp": 764
+    },
+    {
+      "order": 2,
+      "text": "Засыпать сахар на нарезанное масло и перемешать венчиком.",
+      "timestamp": 786
+    },
+    {
+      "order": 3,
+      "text": "Разбить четыре яйца и добавить в смесь масла и сахара, хорошо перемешать.",
+      "timestamp": 798
+    },
+    {
+      "order": 4,
+      "text": "Добавить в смесь молоко.",
+      "timestamp": 818
+    },
+    {
+      "order": 5,
+      "text": "Добавить в смесь муку.",
+      "timestamp": 828
+    },
+    {
+      "order": 6,
+      "text": "Добавить в смесь разрыхлитель.",
+      "timestamp": 842
+    },
+    {
+      "order": 7,
+      "text": "Добавить в смесь корицу.",
+      "timestamp": 850
+    },
+    {
+      "order": 8,
+      "text": "Пока смесь перемешивается, нарезать груши мелким кубиком.",
+      "timestamp": 873
+    },
+    {
+      "order": 9,
+      "text": "Взвесить нарезанные груши (около 600 г, четыре штуки).",
+      "timestamp": 881
+    },
+    {
+      "order": 10,
+      "text": "Всыпать нарезанные груши в смесь.",
+      "timestamp": 905
+    },
+    {
+      "order": 11,
+      "text": "Перемешать смесь с грушами лопаткой.",
+      "timestamp": 919
+    },
+    {
+      "order": 12,
+      "text": "Пересыпать тесто в форму для выпечки.",
+      "timestamp": 932
+    },
+    {
+      "order": 13,
+      "text": "Отправить форму с тестом в духовку на 180°C на 45 минут.",
+      "timestamp": 959
+    },
+    {
+      "order": 14,
+      "text": "Достать готовый кекс из духовки, когда сработает таймер.",
+      "timestamp": 1093
+    },
+    {
+      "order": 15,
+      "text": "Проверить готовность кекса зубочисткой (шпажкой).",
+      "timestamp": 1115
+    },
+    {
+      "order": 16,
+      "text": "Убедиться, что кекс готов.",
+      "timestamp": 1140
+    },
+    {
+      "order": 17,
+      "text": "Оставить кекс остывать в форме, затем достать из формы, посыпать сахарной пудрой и подавать.",
+      "timestamp": 1142
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9888888888888889,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 744,
+    "segmentEnd": 1153,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-17T11:50:10.327Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

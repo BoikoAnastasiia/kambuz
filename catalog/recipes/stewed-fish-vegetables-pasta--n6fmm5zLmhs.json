@@ -1,0 +1,167 @@
+{
+  "id": "stewed-fish-vegetables-pasta--n6fmm5zLmhs",
+  "nameRu": "Тушёная рыба с овощами и макаронами",
+  "nameEn": "Stewed fish with vegetables and pasta",
+  "dishKey": "stewed-fish-vegetables-pasta",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "stew",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 25,
+  "totalMinutes": 35,
+  "ingredients": [
+    {
+      "ingredient": "fish-white",
+      "rawName": "рыбка (ред снаппер филированный)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "филе ред снаппера, отнесено к категории белой рыбы"
+    },
+    {
+      "ingredient": "bell-pepper",
+      "rawName": "сладкий перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "zucchini",
+      "rawName": "кабачки",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "tomato",
+      "rawName": "томаты",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "sunflower-oil",
+      "rawName": "маслице",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "налито в кастрюлю для обжаривания овощей и рыбы, поэтому определено как подсолнечное масло"
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чесночок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "spaghetti",
+      "rawName": "макароны",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "отварены отдельно и добавлены к рыбе с овощами"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Достать овощи и рыбу для приготовления блюда.",
+      "timestamp": 1229
+    },
+    {
+      "order": 2,
+      "text": "Подготовить филе рыбы (ред снаппер).",
+      "timestamp": 1235
+    },
+    {
+      "order": 3,
+      "text": "Нарезать рыбу и овощи.",
+      "timestamp": 1288
+    },
+    {
+      "order": 4,
+      "text": "Разогреть подсолнечное масло в кастрюле.",
+      "timestamp": 1306
+    },
+    {
+      "order": 5,
+      "text": "Положить в кастрюлю нарезанные болгарский перец и кабачки.",
+      "timestamp": 1310
+    },
+    {
+      "order": 6,
+      "text": "Обжарить овощи.",
+      "timestamp": 1319
+    },
+    {
+      "order": 7,
+      "text": "Добавить рыбу к овощам.",
+      "timestamp": 1326
+    },
+    {
+      "order": 8,
+      "text": "Добавить томаты.",
+      "timestamp": 1331
+    },
+    {
+      "order": 9,
+      "text": "Отварить макароны.",
+      "timestamp": 1347
+    },
+    {
+      "order": 10,
+      "text": "Приправить солью, перцем и чесноком.",
+      "timestamp": 1363
+    },
+    {
+      "order": 11,
+      "text": "Снять блюдо с огня и смешать с макаронами.",
+      "timestamp": 1368
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1073,
+    "segmentEnd": 1368,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-17T11:50:10.326Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

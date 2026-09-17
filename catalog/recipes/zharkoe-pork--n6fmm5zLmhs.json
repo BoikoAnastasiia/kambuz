@@ -1,0 +1,151 @@
+{
+  "id": "zharkoe-pork--n6fmm5zLmhs",
+  "nameRu": "Жаркое из свинины",
+  "nameEn": "Pork stew",
+  "dishKey": "zharkoe-pork",
+  "cuisine": "russian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "stew",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 60,
+  "ingredients": [
+    {
+      "ingredient": "pork",
+      "rawName": "свинина",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "potato",
+      "rawName": "картофанчик",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "sugar",
+      "rawName": "сахар",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чесночок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "water",
+      "rawName": "водица",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать свинину для жаркого.",
+      "timestamp": 1041
+    },
+    {
+      "order": 2,
+      "text": "Обжарить свинину.",
+      "timestamp": 1043
+    },
+    {
+      "order": 3,
+      "text": "Добавить картофель.",
+      "timestamp": 1153
+    },
+    {
+      "order": 4,
+      "text": "Добавить соль и перец.",
+      "timestamp": 1158
+    },
+    {
+      "order": 5,
+      "text": "Добавить сахар.",
+      "timestamp": 1161
+    },
+    {
+      "order": 6,
+      "text": "Добавить зелень.",
+      "timestamp": 1161
+    },
+    {
+      "order": 7,
+      "text": "Добавить чеснок.",
+      "timestamp": 1164
+    },
+    {
+      "order": 8,
+      "text": "Залить томатным соком.",
+      "timestamp": 1169
+    },
+    {
+      "order": 9,
+      "text": "Добавить воду и оставить вариться.",
+      "timestamp": 1173
+    },
+    {
+      "order": 10,
+      "text": "Попробовать и довести до вкуса.",
+      "timestamp": 1177
+    },
+    {
+      "order": 11,
+      "text": "Жаркое готово.",
+      "timestamp": 1368
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1041,
+    "segmentEnd": 1374,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-17T11:50:10.324Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

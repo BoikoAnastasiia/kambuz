@@ -1,0 +1,167 @@
+{
+  "id": "zharkoye-pork--n6fmm5zLmhs",
+  "nameRu": "Жаркое из свинины",
+  "nameEn": "Pork Zharkoye (Braised Pork Stew)",
+  "dishKey": "zharkoye-pork",
+  "cuisine": "russian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "stew",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 60,
+  "ingredients": [
+    {
+      "ingredient": "pork",
+      "rawName": "свинина",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Chef says he cut pork for zharkoye and fries it, no amount stated"
+    },
+    {
+      "ingredient": "potato",
+      "rawName": "картофанчик",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Diminutive form used, no quantity given"
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Assumed black pepper as no color specified, standard seasoning use"
+    },
+    {
+      "ingredient": "sugar",
+      "rawName": "сахар",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "травушка-муравушка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Joking generic term for greens/herbs, no specific herb identified"
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чесночок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Mentioned twice for emphasis, no quantity stated"
+    },
+    {
+      "ingredient": null,
+      "rawName": "томатный сок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Tomato juice used to fill the stew, no matching vocabulary id for juice form"
+    },
+    {
+      "ingredient": "water",
+      "rawName": "водица",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать свинину для жаркого.",
+      "timestamp": 1041
+    },
+    {
+      "order": 2,
+      "text": "Обжарить свинину.",
+      "timestamp": 1043
+    },
+    {
+      "order": 3,
+      "text": "Добавить картофель в жаркое.",
+      "timestamp": 1153
+    },
+    {
+      "order": 4,
+      "text": "Добавить соль и перец.",
+      "timestamp": 1158
+    },
+    {
+      "order": 5,
+      "text": "Добавить сахар и зелень.",
+      "timestamp": 1161
+    },
+    {
+      "order": 6,
+      "text": "Добавить чеснок.",
+      "timestamp": 1164
+    },
+    {
+      "order": 7,
+      "text": "Залить томатным соком.",
+      "timestamp": 1169
+    },
+    {
+      "order": 8,
+      "text": "Добавить воду и оставить жаркое вариться.",
+      "timestamp": 1173
+    },
+    {
+      "order": 9,
+      "text": "Попробовать и довести до вкуса позже.",
+      "timestamp": 1177
+    },
+    {
+      "order": 10,
+      "text": "Довести жаркое до кипения.",
+      "timestamp": 1226
+    },
+    {
+      "order": 11,
+      "text": "Снять готовое жаркое с плиты.",
+      "timestamp": 1368
+    }
+  ],
+  "flags": [],
+  "completeness": 0.07092000000000001,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1041,
+    "segmentEnd": 1374,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-16T10:39:41.091Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

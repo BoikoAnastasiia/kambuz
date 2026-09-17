@@ -1,0 +1,73 @@
+{
+  "id": "meatballs-cheese--n6fmm5zLmhs",
+  "nameRu": "Тефтели с сыром",
+  "nameEn": "Meatballs with cheese",
+  "dishKey": "meatballs-cheese",
+  "cuisine": "russian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "bake",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": null,
+  "totalMinutes": null,
+  "ingredients": [
+    {
+      "ingredient": "cheese-hard",
+      "rawName": "сыр",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Chef mentions the meatballs are filled with cheese, no quantity or type specified."
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Тефтели уже приготовлены заранее (сделаны накануне)",
+      "timestamp": 1477
+    },
+    {
+      "order": 2,
+      "text": "Включить духовку",
+      "timestamp": 1536
+    },
+    {
+      "order": 3,
+      "text": "Поставить тефтели в духовку",
+      "timestamp": 1536
+    },
+    {
+      "order": 4,
+      "text": "Достать тефтели из духовки",
+      "timestamp": 1568
+    },
+    {
+      "order": 5,
+      "text": "Отдать оставшиеся тефтели в раздачу",
+      "timestamp": 1568
+    }
+  ],
+  "flags": [],
+  "completeness": 0.031560000000000005,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1466,
+    "segmentEnd": 1572,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-16T10:39:44.385Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

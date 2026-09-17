@@ -1,0 +1,157 @@
+{
+  "id": "braised-fish-vegetables-pasta--n6fmm5zLmhs",
+  "nameRu": "Тушёная рыба с овощами и макаронами",
+  "nameEn": "Braised fish with vegetables and pasta",
+  "dishKey": "braised-fish-vegetables-pasta",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "stew",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 30,
+  "ingredients": [
+    {
+      "ingredient": "fish-white",
+      "rawName": "рыба (ред снаппер филированный)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "bell-pepper",
+      "rawName": "сладкий перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "zucchini",
+      "rawName": "кабачки",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "tomato",
+      "rawName": "томаты/помидоры",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чесночок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "spaghetti",
+      "rawName": "макароны/паста",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "маслице",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "тип масла не указан"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Достать рыбу и овощи, начать их нарезку; рыба сегодня — ред снаппер, филированная",
+      "timestamp": 1229
+    },
+    {
+      "order": 2,
+      "text": "Поставить кастрюлю на плиту и налить немного масла",
+      "timestamp": 1306
+    },
+    {
+      "order": 3,
+      "text": "Добавить в кастрюлю нарезанный сладкий перец",
+      "timestamp": 1310
+    },
+    {
+      "order": 4,
+      "text": "Добавить нарезанные кабачки",
+      "timestamp": 1314
+    },
+    {
+      "order": 5,
+      "text": "Обжарить овощи",
+      "timestamp": 1320
+    },
+    {
+      "order": 6,
+      "text": "Добавить рыбу и томаты, приправить",
+      "timestamp": 1326
+    },
+    {
+      "order": 7,
+      "text": "Перемешать и добавить пасту (макароны)",
+      "timestamp": 1347
+    },
+    {
+      "order": 8,
+      "text": "Проверить готовность: овощи альденте, рыба готова",
+      "timestamp": 1357
+    },
+    {
+      "order": 9,
+      "text": "Заправить солью, перцем и чесноком, больше ничего не добавлять",
+      "timestamp": 1363
+    }
+  ],
+  "flags": [],
+  "completeness": 0.0631,
+  "source": {
+    "videoId": "n6fmm5zLmhs",
+    "url": "https://www.youtube.com/watch?v=n6fmm5zLmhs",
+    "videoTitle": "🔥Морской Vlog | Яйца Бенедикт, Самое вкусное жаркое и ТЕФТЕЛИ С СЫРОМ🧀",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1073,
+    "segmentEnd": 1368,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-16T09:53:11.798Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

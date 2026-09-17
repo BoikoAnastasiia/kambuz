@@ -1,0 +1,97 @@
+[
+  {
+    "id": "eggs-benedict--n6fmm5zLmhs",
+    "nameRu": "Яйца Бенедикт",
+    "nameEn": "Eggs Benedict",
+    "dishKey": "eggs-benedict",
+    "cuisine": "french",
+    "mealTypes": [
+      "breakfast"
+    ],
+    "category": "breakfast-dish",
+    "completeness": 0.9400000000000001,
+    "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "oatmeal--n6fmm5zLmhs",
+    "nameRu": "Овсянка",
+    "nameEn": "Oatmeal",
+    "dishKey": "oatmeal",
+    "cuisine": "other",
+    "mealTypes": [
+      "breakfast"
+    ],
+    "category": "breakfast-dish",
+    "completeness": 0.5733333333333334,
+    "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "pear-cake--n6fmm5zLmhs",
+    "nameRu": "Грушевый кекс",
+    "nameEn": "Pear cake",
+    "dishKey": "pear-cake",
+    "cuisine": "other",
+    "mealTypes": [
+      "breakfast"
+    ],
+    "category": "dessert",
+    "completeness": 0.9888888888888889,
+    "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "pearl-barley-zazharka--n6fmm5zLmhs",
+    "nameRu": "Перловка с зажаркой",
+    "nameEn": "Pearl barley with sautéed vegetables",
+    "dishKey": "pearl-barley-zazharka",
+    "cuisine": "russian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "side",
+    "completeness": 0.5450000000000002,
+    "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "sausage-soup--n6fmm5zLmhs",
+    "nameRu": "Суп с колбасками",
+    "nameEn": "Sausage soup",
+    "dishKey": "sausage-soup",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "soup",
+    "completeness": 0.9,
+    "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "stewed-fish-vegetables-pasta--n6fmm5zLmhs",
+    "nameRu": "Тушёная рыба с овощами и макаронами",
+    "nameEn": "Stewed fish with vegetables and pasta",
+    "dishKey": "stewed-fish-vegetables-pasta",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "stew",
+    "completeness": 0.9,
+    "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "zharkoe-pork--n6fmm5zLmhs",
+    "nameRu": "Жаркое из свинины",
+    "nameEn": "Pork stew",
+    "dishKey": "zharkoe-pork",
+    "cuisine": "russian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "stew",
+    "completeness": 0.9,
+    "videoId": "n6fmm5zLmhs"
+  }
+]
