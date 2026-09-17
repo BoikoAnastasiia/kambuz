@@ -70,6 +70,24 @@ and the token-usage table to stdout. The report lists what was written,
 what the verifier flagged, which segments failed, and every ingredient the
 extractor could not map to `vocab/ingredients.json`.
 
+## Reports
+
+Every LLM call is priced from `src/llm/pricing.ts` (per-model $/1M tokens,
+cache reads at 0.1x and cache writes at 1.25x the input rate) and the
+markdown report's token table gains a `$` column and a `Cost:` line.
+
+Each run also writes `reports/<timestamp>.html` — one self-contained page,
+no external requests, light/dark via `prefers-color-scheme` — with cost and
+token tiles, a per-agent cost table, the video and catalog-change tables,
+and a card per recipe written this run: ingredients with their vocab id (or
+"unmapped") and provenance, and steps whose timestamps link straight to
+that point in the source video. Pass `--open` to open it automatically
+(`open` on macOS, `xdg-open` elsewhere) once the run finishes.
+
+Every run also appends one line to `reports/spend.jsonl` (timestamp,
+source, cost, tokens), and the HTML header shows the running total spent
+across every past run.
+
 The cache is keyed by video and stage, so nothing short of deleting a file
 re-fetches captions. To start a video over completely — a corrupt download,
 a changed caption track — remove its directory:

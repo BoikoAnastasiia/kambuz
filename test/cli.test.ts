@@ -16,17 +16,22 @@ describe("apiKeyError", () => {
 describe("parseCliArgs", () => {
   it("parses a bare ingest command", () => {
     const result = parseCliArgs(["ingest", "https://youtu.be/xyz"]);
-    expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: false });
+    expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: false, open: false });
   });
 
   it("parses --force and --only-stage", () => {
     const result = parseCliArgs(["ingest", "https://youtu.be/xyz", "--force", "--only-stage", "extract"]);
-    expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: true, onlyStage: "extract", quiet: false });
+    expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: true, onlyStage: "extract", quiet: false, open: false });
   });
 
   it("parses --quiet", () => {
     const result = parseCliArgs(["ingest", "https://youtu.be/xyz", "--quiet"]);
-    expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: true });
+    expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: true, open: false });
+  });
+
+  it("parses --open", () => {
+    const result = parseCliArgs(["ingest", "https://youtu.be/xyz", "--open"]);
+    expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: false, open: true });
   });
 
   it("parses a bare eval command (no ingestion by default)", () => {
@@ -42,7 +47,7 @@ describe("parseCliArgs", () => {
   it("ignores a bare -- separator, which npm forwards on `npm run eval -- --ingest`", () => {
     // Without this the flag lands in positionals and the run dies with the usage text.
     expect(parseCliArgs(["eval", "--", "--ingest"])).toEqual({ ok: true, command: "eval", force: false, ingest: true, onlyStage: undefined });
-    expect(parseCliArgs(["--", "ingest", "https://youtu.be/xyz"])).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: false });
+    expect(parseCliArgs(["--", "ingest", "https://youtu.be/xyz"])).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: false, open: false });
   });
 
   it("rejects eval with an extra positional argument", () => {

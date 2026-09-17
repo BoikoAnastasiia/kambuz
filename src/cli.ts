@@ -1,28 +1,43 @@
 import "./env.js"; // loads .env — must come before anything that reads process.env
 import { parseArgs } from "node:util";
 import { mkdir, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { config } from "./config.js";
 import { createLlmClient } from "./llm/client.js";
-import { UsageLedger } from "./llm/usage.js";
+import { UsageLedger, formatCost } from "./llm/usage.js";
 import { loadVocab } from "./vocab/load.js";
 import { StageCache } from "./orchestrator/cache.js";
 import { Catalog } from "./orchestrator/catalog.js";
 import { ingest, type IngestOptions } from "./orchestrator/run.js";
-import { renderReport } from "./orchestrator/report.js";
+import { renderReport, totalCostUsd } from "./orchestrator/report.js";
+import { renderReportHtml } from "./orchestrator/report-html.js";
+import { spendEntry, appendSpend, readSpendTotal } from "./cli/spend.js";
 import { runEval, renderEval } from "./eval/run.js";
 import { createProgressRenderer } from "./cli/progress.js";
 
 export const USAGE =
-  "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize] [--quiet]\n" +
+  "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize] [--quiet] [--open]\n" +
   "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
   "  --force               re-run every agent stage (does not re-fetch captions)\n" +
   "  --quiet               (ingest only) don't draw the live per-video progress tree, just print the final report\n" +
+  "  --open                (ingest only) open the HTML report when the run finishes\n" +
   "  --ingest              (eval only) runs the pipeline for each case's video first (calls the API for\n" +
   "                         uncached videos); without it, eval only reads the existing catalog.";
+
+/** Best-effort: opening the report is a convenience, never a reason to fail the run. */
+function openInBrowser(filePath: string): Promise<void> {
+  return new Promise((resolve) => {
+    const cmd = process.platform === "darwin" ? "open" : "xdg-open";
+    execFile(cmd, [filePath], (err) => {
+      if (err) console.error(`warning: could not open ${filePath}: ${err.message}`);
+      resolve();
+    });
+  });
+}
 
 export const MISSING_API_KEY =
   "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.";
@@ -36,7 +51,7 @@ const STAGES = ["scout", "extract", "verify", "categorize"] as const;
 type Stage = (typeof STAGES)[number];
 
 export type ParsedArgs =
-  | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage; quiet: boolean }
+  | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage; quiet: boolean; open: boolean }
   | { ok: true; command: "eval"; force: boolean; ingest: boolean; onlyStage?: Stage }
   | { ok: false; error: string };
 
@@ -46,7 +61,7 @@ function isStage(value: string): value is Stage {
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
-  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean };
+  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean; open?: boolean };
   // npm forwards the "--" of `npm run eval -- --ingest` in some setups; left in place it
   // turns every later flag into a positional and the run dies with the usage text.
   const args = argv.filter((a) => a !== "--");
@@ -59,6 +74,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         "only-stage": { type: "string" },
         ingest: { type: "boolean", default: false },
         quiet: { type: "boolean", default: false },
+        open: { type: "boolean", default: false },
       },
     }));
   } catch (e) {
@@ -78,7 +94,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     if (onlyStageRaw !== undefined && !isStage(onlyStageRaw)) {
       return { ok: false, error: `--only-stage must be one of: ${STAGES.join(", ")} (got "${onlyStageRaw}")` };
     }
-    return { ok: true, command: "ingest", url, force: values.force ?? false, onlyStage: onlyStageRaw, quiet: values.quiet ?? false };
+    return { ok: true, command: "ingest", url, force: values.force ?? false, onlyStage: onlyStageRaw, quiet: values.quiet ?? false, open: values.open ?? false };
   }
 
   if (command === "eval") {
@@ -127,6 +143,7 @@ async function main(): Promise<void> {
     cache: new StageCache(config.paths.cache),
     catalog: new Catalog(config.paths.catalog),
     usageText: () => ledger.toString(),
+    usageRows: () => ledger.rows(),
   };
 
   switch (parsed.command) {
@@ -140,11 +157,30 @@ async function main(): Promise<void> {
       // torn down) before the report prints below.
       const [report] = await Promise.all([ingest(parsed.url, ingestDeps, opts), renderer?.finish() ?? Promise.resolve()]);
       await mkdir(config.paths.reports, { recursive: true });
-      const file = path.join(config.paths.reports, `${report.startedAt.replace(/[:.]/g, "-")}.md`);
+      const stamp = report.startedAt.replace(/[:.]/g, "-");
+      const mdFile = path.join(config.paths.reports, `${stamp}.md`);
+      const htmlFile = path.join(config.paths.reports, `${stamp}.html`);
       const rendered = renderReport(report);
-      await writeFile(file, rendered);
+      await writeFile(mdFile, rendered);
+
+      const spendFile = path.join(config.paths.reports, "spend.jsonl");
+      const entry = spendEntry(report.finishedAt || report.startedAt, parsed.url, report.usageRows);
+      await appendSpend(spendFile, entry);
+      const spendSoFar = await readSpendTotal(spendFile);
+
+      const allRecipes = await deps.catalog.load();
+      const writtenRecipes = allRecipes.filter((r) => report.written.includes(r.id));
+      const html = renderReportHtml(report, writtenRecipes, spendSoFar.totalUsd);
+      await writeFile(htmlFile, html);
+
       console.log(rendered);
-      console.log(`\nreport: ${file}`);
+      console.log(`\nreport: ${mdFile}`);
+      console.log(`html report: ${htmlFile}`);
+      const runCost = totalCostUsd(report.usageRows);
+      const runCalls = report.usageRows.reduce((n, r) => n + r.calls, 0);
+      console.log(`cost ${formatCost(runCost)} · ${runCalls} calls · spent so far ${formatCost(spendSoFar.totalUsd)}`);
+
+      if (parsed.open) await openInBrowser(htmlFile);
       return;
     }
     case "eval": {
