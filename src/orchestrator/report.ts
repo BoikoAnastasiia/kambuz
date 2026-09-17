@@ -1,7 +1,19 @@
+import { formatCost, type UsageRow } from "../llm/usage.js";
+
 export type VideoStatus = "done" | "skipped-no-captions" | "not-recipe" | "error";
+
+/** null when any bucket's cost is unknown (an unpriced model was used somewhere in the run). */
+export function totalCostUsd(rows: UsageRow[]): number | null {
+  let total: number | null = 0;
+  for (const r of rows) {
+    total = total === null || r.costUsd === null ? null : total + r.costUsd;
+  }
+  return total;
+}
 
 export interface RunReport {
   startedAt: string;
+  finishedAt: string;
   url: string;
   videos: { videoId: string; title: string; status: VideoStatus; recipes: number; error?: string }[];
   segmentErrors: { videoId: string; segmentIndex: number; workingName: string; error: string }[];
@@ -15,12 +27,13 @@ export interface RunReport {
   tooThin: { recipeId: string; completeness: number; ingredients: number; steps: number }[];
   minCompleteness: number;
   usage: string;
+  usageRows: UsageRow[];
 }
 
 export function emptyReport(url: string, minCompleteness = 0.3): RunReport {
   return {
-    startedAt: new Date().toISOString(), url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [], superseded: [],
-    unmapped: {}, flags: [], validationErrors: [], tooThin: [], minCompleteness, usage: "",
+    startedAt: new Date().toISOString(), finishedAt: "", url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [], superseded: [],
+    unmapped: {}, flags: [], validationErrors: [], tooThin: [], minCompleteness, usage: "", usageRows: [],
   };
 }
 
@@ -30,6 +43,7 @@ export function renderReport(r: RunReport): string {
     `# Kambuz run ${r.startedAt}`,
     "",
     `Source: ${r.url}`,
+    `Cost: ${formatCost(totalCostUsd(r.usageRows))}`,
     "",
     "## Videos",
     "",

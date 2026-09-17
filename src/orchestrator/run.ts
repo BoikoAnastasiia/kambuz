@@ -1,6 +1,7 @@
 import pLimit from "p-limit";
 import type { Config } from "../config.js";
 import type { LlmClient } from "../llm/client.js";
+import type { UsageRow } from "../llm/usage.js";
 import type { Vocab } from "../vocab/load.js";
 import { validateRecipe } from "../vocab/validate.js";
 import { StageCache } from "./cache.js";
@@ -30,6 +31,7 @@ export interface IngestDeps {
   fetch?: (videoId: string, workDir: string) => Promise<FetchResult>;
   expand?: (url: string) => Promise<string[]>;
   usageText?: () => string;
+  usageRows?: () => UsageRow[];
   onEvent?: (e: IngestEvent) => void;
 }
 
@@ -237,6 +239,8 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
 
   report.videos = rows;
   report.usage = deps.usageText?.() ?? "";
+  report.usageRows = deps.usageRows?.() ?? [];
+  report.finishedAt = new Date().toISOString();
   return report;
 
   // A recipe's identity for re-processing is its segment (same videoId + segmentStart),

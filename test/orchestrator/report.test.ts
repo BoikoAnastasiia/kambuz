@@ -44,4 +44,25 @@ describe("renderReport", () => {
     expect(md).toContain("- superseded by a re-run: 1");
     expect(md).toContain("lasagna-bolognese--v1");
   });
+
+  it("shows the Cost line, summed from usageRows", () => {
+    const r = emptyReport("https://youtu.be/v1");
+    r.usageRows = [
+      { agent: "scout", calls: 1, input: 1_000_000, output: 0, costUsd: 2 },
+      { agent: "extractor", calls: 1, input: 1_000_000, output: 0, costUsd: 5 },
+    ];
+
+    const md = renderReport(r);
+
+    expect(md).toContain("Cost: $7.00");
+  });
+
+  it("shows an unknown Cost as ? when a bucket's model is unpriced", () => {
+    const r = emptyReport("https://youtu.be/v1");
+    r.usageRows = [{ agent: "scout", calls: 1, input: 1_000_000, output: 0, costUsd: null }];
+
+    const md = renderReport(r);
+
+    expect(md).toContain("Cost: ?");
+  });
 });
