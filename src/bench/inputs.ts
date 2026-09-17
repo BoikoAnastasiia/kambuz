@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import type { z } from "zod";
+import { z } from "zod";
 import { DraftRecipeSchema, type DraftRecipe } from "../schemas/recipe.js";
 import { ScoutResultSchema, type ScoutSegment } from "../schemas/scout.js";
 
@@ -9,7 +9,11 @@ export interface BenchSegment {
   segmentIndex: number;
   segment: ScoutSegment;
   draft: DraftRecipe;
+  /** The category from the cached categorize-<i>.json, when there is one; used to pick realistic planted ingredients. */
+  category: string | null;
 }
+
+const CachedCategorySchema = z.object({ category: z.string() });
 
 export function segmentKey(s: { videoId: string; segmentIndex: number }): string {
   return `${s.videoId}#${s.segmentIndex}`;
@@ -55,7 +59,8 @@ export async function loadBenchInputs(cacheRoot: string): Promise<{ segments: Be
       const draft = await readStage(path.join(dir, `extract-${segmentIndex}.json`), DraftRecipeSchema);
       if ("missing" in draft) { skipped.push(`${key}: no extract-${segmentIndex}.json`); continue; }
       if ("error" in draft) { skipped.push(`${key}: unusable extract-${segmentIndex}.json (${draft.error})`); continue; }
-      segments.push({ videoId, segmentIndex, segment, draft: draft.value });
+      const categorized = await readStage(path.join(dir, `categorize-${segmentIndex}.json`), CachedCategorySchema);
+      segments.push({ videoId, segmentIndex, segment, draft: draft.value, category: "value" in categorized ? categorized.value.category : null });
     }
   }
   return { segments, skipped };

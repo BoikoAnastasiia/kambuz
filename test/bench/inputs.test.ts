@@ -13,6 +13,7 @@ describe("loadBenchInputs", () => {
       expect(segments.map((s) => `${s.videoId}#${s.segmentIndex}`)).toEqual(["v1#0", "v1#1"]);
       expect(segments[0].draft).toEqual(lasagnaDraft);
       expect(segments[1].segment).toEqual(soupSegment);
+      expect(segments.map((x) => x.category)).toEqual(["pasta", null]);
       expect(skipped).toEqual(["v2#0: no extract-0.json", "v3: no scout.json"]);
     } finally {
       await rm(root, { recursive: true, force: true });

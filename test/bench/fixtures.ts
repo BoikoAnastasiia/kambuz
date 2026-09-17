@@ -45,7 +45,7 @@ export const lasagnaDraft: DraftRecipe = {
   ],
   steps: [
     { order: 1, text: "Нарезать лук.", timestamp: 30 },
-    { order: 2, text: "Обжарить фарш.", timestamp: 60 },
+    { order: 2, text: "Обжарить 500 г фарша.", timestamp: 60 },
   ],
 };
 
@@ -69,6 +69,7 @@ export async function makeCache(): Promise<string> {
   await write("v1", "scout", { isRecipeVideo: true, segments: [lasagnaSegment, soupSegment] });
   await write("v1", "extract-0", lasagnaDraft);
   await write("v1", "extract-1", soupDraft);
+  await write("v1", "categorize-0", { category: "pasta" });
   await write("v2", "scout", { isRecipeVideo: true, segments: [soupSegment] });
   await mkdir(path.join(root, "v3"), { recursive: true });
   return root;

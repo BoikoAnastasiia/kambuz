@@ -61,15 +61,15 @@ function fakeLlmFactory() {
       }
       // verifier: the strong model supports exactly what the original cached draft contains
       const original = opts.user.includes(lasagnaSegment.rawText) ? lasagnaDraft : soupDraft;
-      const ingredients = [...opts.user.matchAll(/^- (.+) \[(?:stated|inferred|unknown)\] (\S+)/gm)].map(([, rawName, qty]) => ({
+      const ingredients = [...opts.user.matchAll(/^- (.+) \[(?:stated|inferred|unknown)\] (.*)$/gm)].map(([, rawName, amount]) => ({
         rawName,
         quote: null,
-        supported: !strong || original.ingredients.some((i) => i.rawName === rawName && String(i.quantity ?? "?") === qty),
+        supported: !strong || original.ingredients.some((i) => i.rawName === rawName && `${i.quantity ?? "?"} ${i.unit ?? ""}`.trim() === amount),
       }));
-      const steps = [...opts.user.matchAll(/^(\d+)\. /gm)].map(([, order]) => ({
+      const steps = [...opts.user.matchAll(/^(\d+)\. (.*)$/gm)].map(([, order, text]) => ({
         order: Number(order),
         quote: null,
-        supported: !strong || Number(order) <= original.steps.length,
+        supported: !strong || original.steps.some((st) => st.order === Number(order) && st.text === text),
       }));
       return { ingredients, steps, confidence: 0.9 } as T;
     },
@@ -86,8 +86,8 @@ describe("benchCommand without --yes", () => {
     expect(makeLlm).not.toHaveBeenCalled();
     expect(calls).toHaveLength(0);
     expect(out.result).toBeNull();
-    // lasagna: clean + 3 planted; soup: clean + extra-ingredient + extra-step → 7 drafts × 2 variants × 2 repeats
-    expect(lines.join("\n")).toContain("28 calls across 2 variants on 2 segments");
+    // lasagna: clean + 5 planted; soup: clean + extra-ingredient + extra-step → 9 drafts × 2 variants × 2 repeats
+    expect(lines.join("\n")).toContain("36 calls across 2 variants on 2 segments");
     expect(lines.join("\n")).toMatch(/v2#0: no extract-0\.json/);
     expect(lines.join("\n")).toMatch(/--yes/);
     await expect(readdir(config.paths.reports)).rejects.toThrow();
@@ -161,13 +161,15 @@ describe("benchCommand verifier", () => {
     if (r.agent !== "verifier") throw new Error("wrong agent");
     const by = (id: string) => r.scores.find((v) => v.variant === id)!;
     const sonnet = by("claude-sonnet-5");
-    expect(sonnet).toMatchObject({ cases: 7, errors: 0, overallDetection: 1, cleanFlagsMean: 0, noiseMean: 0 });
+    expect(sonnet).toMatchObject({ cases: 9, errors: 0, overallDetection: 1, cleanFlagsMean: 0, noiseMean: 0 });
     expect(sonnet.detection["extra-ingredient"]).toEqual({ detected: 2, total: 2, rate: 1 });
-    expect(sonnet.detection["changed-quantity"]).toEqual({ detected: 1, total: 1, rate: 1 });
+    expect(sonnet.detection["quantity-x1.5"]).toEqual({ detected: 1, total: 1, rate: 1 });
+    expect(sonnet.detection["unit-swap"]).toEqual({ detected: 1, total: 1, rate: 1 });
+    expect(sonnet.detection["changed-step-number"]).toEqual({ detected: 1, total: 1, rate: 1 });
     expect(sonnet.detection["extra-step"]).toEqual({ detected: 2, total: 2, rate: 1 });
-    expect(by("claude-haiku-4-5")).toMatchObject({ cases: 7, overallDetection: 0, cleanFlagsMean: 0, noiseMean: 0 });
-    expect(r.usage["claude-haiku-4-5"].calls).toBe(7);
+    expect(by("claude-haiku-4-5")).toMatchObject({ cases: 9, overallDetection: 0, cleanFlagsMean: 0, noiseMean: 0 });
+    expect(r.usage["claude-haiku-4-5"].calls).toBe(9);
     expect(r.cases.every((c) => !c.ok || Array.isArray(c.verification?.ingredients))).toBe(true);
-    expect(await readFile(out.files!.html, "utf8")).toContain("changed-quantity");
+    expect(await readFile(out.files!.html, "utf8")).toContain("changed-step-number");
   });
 });

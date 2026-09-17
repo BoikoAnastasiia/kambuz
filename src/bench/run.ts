@@ -84,19 +84,20 @@ export function truthFile(config: Config): string {
   return path.join(config.paths.eval, "bench", "categorizer.json");
 }
 
-function describeMutation(original: DraftRecipe, m: Mutation): string {
-  if (m.kind === "clean") return "unmodified draft";
-  if (m.kind === "extra-step") {
-    const step = m.draft.steps.at(-1)!;
-    return `step ${step.order}: ${step.text}`;
+/** A one-line, human-readable account of what was planted, for the plan and the HTML report. */
+export function describeMutation(original: DraftRecipe, m: Mutation): string {
+  if (!m.target) return "unmodified draft";
+  const amount = (q: number | null, unit: string | null) => `${q ?? "?"}${unit ? ` ${unit}` : ""}`;
+  if (m.target.kind === "ingredient") {
+    const index = m.draft.ingredients.findIndex((i) => i.rawName === m.target!.ref);
+    const after = m.draft.ingredients[index];
+    if (index >= original.ingredients.length) return `+ ${after.rawName} ${amount(after.quantity, after.unit)}`;
+    const before = original.ingredients[index];
+    return `${before.rawName}: ${amount(before.quantity, before.unit)} → ${amount(after.quantity, after.unit)}`;
   }
-  if (m.kind === "extra-ingredient") {
-    const ing = m.draft.ingredients.at(-1)!;
-    return `${ing.rawName} ${ing.quantity} ${ing.unit}`;
-  }
-  const index = m.draft.ingredients.findIndex((i) => i.rawName === m.target!.ref);
-  const before = original.ingredients[index];
-  return `${before.rawName}: ${before.quantity} → ${m.draft.ingredients[index].quantity}${before.unit ? ` ${before.unit}` : ""}`;
+  const after = m.draft.steps.find((st) => String(st.order) === m.target!.ref)!;
+  const before = original.steps.find((st) => st.order === after.order);
+  return before ? `step ${after.order}: "${before.text}" → "${after.text}"` : `+ step ${after.order}: ${after.text}`;
 }
 
 /** Reads inputs and labels and lays out every call. Never touches an LLM. */
@@ -124,7 +125,7 @@ export async function planBench(opts: BenchOptions, deps: Pick<BenchDeps, "confi
     }
   } else {
     for (const input of inputs) {
-      const mutations = generateMutations(input.videoId, input.segmentIndex, input.segment, input.draft, deps.vocab);
+      const mutations = generateMutations(input, { vocab: deps.vocab, segments: inputs });
       const described = mutations.map((m) => ({ kind: m.kind, target: m.target, detail: describeMutation(input.draft, m) }));
       segments.push({ videoId: input.videoId, segmentIndex: input.segmentIndex, workingName: input.segment.workingName, mutations: described });
       mutations.forEach((mutation, i) => everyRun(input, { mutation, detail: described[i].detail }));

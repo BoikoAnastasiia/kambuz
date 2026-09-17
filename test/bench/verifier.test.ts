@@ -14,7 +14,7 @@ describe("scoreVerifier", () => {
     // variant a: clean run flags step 2 on segment 0
     c({ variant: "a", mutation: "clean", flags: [step("2")] }),
     c({ variant: "a", mutation: "extra-ingredient", target: { kind: "ingredient", ref: "Корица" }, flags: [step("2"), ing("Корица")] }),
-    c({ variant: "a", mutation: "changed-quantity", target: { kind: "ingredient", ref: "фарш" }, flags: [step("2"), ing("лук")] }),
+    c({ variant: "a", mutation: "quantity-x1.5", target: { kind: "ingredient", ref: "фарш" }, flags: [step("2"), ing("лук")] }),
     c({ variant: "a", mutation: "extra-step", target: { kind: "step", ref: "3" }, flags: [step("3")] }),
     c({ variant: "a", mutation: "clean", segmentIndex: 1, flags: [] }),
     c({ variant: "a", mutation: "extra-step", segmentIndex: 1, target: { kind: "step", ref: "2" }, flags: [step("2")], ms: 150 }),
@@ -28,11 +28,11 @@ describe("scoreVerifier", () => {
   it("scores detection per kind and overall, clean flags and noise", () => {
     const a = scored.find((v) => v.variant === "a")!;
     expect(a.detection["extra-ingredient"]).toEqual({ detected: 1, total: 1, rate: 1 });
-    expect(a.detection["changed-quantity"]).toEqual({ detected: 0, total: 1, rate: 0 });
+    expect(a.detection["quantity-x1.5"]).toEqual({ detected: 0, total: 1, rate: 0 });
     expect(a.detection["extra-step"]).toEqual({ detected: 2, total: 2, rate: 1 });
     expect(a.overallDetection).toBe(0.75);
     expect(a.cleanFlagsMean).toBe(0.5);
-    // noise: step 2 was already flagged on clean; лук on the changed-quantity draft is new → 1 extra over 4 mutated cases
+    // noise: step 2 was already flagged on clean; лук on the quantity-x1.5 draft is new → 1 extra over 4 mutated cases
     expect(a.noiseMean).toBe(0.25);
     expect(a).toMatchObject({ cases: 6, errors: 0, meanLatencyMs: (50 * 5 + 150) / 6 });
   });
