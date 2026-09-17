@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { z } from "zod";
-import type { AgentName, Config } from "../config.js";
+import type { AgentName, Config, Effort } from "../config.js";
 import type { UsageLedger } from "./usage.js";
 
 export type LlmParseReason = "refusal" | "parse" | "truncated";
@@ -33,6 +33,10 @@ export interface StructuredCall<T> {
   user: string;
   schema: z.ZodType<T>;
   maxTokens?: number;
+  /** Overrides config.models[agent] for this call; usage is priced under this model. */
+  model?: string;
+  /** Overrides config.effort[agent] for this call. */
+  effort?: Effort;
 }
 
 export interface LlmClient {
@@ -45,7 +49,9 @@ const REQUEST_TIMEOUT_MS = 20 * 60 * 1000;
 
 export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: Anthropic = new Anthropic()): LlmClient {
   async function once<T>(opts: StructuredCall<T>): Promise<T> {
-    const model = config.models[opts.agent];
+    const model = opts.model ?? config.models[opts.agent];
+    const effort = opts.effort ?? config.effort[opts.agent];
+    const format = zodOutputFormat(opts.schema);
     const maxTokens = opts.maxTokens ?? 16000;
     let response;
     try {
@@ -54,7 +60,8 @@ export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: 
         max_tokens: maxTokens,
         system: opts.system,
         messages: [{ role: "user", content: opts.user }],
-        output_config: { format: zodOutputFormat(opts.schema) },
+        // Without an effort the request is exactly what it was before effort existed.
+        output_config: effort ? { format, effort } : { format },
       }, { timeout: REQUEST_TIMEOUT_MS });
     } catch (e) {
       // The throw carries no message, so this attempt's usage is not knowable.

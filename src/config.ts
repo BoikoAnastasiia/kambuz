@@ -7,11 +7,20 @@ export type AgentName = (typeof AGENT_NAMES)[number];
 
 export { ROOT };
 
+export const EFFORTS = ["low", "medium", "high"] as const;
+export type Effort = (typeof EFFORTS)[number];
+
+export function isEffort(value: string): value is Effort {
+  return (EFFORTS as readonly string[]).includes(value);
+}
+
 export const DEFAULT_CONCURRENCY = 4;
 export const DEFAULT_MIN_COMPLETENESS = 0.3;
 
 export interface Config {
   models: Record<AgentName, string>;
+  /** Thinking effort per agent; an agent missing here gets no effort field in its requests. */
+  effort: Partial<Record<AgentName, Effort>>;
   concurrency: number;
   minCompleteness: number;
   paths: { cache: string; catalog: string; reports: string; vocab: string; prompts: string; eval: string };
@@ -29,12 +38,23 @@ function minCompletenessFrom(raw: string | undefined): number {
   return raw !== undefined && raw.trim() !== "" && Number.isFinite(n) && n >= 0 && n <= 1 ? n : DEFAULT_MIN_COMPLETENESS;
 }
 
+/** KAMBUZ_EFFORT_<AGENT>=low|medium|high; anything else is ignored rather than sent to the API. */
+function effortFrom(env: NodeJS.ProcessEnv): Partial<Record<AgentName, Effort>> {
+  const effort: Partial<Record<AgentName, Effort>> = {};
+  for (const n of AGENT_NAMES) {
+    const raw = env[`KAMBUZ_EFFORT_${n.toUpperCase()}`]?.trim().toLowerCase();
+    if (raw && isEffort(raw)) effort[n] = raw;
+  }
+  return effort;
+}
+
 export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const models = Object.fromEntries(
     AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? env.KAMBUZ_MODEL ?? "claude-sonnet-5"]),
   ) as Record<AgentName, string>;
   return {
     models,
+    effort: effortFrom(env),
     concurrency: concurrencyFrom(env.KAMBUZ_CONCURRENCY),
     minCompleteness: minCompletenessFrom(env.KAMBUZ_MIN_COMPLETENESS),
     paths: {

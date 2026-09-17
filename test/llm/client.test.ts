@@ -84,3 +84,49 @@ describe("callStructured", () => {
     expect(ledger.byAgent().scout.calls).toBe(1);
   });
 });
+
+describe("callStructured model and effort", () => {
+  function ok() {
+    return fakeAnthropic([{ parsed_output: { answer: "ok" }, stop_reason: "end_turn" }]);
+  }
+
+  it("sends exactly the format when no effort is set anywhere", async () => {
+    const { client, parse } = ok();
+    const llm = createLlmClient(buildConfig({}), new UsageLedger(), client);
+    await llm.callStructured({ agent: "verifier", system: "s", user: "u", schema: Out });
+    const body = parse.mock.calls[0][0] as any;
+    expect(Object.keys(body.output_config)).toEqual(["format"]);
+  });
+
+  it("sends effort alongside the format when the call sets it", async () => {
+    const { client, parse } = ok();
+    const llm = createLlmClient(buildConfig({}), new UsageLedger(), client);
+    await llm.callStructured({ agent: "verifier", system: "s", user: "u", schema: Out, effort: "low" });
+    const body = parse.mock.calls[0][0] as any;
+    expect(body.output_config.effort).toBe("low");
+    expect(body.output_config.format).toBeDefined();
+  });
+
+  it("applies the configured effort for the agent when the call has none, and the call's own effort wins", async () => {
+    const config = buildConfig({ KAMBUZ_EFFORT_VERIFIER: "medium" });
+    const a = ok();
+    await createLlmClient(config, new UsageLedger(), a.client).callStructured({ agent: "verifier", system: "s", user: "u", schema: Out });
+    expect((a.parse.mock.calls[0][0] as any).output_config.effort).toBe("medium");
+    const b = ok();
+    await createLlmClient(config, new UsageLedger(), b.client).callStructured({ agent: "verifier", system: "s", user: "u", schema: Out, effort: "high" });
+    expect((b.parse.mock.calls[0][0] as any).output_config.effort).toBe("high");
+    const c = ok();
+    await createLlmClient(config, new UsageLedger(), c.client).callStructured({ agent: "scout", system: "s", user: "u", schema: Out });
+    expect((c.parse.mock.calls[0][0] as any).output_config.effort).toBeUndefined();
+  });
+
+  it("honours a per-call model override and prices usage under that model", async () => {
+    const { client, parse } = ok();
+    const ledger = new UsageLedger();
+    const llm = createLlmClient(buildConfig({}), ledger, client);
+    await llm.callStructured({ agent: "categorizer", system: "s", user: "u", schema: Out, model: "claude-haiku-4-5" });
+    expect((parse.mock.calls[0][0] as any).model).toBe("claude-haiku-4-5");
+    // haiku: 10 in * $1/M + 2 out * $5/M; sonnet would be 10*2 + 2*10 per M
+    expect(ledger.byAgent().categorizer.costUsd).toBeCloseTo((10 * 1 + 2 * 5) / 1_000_000, 12);
+  });
+});

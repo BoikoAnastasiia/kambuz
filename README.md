@@ -115,6 +115,9 @@ it never calls the API — it only reads what is already in `catalog/`.
 - `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-sonnet-5`).
 - `KAMBUZ_MODEL_SCOUT`, `..._EXTRACTOR`, `..._VERIFIER`, `..._CATEGORIZER`,
   `..._JUDGE` — override one agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
+- `KAMBUZ_EFFORT_<AGENT>=low|medium|high` — thinking effort for one agent,
+  e.g. `KAMBUZ_EFFORT_VERIFIER=low`. Unset (or any other value) sends no
+  effort field, which is what every run sent before this setting existed.
 - `KAMBUZ_CONCURRENCY=<n>` — simultaneous LLM calls across the whole run
   (default 4).
 

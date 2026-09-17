@@ -41,3 +41,13 @@ describe("config", () => {
     delete process.env.KAMBUZ_MODEL_SCOUT;
   });
 });
+
+describe("config effort", () => {
+  it("is empty by default", () => {
+    expect(buildConfig({}).effort).toEqual({});
+  });
+  it("reads KAMBUZ_EFFORT_<AGENT> for valid levels and ignores invalid ones", () => {
+    const c = buildConfig({ KAMBUZ_EFFORT_VERIFIER: "low", KAMBUZ_EFFORT_JUDGE: "HIGH ", KAMBUZ_EFFORT_SCOUT: "turbo", KAMBUZ_EFFORT_EXTRACTOR: "" });
+    expect(c.effort).toEqual({ verifier: "low", judge: "high" });
+  });
+});
