@@ -48,6 +48,8 @@ function fakeLlmFactory() {
       calls.push(opts as StructuredCall<unknown>);
       const model = opts.model!;
       if (model.includes("haiku") && opts.effort) throw new Error("400 effort is not supported on this model");
+      // opus pretends one attempt per call failed to parse before succeeding: billed but unrecorded
+      if (model.includes("opus")) ledger.addUnbilled(opts.agent, model);
       ledger.add(opts.agent, model, { input_tokens: 100, output_tokens: 10 });
       const strong = !model.includes("haiku");
       if (opts.agent === "categorizer") {
@@ -95,6 +97,10 @@ describe("benchCommand without --yes", () => {
     expect(lines.join("\n")).toMatch(/v2#0: no extract-0\.json/);
     expect(lines.join("\n")).toMatch(/--yes/);
     expect(lines.join("\n")).toMatch(/--repeat 3 or more is recommended/);
+    const plan = lines.join("\n");
+    expect(plan).toMatch(/rough estimate/);
+    expect(plan).toMatch(/claude-sonnet-5 \(default effort: high\): ~\$\d+\.\d+ \(18 calls/);
+    expect(plan).toMatch(/claude-haiku-4-5: ~\$\d+\.\d+ \(18 calls/);
     await expect(readdir(config.paths.reports)).rejects.toThrow();
   });
 });
@@ -136,7 +142,9 @@ describe("benchCommand categorizer", () => {
     expect(r.usage["claude-sonnet-5"]).toMatchObject({ calls: 4, input: 400, output: 40 });
     expect(r.usage["claude-sonnet-5"].costUsd).toBeCloseTo((4 * (100 * 2 + 10 * 10)) / 1_000_000, 12);
     expect(r.usage["claude-haiku-4-5"].costUsd).toBeCloseTo((4 * (100 * 1 + 10 * 5)) / 1_000_000, 12);
-    expect(r.usage["claude-haiku-4-5:low"]).toMatchObject({ calls: 0, costUsd: 0 });
+    expect(r.usage["claude-haiku-4-5:low"]).toMatchObject({ calls: 0, costUsd: 0, unbilled: 0 });
+    // no successful call: no cost to show, rather than a misleading $0
+    expect(text).toMatch(/claude-haiku-4-5:low .*· — · latency/);
 
     const json = JSON.parse(await readFile(out.files!.json, "utf8"));
     expect(json.promptsHash).toMatch(/^[0-9a-f]{64}$/);
@@ -201,11 +209,14 @@ describe("benchCommand verifier", () => {
     expect(failing.overall).toMatchObject({ errors: 7, detection: { hits: 0, total: 7, rate: 0 } });
 
     expect(r.usage["claude-haiku-4-5"].calls).toBe(9);
+    expect(r.usage["claude-opus-5"]).toMatchObject({ calls: 9, unbilled: 9 });
     expect(r.cases.every((c) => c.draft.ingredients.length > 0)).toBe(true);
     const html = await readFile(out.files!.html, "utf8");
     expect(html).toContain("changed-step-number");
     expect(html).toContain("omitted");
     expect(html).toContain("pre-flagged (excluded)");
+    expect(html).toContain("claude-sonnet-5 (default effort: high)");
+    expect(html).toMatch(/≥\$0\.\d+/);
 
     // everything needed to re-score is in the JSON: drafts, verifier output, per-case usage
     const saved = JSON.parse(await readFile(out.files!.json, "utf8"));

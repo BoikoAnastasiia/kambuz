@@ -14,7 +14,7 @@ import { Catalog } from "./orchestrator/catalog.js";
 import { ingest, type IngestOptions } from "./orchestrator/run.js";
 import { renderReport, totalCostUsd } from "./orchestrator/report.js";
 import { renderReportHtml } from "./orchestrator/report-html.js";
-import { spendEntry, appendSpend, readSpendTotal } from "./cli/spend.js";
+import { spendEntry, appendSpend, readSpendTotal, spendSuffix } from "./cli/spend.js";
 import { runEval, renderEval } from "./eval/run.js";
 import { createProgressRenderer } from "./cli/progress.js";
 import { BENCH_AGENTS, benchCommand, rescoreCommand, type BenchAgent } from "./bench/run.js";
@@ -242,7 +242,7 @@ async function main(): Promise<void> {
 
       const allRecipes = await deps.catalog.load();
       const writtenRecipes = allRecipes.filter((r) => report.written.includes(r.id));
-      const html = renderReportHtml(report, writtenRecipes, spendSoFar.totalUsd);
+      const html = renderReportHtml(report, writtenRecipes, spendSoFar.totalUsd, spendSoFar.unknownRuns);
       await writeFile(htmlFile, html);
 
       console.log(rendered);
@@ -250,7 +250,7 @@ async function main(): Promise<void> {
       console.log(`html report: ${htmlFile}`);
       const runCost = totalCostUsd(report.usageRows);
       const runCalls = report.usageRows.reduce((n, r) => n + r.calls, 0);
-      console.log(`cost ${formatCost(runCost)} · ${runCalls} calls · spent so far ${formatCost(spendSoFar.totalUsd)}`);
+      console.log(`cost ${formatCost(runCost)} · ${runCalls} calls · spent so far ${formatCost(spendSoFar.totalUsd)}${spendSuffix(spendSoFar)}`);
 
       if (parsed.open) await openInBrowser(htmlFile);
       return;

@@ -32,6 +32,19 @@ export function formatCost(cost: number | null): string {
 export class UsageLedger {
   private buckets = new Map<string, Bucket>();
   private listeners = new Set<UsageListener>();
+  private unbilled = 0;
+
+  /**
+   * An attempt the API billed but whose usage never reached us (the SDK threw while parsing
+   * the answer). Counted so a cost can be shown as a lower bound rather than as exact.
+   */
+  addUnbilled(_agent: AgentName, _model: string): void {
+    this.unbilled += 1;
+  }
+
+  unbilledCalls(): number {
+    return this.unbilled;
+  }
 
   add(agent: AgentName, model: string, usage: { input_tokens: number; output_tokens: number }): void {
     const b = this.buckets.get(agent) ?? { input: 0, output: 0, calls: 0, costUsd: 0 };

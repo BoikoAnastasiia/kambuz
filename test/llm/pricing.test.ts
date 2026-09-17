@@ -24,4 +24,11 @@ describe("costUsd", () => {
   it("ignores absent cache fields", () => {
     expect(costUsd("claude-sonnet-5", { input_tokens: 500_000, output_tokens: 0 })).toBeCloseTo(1, 10);
   });
+
+  it("only resolves a dated snapshot of a registered id, never a different model sharing its prefix", () => {
+    expect(costUsd("claude-sonnet-5-20260301", { input_tokens: 1_000_000, output_tokens: 0 })).toBe(2);
+    expect(costUsd("claude-sonnet-5-1", { input_tokens: 1_000_000, output_tokens: 0 })).toBeNull();
+    expect(costUsd("claude-sonnet-5-1-20260301", { input_tokens: 1_000_000, output_tokens: 0 })).toBeNull();
+    expect(costUsd("claude-sonnet-5-2026", { input_tokens: 1_000_000, output_tokens: 0 })).toBeNull();
+  });
 });

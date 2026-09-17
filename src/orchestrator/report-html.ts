@@ -57,10 +57,13 @@ function idList(ids: string[]): string {
 
 function usageTable(rows: UsageRow[]): string {
   const total = totalCostUsd(rows);
+  // With an unpriced agent the total is unknown; bars then split what is priced, and say so.
+  const pricedTotal = rows.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);
+  const shareBase = total ?? pricedTotal;
   const totalRow = rows.reduce((acc, r) => ({ calls: acc.calls + r.calls, input: acc.input + r.input, output: acc.output + r.output }), { calls: 0, input: 0, output: 0 });
   const body = rows
     .map((r) => {
-      const share = total !== null && r.costUsd !== null && total > 0 ? (r.costUsd / total) * 100 : 0;
+      const share = r.costUsd !== null && shareBase > 0 ? (r.costUsd / shareBase) * 100 : 0;
       return `<tr>
         <td>${escapeHtml(r.agent)}</td>
         <td>${r.calls}</td>
@@ -73,7 +76,7 @@ function usageTable(rows: UsageRow[]): string {
     .join("");
   return `<h2>Cost &amp; tokens</h2>
   <table>
-    <thead><tr><th>Agent</th><th>Calls</th><th>Input</th><th>Output</th><th>$</th><th>Share of cost</th></tr></thead>
+    <thead><tr><th>Agent</th><th>Calls</th><th>Input</th><th>Output</th><th>$</th><th>${total === null ? "Share of priced calls" : "Share of cost"}</th></tr></thead>
     <tbody>
       ${body}
       <tr class="total-row"><td>total</td><td>${totalRow.calls}</td><td>${totalRow.input.toLocaleString("en-US")}</td><td>${totalRow.output.toLocaleString("en-US")}</td><td>${formatCost(total)}</td><td></td></tr>
@@ -144,7 +147,7 @@ function recipeCard(r: Recipe): string {
   </div>`;
 }
 
-export function renderReportHtml(report: RunReport, recipes: Recipe[], spentSoFar: number | null = null): string {
+export function renderReportHtml(report: RunReport, recipes: Recipe[], spentSoFar: number | null = null, unpricedRuns = 0): string {
   const runCost = totalCostUsd(report.usageRows);
   const tooThinCount = report.tooThin.length;
   const unmappedEntries = Object.entries(report.unmapped).sort((a, b) => b[1] - a[1]);
@@ -162,7 +165,7 @@ export function renderReportHtml(report: RunReport, recipes: Recipe[], spentSoFa
   <p class="meta">
     Started ${escapeHtml(report.startedAt)} · Duration ${durationLabel(report.startedAt, report.finishedAt)}<br>
     Source: <a href="${escapeHtml(report.url)}">${escapeHtml(report.url)}</a><br>
-    ${spentSoFar !== null ? `Spent so far: ${formatCost(spentSoFar)}` : ""}
+    ${spentSoFar !== null ? `Spent so far: ${formatCost(spentSoFar)}${unpricedRuns > 0 ? ` (${unpricedRuns} run${unpricedRuns === 1 ? "" : "s"} unpriced)` : ""}` : ""}
   </p>
   <div class="tiles">
     <div class="tile"><div class="n">${report.videos.length}</div><div class="label">videos</div></div>

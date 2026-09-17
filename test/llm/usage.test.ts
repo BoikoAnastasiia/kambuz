@@ -80,4 +80,12 @@ describe("formatCost", () => {
   it("renders unknown cost as ?", () => {
     expect(formatCost(null)).toBe("?");
   });
+
+  it("counts attempts whose usage could not be billed, without touching the token buckets", () => {
+    const l = new UsageLedger();
+    l.addUnbilled("scout", "claude-sonnet-5");
+    l.addUnbilled("scout", "claude-sonnet-5");
+    expect(l.unbilledCalls()).toBe(2);
+    expect(l.total()).toEqual({ input: 0, output: 0, calls: 0, costUsd: 0 });
+  });
 });

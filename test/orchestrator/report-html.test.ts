@@ -139,4 +139,23 @@ describe("renderReportHtml", () => {
     // The only "script" occurrences allowed are the escaped, inert ones from the fixture name.
     expect(html.match(/<script(?!&gt;)/gi)).toBeNull();
   });
+
+  it("shows unpriced runs next to spent so far", () => {
+    expect(renderReportHtml(baseReport(), [], 12.5, 2)).toContain("Spent so far: $12.50 (2 runs unpriced)");
+    expect(renderReportHtml(baseReport(), [], 12.5, 0)).not.toContain("unpriced");
+  });
+
+  it("draws cost bars from the priced agents when the total is unknown, and says so", () => {
+    const report = baseReport({
+      usageRows: [
+        { agent: "scout", calls: 1, input: 1, output: 1, costUsd: 3 },
+        { agent: "extractor", calls: 1, input: 1, output: 1, costUsd: 1 },
+        { agent: "judge", calls: 1, input: 1, output: 1, costUsd: null },
+      ],
+    });
+    const html = renderReportHtml(report, []);
+    expect(html).toContain("width:75.0%");
+    expect(html).toContain("width:25.0%");
+    expect(html).toMatch(/share of priced calls/i);
+  });
 });

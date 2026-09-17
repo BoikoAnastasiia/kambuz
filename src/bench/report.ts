@@ -6,6 +6,8 @@ import { jaccard, type CategorizerCase } from "./categorizer.js";
 import { segmentKey } from "./inputs.js";
 import { MODIFIES_EXISTING, PLANTED_KINDS } from "./mutations.js";
 import type { BenchResult, PlannedSegment, VariantUsage } from "./run.js";
+import { variantCostLabel } from "./usage.js";
+import { variantLabel } from "./variants.js";
 import { formatProportion as prop } from "./stats.js";
 import { targetStatus, type KindScore, type VerifierCase } from "./verifier.js";
 
@@ -45,9 +47,23 @@ function firstErrors(result: BenchResult): Map<string, { count: number; first: s
   return out;
 }
 
+function label(result: BenchResult, id: string): string {
+  const v = result.variants.find((x) => x.id === id);
+  return v ? variantLabel(v) : id;
+}
+
+function costCell(result: BenchResult, s: VariantSummary): string {
+  return variantCostLabel(result.usage[s.variant], s.cases - s.errors, formatCost);
+}
+
+function totalCostLabel(result: BenchResult): string {
+  const unbilled = Object.values(result.usage).some((u) => (u.unbilled ?? 0) > 0);
+  return `${unbilled ? "≥" : ""}${formatCost(totalCost(result.usage))}`;
+}
+
 function usageLine(result: BenchResult, s: VariantSummary): string {
   const u = result.usage[s.variant];
-  return `ok ${s.cases - s.errors} · err ${s.errors}${s.errors ? " (!)" : ""} · ${u.calls} calls · ${u.input.toLocaleString("en-US")} in / ${u.output.toLocaleString("en-US")} out · ${formatCost(u.costUsd)} · latency ${ms(s.meanLatencyMs)}`;
+  return `ok ${s.cases - s.errors} · err ${s.errors}${s.errors ? " (!)" : ""} · ${u.calls} calls · ${u.input.toLocaleString("en-US")} in / ${u.output.toLocaleString("en-US")} out · ${costCell(result, s)} · latency ${ms(s.meanLatencyMs)}`;
 }
 
 function kindLine(k: KindScore): string {
@@ -59,7 +75,7 @@ export function renderBenchConsole(result: BenchResult): string {
   const errors = firstErrors(result);
   const row = (label: string, value: string) => `  ${label.padEnd(22)} ${value}`;
   for (const s of summaries(result)) {
-    out.push(`${s.variant}  ${usageLine(result, s)}`);
+    out.push(`${label(result, s.variant)}  ${usageLine(result, s)}`);
     if (result.agent === "categorizer") {
       const c = result.scores.variants.find((x) => x.variant === s.variant)!;
       out.push(row("cuisine", prop(c.cuisine)), row("category", prop(c.category)), row("meal types exact", prop(c.mealTypesExact)), row("meal types jaccard", num(c.mealTypesJaccard)), row("dishKey stable", c.dishKeyStability ? prop(c.dishKeyStability) : "— (needs --repeat 2+)"));
@@ -73,7 +89,7 @@ export function renderBenchConsole(result: BenchResult): string {
     const e = errors.get(s.variant);
     if (e) out.push(`  !! ${e.count} failed (counted as misses), first error: ${e.first}`);
   }
-  out.push(`total ${formatCost(totalCost(result.usage))}`);
+  out.push(`total ${totalCostLabel(result)}${Object.values(result.usage).some((u) => (u.unbilled ?? 0) > 0) ? " (some attempts could not be billed: a lower bound)" : ""}`);
   if (result.agent === "categorizer" && result.scores.agreement.length) {
     out.push("dishKey agreement (first answer per segment):");
     for (const a of result.scores.agreement) out.push(`  ${a.a} vs ${a.b}: ${prop(a.agreement)}`);
@@ -85,9 +101,10 @@ const BENCH_CSS = `
   .miss { color: var(--red); font-weight: 600; }
   .hit { color: var(--green); }
   .warn { color: var(--amber); font-weight: 600; }
-  .err { color: var(--red); font-size: 12px; }
+  .err { color: var(--red); font-size: 12px; white-space: normal; min-width: 16em; }
+  .wrap { white-space: normal; display: inline-block; min-width: 18em; }
   tr.has-errors td:nth-child(2) { color: var(--red); font-weight: 700; }
-  .answers > div, .bench td:first-child, .bench th { white-space: nowrap; }
+  .bench td, .bench th { white-space: nowrap; }
   .scroll { overflow-x: auto; }
   code { font-size: 12px; }
 `;
@@ -110,7 +127,7 @@ function segmentCell(s: PlannedSegment): string {
 
 function usageCells(result: BenchResult, s: VariantSummary): string[] {
   const u = result.usage[s.variant];
-  return [String(u.calls), u.input.toLocaleString("en-US"), u.output.toLocaleString("en-US"), e(formatCost(u.costUsd)), ms(s.meanLatencyMs)];
+  return [String(u.calls), u.input.toLocaleString("en-US"), u.output.toLocaleString("en-US"), e(costCell(result, s)), ms(s.meanLatencyMs)];
 }
 const USAGE_HEAD = ["calls", "in", "out", "$", "latency"];
 
@@ -119,7 +136,7 @@ function categorizerSections(result: CategorizerResult): string {
     ["variant", "ok/err", "cuisine", "category", "meals exact", "meals J", "dishKey stable", ...USAGE_HEAD],
     result.scores.variants.map((s) => ({
       cls: s.errors ? "has-errors" : undefined,
-      cells: [e(s.variant), `${s.cases - s.errors}/${s.errors}`, prop(s.cuisine), prop(s.category), prop(s.mealTypesExact), num(s.mealTypesJaccard), s.dishKeyStability ? prop(s.dishKeyStability) : "—", ...usageCells(result, s)],
+      cells: [e(label(result, s.variant)), `${s.cases - s.errors}/${s.errors}`, prop(s.cuisine), prop(s.category), prop(s.mealTypesExact), num(s.mealTypesJaccard), s.dishKeyStability ? prop(s.dishKeyStability) : "—", ...usageCells(result, s)],
     })),
   );
   const agreement = result.scores.agreement.length
@@ -147,7 +164,7 @@ function categorizerSections(result: CategorizerResult): string {
   <p class="meta">Every rate counts a failed call as a miss and shows hits/total with a 95% Wilson interval. Cuisine is scored on the model's raw answer, before an unknown cuisine becomes "other".</p>
   ${variants}${agreement}
   <h2>Per segment</h2><p class="meta">cuisine · category · meal types · dishKey, one line per repeat; mismatches with the label in red.</p>
-  ${table(["segment", "truth", ...result.variants.map((v) => v.id)], rows)}`;
+  ${table(["segment", "truth", ...result.variants.map(variantLabel)], rows)}`;
 }
 
 function verifierSections(result: VerifierResult): string {
@@ -155,7 +172,7 @@ function verifierSections(result: VerifierResult): string {
     ["variant", "ok/err", "detected", "omitted", "false pos. ingredients", "false pos. steps", "clean flags", "noise", ...USAGE_HEAD],
     result.scores.map((s) => ({
       cls: s.errors ? "has-errors" : undefined,
-      cells: [e(s.variant), `${s.cases - s.errors}/${s.errors}`, prop(s.overall.detection), String(s.overall.missing), prop(s.falsePositives.ingredients), prop(s.falsePositives.steps), num(s.cleanFlagsMean), num(s.noiseMean), ...usageCells(result, s)],
+      cells: [e(label(result, s.variant)), `${s.cases - s.errors}/${s.errors}`, prop(s.overall.detection), String(s.overall.missing), prop(s.falsePositives.ingredients), prop(s.falsePositives.steps), num(s.cleanFlagsMean), num(s.noiseMean), ...usageCells(result, s)],
     })),
   );
   const byKind = table(
@@ -195,7 +212,7 @@ function verifierSections(result: VerifierResult): string {
           })
           .join("");
       });
-      return { cells: [segmentCell(s), e(m.kind), e(m.detail), ...cells] };
+      return { cells: [segmentCell(s), e(m.kind), `<span class="wrap">${e(m.detail)}</span>`, ...cells] };
     }),
   );
   return `<h2>Variants</h2>
@@ -203,7 +220,7 @@ function verifierSections(result: VerifierResult): string {
   ${variants}
   <h2>Detection by kind</h2>${byKind}
   <h2>Per case</h2><p class="meta">One line per repeat. "+N noise" counts flags on untouched items not raised on the same repeat's clean draft; hover a cell for all flags.</p>
-  ${table(["segment", "draft", "planted", ...result.variants.map((v) => v.id)], rows)}`;
+  ${table(["segment", "draft", "planted", ...result.variants.map(variantLabel)], rows)}`;
 }
 
 export function renderBenchHtml(result: BenchResult): string {
@@ -228,7 +245,7 @@ export function renderBenchHtml(result: BenchResult): string {
     <div class="tile"><div class="n">${result.segments.length}</div><div class="label">segments</div></div>
     <div class="tile"><div class="n">${result.cases.length}</div><div class="label">cases</div></div>
     <div class="tile"><div class="n">${calls}</div><div class="label">API calls</div></div>
-    <div class="tile cost"><div class="n">${formatCost(totalCost(result.usage))}</div><div class="label">total cost</div></div>
+    <div class="tile cost"><div class="n">${e(totalCostLabel(result))}</div><div class="label">total cost</div></div>
   </div>
   ${result.agent === "categorizer" ? categorizerSections(result) : verifierSections(result)}
   ${lists}

@@ -37,8 +37,9 @@ export function sumSpend(raw: string): SpendSummary {
       continue;
     }
     runs++;
-    if (entry.costUsd === null || entry.costUsd === undefined) unknownRuns++;
-    else totalUsd += entry.costUsd;
+    // Only a real number is money: null, a missing field or a hand-edited "1.5" string are unpriced.
+    if (typeof entry.costUsd === "number" && Number.isFinite(entry.costUsd)) totalUsd += entry.costUsd;
+    else unknownRuns++;
   }
   return { totalUsd, runs, unknownRuns };
 }
@@ -55,13 +56,24 @@ export async function appendSpend(filePath: string, entry: SpendEntry): Promise<
   await appendFile(filePath, `${JSON.stringify(entry)}\n`);
 }
 
-/** Reads and sums spend.jsonl; a missing file (no runs yet) summarizes as zero spend. */
+/**
+ * Reads and sums spend.jsonl. A missing file (no runs yet) is zero spend; any other failure is
+ * reported on stderr — it must not end the run, but it must not pass silently for "$0" either.
+ */
 export async function readSpendTotal(filePath: string): Promise<SpendSummary> {
   let raw = "";
   try {
     raw = await readFile(filePath, "utf8");
-  } catch {
-    // no spend.jsonl yet — treat as empty
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") {
+      console.error(`warning: could not read ${filePath}: ${e instanceof Error ? e.message : String(e)}; spent-so-far shows $0`);
+    }
   }
   return sumSpend(raw);
+}
+
+/** " (2 runs unpriced)" after a spent-so-far figure, or nothing when every run was priced. */
+export function spendSuffix(summary: SpendSummary): string {
+  const n = summary.unknownRuns;
+  return n > 0 ? ` (${n} run${n === 1 ? "" : "s"} unpriced)` : "";
 }

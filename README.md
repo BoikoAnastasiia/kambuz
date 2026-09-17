@@ -142,6 +142,13 @@ Every rate counts failed calls as misses and shows hits/total with a 95%
 Wilson interval; with a dozen segments those intervals are wide, so use
 `--repeat 3` or more before choosing a model.
 
+The plan also prints a rough dollar estimate per variant (prompt characters / 3
+for input, a fixed per-call output guess that adaptive thinking can exceed).
+A variant written without an effort on a model that thinks by default is
+labelled with that default, e.g. `claude-sonnet-5 (default effort: high)`. A
+cost shown as `≥$…` is a lower bound: some attempts failed to parse and their
+usage could not be recorded.
+
 A variant the API rejects (for example an effort on a model without it) is
 recorded as errors in the report; the rest of the bench still runs.
 

@@ -28,3 +28,13 @@ export function parseVariants(raw: string): ParsedVariants {
   }
   return { ok: true, variants };
 }
+
+/** Models that think with adaptive thinking at this effort when the request names none. */
+export const DEFAULT_EFFORT: Record<string, Effort> = { "claude-sonnet-5": "high", "claude-opus-5": "high" };
+
+/** How a variant is shown: an effort-less variant on a thinking model says what it will actually run at. */
+export function variantLabel(v: Variant): string {
+  if (v.effort) return v.id;
+  const family = Object.keys(DEFAULT_EFFORT).find((id) => v.model === id || (v.model.startsWith(id) && /^-\d{8}$/.test(v.model.slice(id.length))));
+  return family ? `${v.id} (default effort: ${DEFAULT_EFFORT[family]})` : v.id;
+}

@@ -21,10 +21,15 @@ export const PRICES: Record<string, ModelPrice> = {
 const CACHE_READ_MULTIPLIER = 0.1;
 const CACHE_WRITE_MULTIPLIER = 1.25;
 
-/** A dated id (e.g. "claude-haiku-4-5-20251001") resolves to its undated family by prefix. */
+/**
+ * An exact id, or a dated snapshot of one ("claude-haiku-4-5-20251001"). Only a -YYYYMMDD
+ * suffix counts: "claude-sonnet-5-1" is a different model and must not borrow Sonnet 5's price.
+ */
 function priceFor(model: string): ModelPrice | null {
-  if (model in PRICES) return PRICES[model];
-  const family = Object.keys(PRICES).find((id) => model.startsWith(`${id}-`));
+  if (Object.hasOwn(PRICES, model)) return PRICES[model];
+  const family = Object.keys(PRICES)
+    .filter((id) => model.startsWith(id) && /^-\d{8}$/.test(model.slice(id.length)))
+    .sort((a, b) => b.length - a.length)[0];
   return family ? PRICES[family] : null;
 }
 

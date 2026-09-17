@@ -2,8 +2,11 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pLimit from "p-limit";
-import { runCategorizerDetailed } from "../agents/categorizer.js";
-import { flagsFromVerification, runVerifier } from "../agents/verifier.js";
+import { buildCategorizerUser, runCategorizerDetailed } from "../agents/categorizer.js";
+import { buildVerifierUser, flagsFromVerification, runVerifier } from "../agents/verifier.js";
+import { formatCost } from "../llm/usage.js";
+import { loadPrompt } from "../prompts/load.js";
+import { estimateCost } from "./estimate.js";
 import type { Config } from "../config.js";
 import type { LlmClient } from "../llm/client.js";
 import { UsageLedger } from "../llm/usage.js";
@@ -14,7 +17,7 @@ import { loadBenchInputs, segmentKey, type BenchSegment } from "./inputs.js";
 import { generateMutations, PLANTED_KINDS, type FlagTarget, type Mutation, type MutationKind } from "./mutations.js";
 import { renderBenchConsole, renderBenchHtml } from "./report.js";
 import { aggregateUsage, type CaseUsage, type VariantUsage } from "./usage.js";
-import type { Variant } from "./variants.js";
+import { variantLabel, type Variant } from "./variants.js";
 
 export type { VariantUsage } from "./usage.js";
 import { scoreVerifier, type VerifierCase, type VerifierVariantScore } from "./verifier.js";
@@ -54,6 +57,8 @@ interface Job {
   input: BenchSegment;
   mutation?: Mutation;
   detail?: string;
+  /** Length of system + user prompt, for the cost estimate. */
+  inputChars: number;
 }
 
 export interface BenchPlan extends BenchOptions {
@@ -107,7 +112,8 @@ export async function planBench(opts: BenchOptions, deps: Pick<BenchDeps, "confi
   const truthErrors: string[] = [];
   const segments: PlannedSegment[] = [];
   const jobs: Job[] = [];
-  const everyRun = (input: BenchSegment, extra: Omit<Job, "variant" | "repeat" | "input"> = {}) => {
+  const system = await loadPrompt(opts.agent, deps.config.paths.prompts);
+  const everyRun = (input: BenchSegment, extra: Omit<Job, "variant" | "repeat" | "input">) => {
     for (const variant of opts.variants) for (let repeat = 0; repeat < opts.repeat; repeat++) jobs.push({ variant, repeat, input, ...extra });
   };
 
@@ -122,14 +128,16 @@ export async function planBench(opts: BenchOptions, deps: Pick<BenchDeps, "confi
         continue;
       }
       segments.push({ videoId: input.videoId, segmentIndex: input.segmentIndex, workingName: input.segment.workingName, label });
-      everyRun(input);
+      everyRun(input, { inputChars: system.length + buildCategorizerUser(input.draft, deps.vocab).length });
     }
   } else {
     for (const input of inputs) {
       const mutations = generateMutations(input, { vocab: deps.vocab, segments: inputs });
       const described = mutations.map((m) => ({ kind: m.kind, target: m.target, detail: describeMutation(input.draft, m) }));
       segments.push({ videoId: input.videoId, segmentIndex: input.segmentIndex, workingName: input.segment.workingName, mutations: described });
-      mutations.forEach((mutation, i) => everyRun(input, { mutation, detail: described[i].detail }));
+      mutations.forEach((mutation, i) =>
+        everyRun(input, { mutation, detail: described[i].detail, inputChars: system.length + buildVerifierUser(input.segment, mutation.draft).length }),
+      );
     }
   }
   return { ...opts, segments, skipped, truthErrors, jobs };
@@ -141,7 +149,7 @@ export function planSummary(plan: BenchPlan): string {
 
 export function renderPlan(plan: BenchPlan): string[] {
   const lines = [`bench ${plan.agent}: ${planSummary(plan)} (×${plan.repeat} repeat${plan.repeat === 1 ? "" : "s"}; parse retries can add calls)`];
-  lines.push(`variants: ${plan.variants.map((v) => v.id).join(", ")}`);
+  lines.push(`variants: ${plan.variants.map(variantLabel).join(", ")}`);
   if (plan.agent === "verifier") {
     const counts = new Map<string, number>();
     for (const s of plan.segments) for (const m of s.mutations ?? []) counts.set(m.kind, (counts.get(m.kind) ?? 0) + 1);
@@ -149,6 +157,14 @@ export function renderPlan(plan: BenchPlan): string[] {
     lines.push(`drafts per variant and repeat: ${order.map((k) => `${counts.get(k)} ${k}`).join(", ")}`);
   }
   if (plan.truthErrors.length) lines.push(`ignored ground-truth rows (${plan.truthErrors.length}):`, ...plan.truthErrors.map((e) => `  ${e}`));
+  if (plan.jobs.length) {
+    lines.push(`rough estimate per variant (input ≈ prompt chars / 3; output ≈ ${plan.agent === "verifier" ? 2500 : 150} tokens per call, which thinking can exceed):`);
+    for (const v of plan.variants) {
+      const e = estimateCost(v.model, plan.agent, plan.jobs.filter((j) => j.variant.id === v.id).map((j) => j.inputChars));
+      const k = (n: number) => `${Math.round(n / 1000)}k`;
+      lines.push(`  ${variantLabel(v)}: ~${formatCost(e.costUsd)} (${e.calls} calls, ~${k(e.inputTokens)} in, ~${k(e.outputTokens)} out)`);
+    }
+  }
   if (plan.repeat < 3) lines.push(`note: with --repeat ${plan.repeat} the intervals will be wide; --repeat 3 or more is recommended before choosing a model`);
   if (plan.skipped.length) lines.push(`skipped (${plan.skipped.length}):`, ...plan.skipped.map((s) => `  ${s}`));
   return lines;
@@ -199,7 +215,7 @@ export async function executeBench(plan: BenchPlan, deps: BenchDeps, onProgress?
       }
       onProgress?.(++done, plan.jobs.length);
       const t = ledger.total();
-      const usage: CaseUsage = { model: v.model, calls: t.calls, input: t.input, output: t.output, costUsd: t.costUsd };
+      const usage: CaseUsage = { model: v.model, calls: t.calls, input: t.input, output: t.output, costUsd: t.costUsd, unbilled: ledger.unbilledCalls() };
       return { outcome, ms: Date.now() - t0, usage };
     });
 

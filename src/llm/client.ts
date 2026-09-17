@@ -65,7 +65,10 @@ export function createLlmClient(config: Config, ledger: UsageLedger, anthropic: 
       }, { timeout: REQUEST_TIMEOUT_MS });
     } catch (e) {
       // The throw carries no message, so this attempt's usage is not knowable.
-      if (isParseFailure(e)) throw new LlmParseError(`${opts.agent}: ${(e as Error).message}`, "parse");
+      if (isParseFailure(e)) {
+        ledger.addUnbilled(opts.agent, model);
+        throw new LlmParseError(`${opts.agent}: ${(e as Error).message}`, "parse");
+      }
       throw e;
     }
     ledger.add(opts.agent, model, response.usage);

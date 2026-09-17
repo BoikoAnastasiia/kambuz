@@ -45,6 +45,9 @@ describe("callStructured", () => {
     const llm = createLlmClient(buildConfig({}), ledger, { messages: { parse } } as any);
     expect(await llm.callStructured({ agent: "scout", system: "s", user: "u", schema: Out })).toEqual({ answer: "ok" });
     expect(parse).toHaveBeenCalledTimes(2);
+    // the thrown attempt was billed by the API but carries no usage: the ledger notes it
+    expect(ledger.unbilledCalls()).toBe(1);
+    expect(ledger.total().calls).toBe(1);
   });
 
   it("gives up with a parse error when both attempts throw", async () => {
