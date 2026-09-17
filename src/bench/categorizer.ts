@@ -3,7 +3,7 @@ import { z } from "zod";
 import { MealTypeSchema, type Categorization } from "../schemas/recipe.js";
 import type { Vocab } from "../vocab/load.js";
 import { segmentKey } from "./inputs.js";
-import { mean, rate } from "./stats.js";
+import { mean, proportion, type Proportion } from "./stats.js";
 
 type MealType = z.infer<typeof MealTypeSchema>;
 
@@ -73,26 +73,27 @@ interface CaseBase {
   /** Wall time of the agent call, parse retries included. */
   ms: number;
 }
-export type CategorizerCase = CaseBase & ({ ok: true; output: Categorization } | { ok: false; error: string });
+export type CategorizerCase = CaseBase & ({ ok: true; output: Categorization; rawCuisine: string } | { ok: false; error: string });
 
 export interface CategorizerVariantScore {
   variant: string;
   cases: number;
   errors: number;
-  cuisineAccuracy: number | null;
-  categoryAccuracy: number | null;
-  mealTypesExact: number | null;
+  /** Over every case: a failed call is a miss, never left out. Cuisine is the model's raw answer. */
+  cuisine: Proportion;
+  category: Proportion;
+  mealTypesExact: Proportion;
+  /** Mean over every case, a failed call counting 0. */
   mealTypesJaccard: number | null;
-  /** Share of segments (with ≥ 2 successful repeats) whose dishKey never changed; null for one repeat. */
-  dishKeyStability: number | null;
+  /** Segments (with ≥ 2 cases) whose every repeat succeeded with the same dishKey; null for one repeat. */
+  dishKeyStability: Proportion | null;
   meanLatencyMs: number | null;
 }
 
 export interface DishKeyAgreement {
   a: string;
   b: string;
-  segments: number;
-  rate: number | null;
+  agreement: Proportion;
 }
 
 export function jaccard(a: readonly string[], b: readonly string[]): number {
@@ -105,13 +106,11 @@ export function jaccard(a: readonly string[], b: readonly string[]): number {
   return inter / union.size;
 }
 
-function okCases(cases: CategorizerCase[]): Array<CaseBase & { output: Categorization }> {
-  return cases.flatMap((c) => (c.ok ? [c] : []));
-}
+type OkCase = Extract<CategorizerCase, { ok: true }>;
 
 /** Each variant's answer from its earliest successful repeat, per segment. */
 function firstDishKeys(cases: CategorizerCase[]): Map<string, string> {
-  const sorted = okCases(cases).sort((x, y) => x.repeat - y.repeat);
+  const sorted = cases.filter((c): c is OkCase => c.ok).sort((x, y) => x.repeat - y.repeat);
   const first = new Map<string, string>();
   for (const c of sorted) if (!first.has(segmentKey(c))) first.set(segmentKey(c), c.output.dishKey);
   return first;
@@ -125,32 +124,29 @@ export function scoreCategorizer(
 ): { variants: CategorizerVariantScore[]; agreement: DishKeyAgreement[] } {
   const truth = new Map(labels.map((l) => [segmentKey(l), l]));
   const scores = variants.map((variant): CategorizerVariantScore => {
-    const mine = cases.filter((c) => c.variant === variant);
-    const answered = okCases(mine).filter((c) => truth.has(segmentKey(c)));
+    const mine = cases.filter((c) => c.variant === variant && truth.has(segmentKey(c)));
     const t = (c: CaseBase) => truth.get(segmentKey(c))!;
+    const hits = (test: (c: OkCase) => boolean) => mine.filter((c) => c.ok && test(c)).length;
 
-    let stability: number | null = null;
+    let stability: Proportion | null = null;
     if (repeat >= 2) {
-      const keys = new Map<string, Set<string>>();
-      const counts = new Map<string, number>();
-      for (const c of answered) {
-        keys.set(segmentKey(c), (keys.get(segmentKey(c)) ?? new Set()).add(c.output.dishKey));
-        counts.set(segmentKey(c), (counts.get(segmentKey(c)) ?? 0) + 1);
-      }
-      const repeated = [...counts.entries()].filter(([, n]) => n >= 2).map(([k]) => k);
-      stability = rate(repeated.filter((k) => keys.get(k)!.size === 1).length, repeated.length);
+      const bySegment = new Map<string, CategorizerCase[]>();
+      for (const c of mine) bySegment.set(segmentKey(c), [...(bySegment.get(segmentKey(c)) ?? []), c]);
+      const repeated = [...bySegment.values()].filter((cs) => cs.length >= 2);
+      const stable = repeated.filter((cs) => cs.every((c) => c.ok) && new Set(cs.map((c) => (c as OkCase).output.dishKey)).size === 1);
+      stability = proportion(stable.length, repeated.length);
     }
 
     return {
       variant,
       cases: mine.length,
       errors: mine.filter((c) => !c.ok).length,
-      cuisineAccuracy: rate(answered.filter((c) => c.output.cuisine === t(c).cuisine).length, answered.length),
-      categoryAccuracy: rate(answered.filter((c) => c.output.category === t(c).category).length, answered.length),
-      mealTypesExact: rate(answered.filter((c) => jaccard(c.output.mealTypes, t(c).mealTypes) === 1).length, answered.length),
-      mealTypesJaccard: mean(answered.map((c) => jaccard(c.output.mealTypes, t(c).mealTypes))),
+      cuisine: proportion(hits((c) => c.rawCuisine === t(c).cuisine), mine.length),
+      category: proportion(hits((c) => c.output.category === t(c).category), mine.length),
+      mealTypesExact: proportion(hits((c) => jaccard(c.output.mealTypes, t(c).mealTypes) === 1), mine.length),
+      mealTypesJaccard: mean(mine.map((c) => (c.ok ? jaccard(c.output.mealTypes, t(c).mealTypes) : 0))),
       dishKeyStability: stability,
-      meanLatencyMs: mean(okCases(mine).map((c) => c.ms)),
+      meanLatencyMs: mean(mine.filter((c) => c.ok).map((c) => c.ms)),
     };
   });
 
@@ -161,7 +157,7 @@ export function scoreCategorizer(
       const A = firsts.get(variants[i])!;
       const B = firsts.get(variants[j])!;
       const shared = [...A.keys()].filter((k) => B.has(k));
-      agreement.push({ a: variants[i], b: variants[j], segments: shared.length, rate: rate(shared.filter((k) => A.get(k) === B.get(k)).length, shared.length) });
+      agreement.push({ a: variants[i], b: variants[j], agreement: proportion(shared.filter((k) => A.get(k) === B.get(k)).length, shared.length) });
     }
   }
   return { variants: scores, agreement };

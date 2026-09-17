@@ -1,12 +1,12 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pLimit from "p-limit";
-import { runCategorizer } from "../agents/categorizer.js";
+import { runCategorizerDetailed } from "../agents/categorizer.js";
 import { flagsFromVerification, runVerifier } from "../agents/verifier.js";
 import type { Config } from "../config.js";
 import type { LlmClient } from "../llm/client.js";
 import { UsageLedger } from "../llm/usage.js";
-import type { Categorization, DraftRecipe, RecipeFlag, Verification } from "../schemas/recipe.js";
+import type { Categorization, DraftRecipe, Verification } from "../schemas/recipe.js";
 import type { Vocab } from "../vocab/load.js";
 import { loadCategorizerTruth, scoreCategorizer, type CategorizerCase, type CategorizerLabel, type CategorizerVariantScore, type DishKeyAgreement } from "./categorizer.js";
 import { loadBenchInputs, segmentKey, type BenchSegment } from "./inputs.js";
@@ -147,6 +147,7 @@ export function renderPlan(plan: BenchPlan): string[] {
     lines.push(`drafts per variant and repeat: ${[...counts.entries()].map(([k, n]) => `${n} ${k}`).join(", ")}`);
   }
   if (plan.truthErrors.length) lines.push(`ignored ground-truth rows (${plan.truthErrors.length}):`, ...plan.truthErrors.map((e) => `  ${e}`));
+  if (plan.repeat < 3) lines.push(`note: with --repeat ${plan.repeat} the intervals will be wide; --repeat 3 or more is recommended before choosing a model`);
   if (plan.skipped.length) lines.push(`skipped (${plan.skipped.length}):`, ...plan.skipped.map((s) => `  ${s}`));
   return lines;
 }
@@ -197,8 +198,10 @@ export async function executeBench(plan: BenchPlan, deps: BenchDeps, onProgress?
   if (plan.agent === "categorizer") {
     const cases = await Promise.all(
       plan.jobs.map(async (job): Promise<CategorizerCase> => {
-        const { outcome, ms } = await timed<Categorization>(job, (llm) => runCategorizer(job.input.draft, deps.vocab, llm, promptsDir));
-        return outcome.ok ? { ...base(job), ok: true, output: outcome.value, ms } : { ...base(job), ok: false, error: outcome.error, ms };
+        const { outcome, ms } = await timed<{ categorization: Categorization; rawCuisine: string }>(job, (llm) => runCategorizerDetailed(job.input.draft, deps.vocab, llm, promptsDir));
+        return outcome.ok
+          ? { ...base(job), ok: true, output: outcome.value.categorization, rawCuisine: outcome.value.rawCuisine, ms }
+          : { ...base(job), ok: false, error: outcome.error, ms };
       }),
     );
     const labels = plan.segments.map((s) => s.label!);
@@ -209,12 +212,11 @@ export async function executeBench(plan: BenchPlan, deps: BenchDeps, onProgress?
   const cases = await Promise.all(
     plan.jobs.map(async (job): Promise<VerifierCase> => {
       const mutation = job.mutation!;
-      const { outcome, ms } = await timed<{ verification: Verification; flags: RecipeFlag[] }>(job, async (llm) => {
-        const verification = await runVerifier(job.input.segment, mutation.draft, llm, promptsDir);
-        return { verification, flags: flagsFromVerification(mutation.draft, verification) };
-      });
-      const shared = { ...base(job), mutation: mutation.kind, target: mutation.target, ms };
-      return outcome.ok ? { ...shared, ok: true, ...outcome.value } : { ...shared, ok: false, error: outcome.error };
+      const { outcome, ms } = await timed<Verification>(job, (llm) => runVerifier(job.input.segment, mutation.draft, llm, promptsDir));
+      const shared = { ...base(job), mutation: mutation.kind, target: mutation.target, draft: mutation.draft, ms };
+      return outcome.ok
+        ? { ...shared, ok: true, verification: outcome.value, flags: flagsFromVerification(mutation.draft, outcome.value) }
+        : { ...shared, ok: false, error: outcome.error };
     }),
   );
   return { agent: "verifier", ...common(), cases, scores: scoreVerifier(cases, plan.variants.map((v) => v.id)) };

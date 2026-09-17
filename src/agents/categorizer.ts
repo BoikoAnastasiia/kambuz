@@ -21,11 +21,24 @@ export function buildCategorizerUser(draft: DraftRecipe, vocab: Vocab): string {
   ].join("\n");
 }
 
-export async function runCategorizer(draft: DraftRecipe, vocab: Vocab, llm: LlmClient, promptsDir: string): Promise<Categorization> {
+/**
+ * Also returns the cuisine exactly as the model answered, before an off-vocabulary answer is
+ * coerced to "other" — a bench scoring "other" must not credit a model for inventing a cuisine.
+ */
+export async function runCategorizerDetailed(
+  draft: DraftRecipe,
+  vocab: Vocab,
+  llm: LlmClient,
+  promptsDir: string,
+): Promise<{ categorization: Categorization; rawCuisine: string }> {
   const system = await loadPrompt("categorizer", promptsDir);
   const raw = await llm.callStructured({ agent: "categorizer", system, user: buildCategorizerUser(draft, vocab), schema: CategorizationWireSchema });
   const cuisine = vocab.cuisines.some((c) => c.id === raw.cuisine) ? raw.cuisine : "other";
   // An off-vocabulary category is kept as-is: validateRecipe reports it and the
   // orchestrator drops that one recipe, rather than a throw killing the whole video.
-  return { ...raw, cuisine, dishKey: slugify(raw.dishKey) };
+  return { categorization: { ...raw, cuisine, dishKey: slugify(raw.dishKey) }, rawCuisine: raw.cuisine };
+}
+
+export async function runCategorizer(draft: DraftRecipe, vocab: Vocab, llm: LlmClient, promptsDir: string): Promise<Categorization> {
+  return (await runCategorizerDetailed(draft, vocab, llm, promptsDir)).categorization;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { runCategorizer, buildCategorizerUser, slugify } from "../../src/agents/categorizer.js";
+import { runCategorizer, runCategorizerDetailed, buildCategorizerUser, slugify } from "../../src/agents/categorizer.js";
 import type { DraftRecipe } from "../../src/schemas/recipe.js";
 import type { Vocab } from "../../src/vocab/load.js";
 import { config } from "../../src/config.js";
@@ -57,5 +57,12 @@ describe("runCategorizer", () => {
     // a regex the SDK cannot enforce would make messages.parse() throw instead
     const schema = llm.callStructured.mock.calls[0][0].schema;
     expect(schema.safeParse({ ...base, cuisine: "italian", dishKey: "Lasagna Bolognese!" }).success).toBe(true);
+  });
+
+  it("runCategorizerDetailed keeps the raw cuisine next to the coerced one", async () => {
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "klingon", dishKey: "x" })) };
+    const r = await runCategorizerDetailed(draft, vocab, llm as any, config.paths.prompts);
+    expect(r.categorization.cuisine).toBe("other");
+    expect(r.rawCuisine).toBe("klingon");
   });
 });

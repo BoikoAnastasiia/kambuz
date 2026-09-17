@@ -125,9 +125,16 @@ calls nothing; with it, it writes `reports/bench-<agent>-<timestamp>.json` and
 - `categorizer` scores cuisine, category and meal types against hand labels in
   `eval/bench/categorizer.json` (format in `eval/bench/README.md`), plus dishKey
   stability across `--repeat` runs.
-- `verifier` needs no labels: it plants an extra ingredient, a tripled quantity
-  and an invented step into each draft and measures how often each is flagged,
-  alongside flags on the untouched draft and extra noise.
+- `verifier` needs no labels: it plants errors into each cached draft (an
+  ingredient borrowed from a similar dish, a quantity ×1.5, a swapped unit, a
+  changed number in a step, an invented step). A planted item counts as
+  detected only when the verifier explicitly marks it unsupported; an omitted
+  entry is reported separately. Detection is shown next to the false-positive
+  rate on the untouched drafts.
+
+Every rate counts failed calls as misses and shows hits/total with a 95%
+Wilson interval; with a dozen segments those intervals are wide, so use
+`--repeat 3` or more before choosing a model.
 
 A variant the API rejects (for example an effort on a model without it) is
 recorded as errors in the report; the rest of the bench still runs.

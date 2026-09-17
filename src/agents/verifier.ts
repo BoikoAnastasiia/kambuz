@@ -17,7 +17,7 @@ export async function runVerifier(segment: ScoutSegment, draft: DraftRecipe, llm
   return { ...raw, confidence: Math.max(0, Math.min(1, raw.confidence)) };
 }
 
-function normalizeName(s: string): string {
+export function normalizeName(s: string): string {
   return s.trim().toLowerCase();
 }
 

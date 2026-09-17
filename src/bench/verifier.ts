@@ -1,7 +1,8 @@
-import type { RecipeFlag, Verification } from "../schemas/recipe.js";
+import { flagsFromVerification, normalizeName } from "../agents/verifier.js";
+import type { DraftRecipe, RecipeFlag, Verification } from "../schemas/recipe.js";
 import { segmentKey } from "./inputs.js";
-import { PLANTED_KINDS, type FlagTarget, type MutationKind, type PlantedKind } from "./mutations.js";
-import { mean, rate } from "./stats.js";
+import { MODIFIES_EXISTING, PLANTED_KINDS, type FlagTarget, type MutationKind, type PlantedKind } from "./mutations.js";
+import { mean, proportion, type Proportion } from "./stats.js";
 
 interface CaseBase {
   variant: string;
@@ -10,74 +11,113 @@ interface CaseBase {
   segmentIndex: number;
   mutation: MutationKind;
   target: FlagTarget | null;
+  /** The exact draft the verifier saw, so a report can be re-scored without regenerating it. */
+  draft: DraftRecipe;
   ms: number;
 }
-export type VerifierCase = CaseBase & ({ ok: true; flags: RecipeFlag[]; verification?: Verification } | { ok: false; error: string });
+/** `flags` is stored for people reading the JSON; scoring always re-derives it from draft + verification. */
+export type VerifierCase = CaseBase & ({ ok: true; verification: Verification; flags?: RecipeFlag[] } | { ok: false; error: string });
 
-export interface Detection {
-  detected: number;
-  total: number;
-  rate: number | null;
+/**
+ * rejected: the verifier returned an entry for the planted item with supported:false.
+ * missing: it returned no entry for it (flagsFromVerification still flags that, but it is
+ * not evidence the model noticed anything). supported: it vouched for the planted item.
+ */
+export type TargetStatus = "rejected" | "missing" | "supported";
+
+export function targetStatus(target: FlagTarget, v: Verification): TargetStatus {
+  const entry =
+    target.kind === "ingredient"
+      ? v.ingredients.find((e) => normalizeName(e.rawName) === normalizeName(target.ref))
+      : v.steps.find((e) => String(e.order) === target.ref);
+  if (!entry) return "missing";
+  return entry.supported ? "supported" : "rejected";
+}
+
+export interface KindScore {
+  rejected: number;
+  missing: number;
+  supported: number;
+  /** Failed calls: in the denominator, as misses. */
+  errors: number;
+  /** Modified items this variant already flagged on the same repeat's clean draft: out of the denominator. */
+  excluded: number;
+  /** rejected / (rejected + missing + supported + errors). */
+  detection: Proportion;
 }
 
 export interface VerifierVariantScore {
   variant: string;
   cases: number;
   errors: number;
-  detection: Record<PlantedKind, Detection>;
-  overallDetection: number | null;
+  detection: Record<PlantedKind, KindScore>;
+  overall: KindScore;
+  /** On clean drafts: share of stated/inferred ingredients, and of steps, that got flagged. */
+  falsePositives: { ingredients: Proportion; steps: Proportion };
   /** Mean number of flags on the unmodified draft. */
   cleanFlagsMean: number | null;
-  /** Mean flags per mutated draft on untouched items that this variant never raised on the clean draft of that segment. */
+  /** Mean flags per mutated draft on untouched items that were not flagged on the same repeat's clean draft. */
   noiseMean: number | null;
   meanLatencyMs: number | null;
 }
 
 const flagKey = (f: { kind: string; ref: string }) => `${f.kind}:${f.ref}`;
 
-export function isDetected(target: FlagTarget, flags: RecipeFlag[]): boolean {
-  return flags.some((f) => flagKey(f) === flagKey(target));
+function kindScore(statuses: Array<TargetStatus | "error" | "excluded">): KindScore {
+  const count = (s: string) => statuses.filter((x) => x === s).length;
+  const rejected = count("rejected");
+  const missing = count("missing");
+  const supported = count("supported");
+  const errors = count("error");
+  return { rejected, missing, supported, errors, excluded: count("excluded"), detection: proportion(rejected, rejected + missing + supported + errors) };
 }
 
 export function scoreVerifier(cases: VerifierCase[], variants: string[]): VerifierVariantScore[] {
   return variants.map((variant) => {
     const mine = cases.filter((c) => c.variant === variant);
-    const ok = mine.flatMap((c) => (c.ok ? [c] : []));
-    const clean = ok.filter((c) => c.mutation === "clean");
-    const mutated = ok.filter((c) => c.mutation !== "clean" && c.target);
+    const flagsOf = new Map<VerifierCase, RecipeFlag[]>();
+    for (const c of mine) if (c.ok) flagsOf.set(c, flagsFromVerification(c.draft, c.verification));
 
-    // Union over repeats: an item flagged on any clean run of the segment is that variant's baseline, not noise.
-    const cleanFlags = new Map<string, Set<string>>();
-    for (const c of clean) {
-      const set = cleanFlags.get(segmentKey(c)) ?? new Set<string>();
-      for (const f of c.flags) set.add(flagKey(f));
-      cleanFlags.set(segmentKey(c), set);
+    const cleanByRun = new Map<string, Set<string>>();
+    for (const c of mine) {
+      if (c.mutation === "clean" && c.ok) cleanByRun.set(`${segmentKey(c)}@${c.repeat}`, new Set(flagsOf.get(c)!.map(flagKey)));
+    }
+    const cleanFlags = (c: VerifierCase) => cleanByRun.get(`${segmentKey(c)}@${c.repeat}`);
+
+    const status = (c: VerifierCase): TargetStatus | "error" | "excluded" => {
+      if (!c.ok) return "error";
+      if (MODIFIES_EXISTING.has(c.mutation) && cleanFlags(c)?.has(flagKey(c.target!))) return "excluded";
+      return targetStatus(c.target!, c.verification);
+    };
+    const planted = mine.filter((c) => c.mutation !== "clean" && c.target);
+    const detection = Object.fromEntries(
+      PLANTED_KINDS.map((kind) => [kind, kindScore(planted.filter((c) => c.mutation === kind).map(status))]),
+    ) as Record<PlantedKind, KindScore>;
+
+    const cleanOk = mine.filter((c): c is Extract<VerifierCase, { ok: true }> => c.ok && c.mutation === "clean");
+    let ingFlagged = 0, ingTotal = 0, stepFlagged = 0, stepTotal = 0;
+    for (const c of cleanOk) {
+      const flags = flagsOf.get(c)!;
+      ingFlagged += flags.filter((f) => f.kind === "ingredient").length;
+      ingTotal += c.draft.ingredients.filter((i) => i.provenance !== "unknown").length;
+      stepFlagged += flags.filter((f) => f.kind === "step").length;
+      stepTotal += c.draft.steps.length;
     }
 
-    const detection = Object.fromEntries(
-      PLANTED_KINDS.map((kind) => {
-        const of = mutated.filter((c) => c.mutation === kind);
-        const detected = of.filter((c) => isDetected(c.target!, c.flags)).length;
-        return [kind, { detected, total: of.length, rate: rate(detected, of.length) }];
-      }),
-    ) as Record<PlantedKind, Detection>;
-
-    const noise = mutated
-      .filter((c) => cleanFlags.has(segmentKey(c)))
-      .map((c) => {
-        const baseline = cleanFlags.get(segmentKey(c))!;
-        return c.flags.filter((f) => flagKey(f) !== flagKey(c.target!) && !baseline.has(flagKey(f))).length;
-      });
+    const noise = planted
+      .filter((c) => c.ok && cleanFlags(c))
+      .map((c) => flagsOf.get(c)!.filter((f) => flagKey(f) !== flagKey(c.target!) && !cleanFlags(c)!.has(flagKey(f))).length);
 
     return {
       variant,
       cases: mine.length,
-      errors: mine.length - ok.length,
+      errors: mine.filter((c) => !c.ok).length,
       detection,
-      overallDetection: rate(mutated.filter((c) => isDetected(c.target!, c.flags)).length, mutated.length),
-      cleanFlagsMean: mean(clean.map((c) => c.flags.length)),
+      overall: kindScore(planted.map(status)),
+      falsePositives: { ingredients: proportion(ingFlagged, ingTotal), steps: proportion(stepFlagged, stepTotal) },
+      cleanFlagsMean: mean(cleanOk.map((c) => flagsOf.get(c)!.length)),
       noiseMean: mean(noise),
-      meanLatencyMs: mean(ok.map((c) => c.ms)),
+      meanLatencyMs: mean(mine.filter((c) => c.ok).map((c) => c.ms)),
     };
   });
 }

@@ -25,6 +25,9 @@ One row per cached segment you have labeled by hand:
 - `cuisine` must be an id from `vocab/cuisines.json`, `category` an id from
   `vocab/categories.json`, `mealTypes` a non-empty list of `breakfast`, `lunch`, `dinner`.
 - `dish` is not scored.
+- Cuisine is scored on the model's raw answer. The pipeline turns a cuisine that is not in the
+  vocabulary into `other`; the bench does not, so labelling a dish `other` only credits a model
+  that actually answered `other`, not one that invented a cuisine.
 
 Rows that break any of these are reported by row number and left out; the rest still run.
 One row per segment: a later duplicate is reported and ignored.

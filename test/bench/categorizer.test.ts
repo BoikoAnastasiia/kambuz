@@ -37,8 +37,8 @@ const truth: CategorizerLabel[] = [
 function out(p: Partial<Categorization>): Categorization {
   return { cuisine: "italian", category: "pasta", mealTypes: ["dinner"], activeMinutes: null, totalMinutes: null, richness: "medium", dishKey: "lasagna", ...p };
 }
-function ok(variant: string, repeat: number, segmentIndex: number, output: Categorization, ms = 100): CategorizerCase {
-  return { variant, repeat, videoId: "v1", segmentIndex, ok: true, output, ms };
+function ok(variant: string, repeat: number, segmentIndex: number, output: Categorization, ms = 100, rawCuisine = output.cuisine): CategorizerCase {
+  return { variant, repeat, videoId: "v1", segmentIndex, ok: true, output, rawCuisine, ms };
 }
 
 describe("scoreCategorizer", () => {
@@ -54,15 +54,32 @@ describe("scoreCategorizer", () => {
   ];
   const scored = scoreCategorizer(cases, truth, ["a", "b"], 2);
 
-  it("scores accuracy, meal types and dishKey stability over successful answers", () => {
+  it("scores accuracy, meal types and dishKey stability with interval and counts", () => {
     const a = scored.variants.find((v) => v.variant === "a")!;
-    expect(a).toMatchObject({ cases: 4, errors: 0, cuisineAccuracy: 1, categoryAccuracy: 1, mealTypesExact: 0.75, dishKeyStability: 0.5, meanLatencyMs: 150 });
+    expect(a).toMatchObject({ cases: 4, errors: 0, meanLatencyMs: 150 });
+    expect(a.cuisine).toMatchObject({ hits: 4, total: 4, rate: 1 });
+    expect(a.category).toMatchObject({ hits: 4, total: 4 });
+    expect(a.mealTypesExact).toMatchObject({ hits: 3, total: 4, rate: 0.75 });
+    expect(a.cuisine.ci![0]).toBeGreaterThan(0.4);
     // jaccard: 1, 1, 1 ({dinner,lunch} vs same), 0.5 ({lunch} vs {lunch,dinner})
     expect(a.mealTypesJaccard).toBeCloseTo(3.5 / 4);
+    expect(a.dishKeyStability).toMatchObject({ hits: 1, total: 2 });
+  });
 
+  it("counts a failed call as a miss everywhere, including stability", () => {
     const b = scored.variants.find((v) => v.variant === "b")!;
-    expect(b).toMatchObject({ cases: 4, errors: 1, cuisineAccuracy: 0, categoryAccuracy: 1, mealTypesExact: 1 / 3, dishKeyStability: 1, meanLatencyMs: 100 });
-    expect(b.mealTypesJaccard).toBeCloseTo(1 / 3);
+    expect(b).toMatchObject({ cases: 4, errors: 1, meanLatencyMs: 100 });
+    expect(b.cuisine).toMatchObject({ hits: 0, total: 4 });
+    expect(b.category).toMatchObject({ hits: 3, total: 4 });
+    expect(b.mealTypesExact).toMatchObject({ hits: 1, total: 4 });
+    expect(b.mealTypesJaccard).toBeCloseTo(0.25);
+    expect(b.dishKeyStability).toMatchObject({ hits: 1, total: 2 });
+  });
+
+  it("scores the raw cuisine, so an invented cuisine coerced to other is not credited", () => {
+    const otherTruth: CategorizerLabel[] = [{ ...truth[0], cuisine: "other" }];
+    const s = scoreCategorizer([ok("x", 0, 0, out({ cuisine: "other" }), 1, "klingon"), ok("x", 1, 0, out({ cuisine: "other" }), 1, "other")], otherTruth, ["x"], 2);
+    expect(s.variants[0].cuisine).toMatchObject({ hits: 1, total: 2 });
   });
 
   it("leaves stability empty for a single repeat", () => {
@@ -70,11 +87,11 @@ describe("scoreCategorizer", () => {
   });
 
   it("reports pairwise dishKey agreement on each variant's first answer", () => {
-    expect(scored.agreement).toEqual([{ a: "a", b: "b", segments: 2, rate: 1 }]);
+    expect(scored.agreement).toEqual([{ a: "a", b: "b", agreement: expect.objectContaining({ hits: 2, total: 2, rate: 1 }) }]);
   });
 
-  it("gives null rates for a variant with no successful answer", () => {
+  it("gives zero rates for a variant whose every call failed", () => {
     const s = scoreCategorizer([{ variant: "x", repeat: 0, videoId: "v1", segmentIndex: 0, ok: false, error: "no", ms: 1 }], truth, ["x"], 1);
-    expect(s.variants[0]).toMatchObject({ errors: 1, cuisineAccuracy: null, mealTypesJaccard: null, meanLatencyMs: null });
+    expect(s.variants[0]).toMatchObject({ errors: 1, cuisine: { hits: 0, total: 1, rate: 0 }, mealTypesJaccard: 0, meanLatencyMs: null });
   });
 });
