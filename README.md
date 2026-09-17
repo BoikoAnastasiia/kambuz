@@ -30,6 +30,9 @@ never made up; the vocabulary files are edited by hand only.
 Per-video stage results are cached in `.cache/<videoId>/`, so a run resumes
 where it stopped and a single stage can be re-run after a prompt or vocabulary
 change. Every LLM call logs token usage, and the run report prints the total.
+Re-processing a segment (same video and segment start) always replaces its
+previous catalog entry outright, even with a lower score — the judge and
+completeness comparison only run across different segments.
 
 ## Setup
 

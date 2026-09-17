@@ -159,7 +159,11 @@ can be tuned independently.
 
 ### 4.6 Judge (code + LLM)
 
-Runs when a recipe is about to be written to the catalog.
+Runs when a recipe is about to be written to the catalog. A recipe's identity
+for re-processing is its segment (same video and segment start): the newest
+processing of a segment always replaces its previous catalog entry outright,
+regardless of id or score, and the candidate lookup and completeness
+comparison below apply only across different segments.
 
 1. **Candidate lookup (code):** existing catalog recipes with the same
    `dish_key`, or with canonical-ingredient Jaccard overlap ≥ 0.6.
