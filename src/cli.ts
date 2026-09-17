@@ -16,17 +16,23 @@ import { renderReportHtml } from "./orchestrator/report-html.js";
 import { spendEntry, appendSpend, readSpendTotal } from "./cli/spend.js";
 import { runEval, renderEval } from "./eval/run.js";
 import { createProgressRenderer } from "./cli/progress.js";
+import { BENCH_AGENTS, benchCommand, type BenchAgent } from "./bench/run.js";
+import { parseVariants, type Variant } from "./bench/variants.js";
 
 export const USAGE =
   "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize] [--quiet] [--open]\n" +
   "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
+  "       kambuz bench <categorizer|verifier> --models <model[:effort],...> [--repeat N] [--yes] [--open]\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
   "  --force               re-run every agent stage (does not re-fetch captions)\n" +
   "  --quiet               (ingest only) don't draw the live per-video progress tree, just print the final report\n" +
-  "  --open                (ingest only) open the HTML report when the run finishes\n" +
+  "  --open                (ingest, bench) open the HTML report when the run finishes\n" +
   "  --ingest              (eval only) runs the pipeline for each case's video first (calls the API for\n" +
-  "                         uncached videos); without it, eval only reads the existing catalog.";
+  "                         uncached videos); without it, eval only reads the existing catalog.\n" +
+  "  --models <list>       (bench) comma-separated variants, e.g. claude-sonnet-5,claude-sonnet-5:low\n" +
+  "  --repeat <n>          (bench) run every case n times (default 1)\n" +
+  "  --yes                 (bench) actually make the calls; without it bench only prints the plan";
 
 /** Best-effort: opening the report is a convenience, never a reason to fail the run. */
 function openInBrowser(filePath: string): Promise<void> {
@@ -53,6 +59,7 @@ type Stage = (typeof STAGES)[number];
 export type ParsedArgs =
   | { ok: true; command: "ingest"; url: string; force: boolean; onlyStage?: Stage; quiet: boolean; open: boolean }
   | { ok: true; command: "eval"; force: boolean; ingest: boolean; onlyStage?: Stage }
+  | { ok: true; command: "bench"; agent: BenchAgent; variants: Variant[]; repeat: number; yes: boolean; open: boolean }
   | { ok: false; error: string };
 
 function isStage(value: string): value is Stage {
@@ -61,7 +68,7 @@ function isStage(value: string): value is Stage {
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
-  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean; open?: boolean };
+  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean; open?: boolean; models?: string; repeat?: string; yes?: boolean };
   // npm forwards the "--" of `npm run eval -- --ingest` in some setups; left in place it
   // turns every later flag into a positional and the run dies with the usage text.
   const args = argv.filter((a) => a !== "--");
@@ -75,6 +82,9 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         ingest: { type: "boolean", default: false },
         quiet: { type: "boolean", default: false },
         open: { type: "boolean", default: false },
+        models: { type: "string" },
+        repeat: { type: "string" },
+        yes: { type: "boolean", default: false },
       },
     }));
   } catch (e) {
@@ -116,7 +126,25 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     return { ok: true, command: "eval", force: values.force ?? false, ingest: ingestFlag, onlyStage };
   }
 
-  return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval" };
+  if (command === "bench") {
+    const agent = positionals[1];
+    if (!agent || !(BENCH_AGENTS as readonly string[]).includes(agent)) {
+      return { ok: false, error: `expected: kambuz bench <${BENCH_AGENTS.join("|")}> --models <model[:effort],...>` };
+    }
+    if (positionals.length > 2) {
+      return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(2).join(" ")}` };
+    }
+    if (values.models === undefined) return { ok: false, error: "bench needs --models, e.g. --models claude-sonnet-5,claude-sonnet-5:low" };
+    const variants = parseVariants(values.models);
+    if (!variants.ok) return { ok: false, error: variants.error };
+    const repeatRaw = values.repeat ?? "1";
+    if (!/^\d+$/.test(repeatRaw.trim()) || Number(repeatRaw) < 1) {
+      return { ok: false, error: `--repeat must be a whole number of at least 1 (got "${repeatRaw}")` };
+    }
+    return { ok: true, command: "bench", agent: agent as BenchAgent, variants: variants.variants, repeat: Number(repeatRaw), yes: values.yes ?? false, open: values.open ?? false };
+  }
+
+  return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval | kambuz bench <agent>" };
 }
 
 async function main(): Promise<void> {
@@ -125,6 +153,28 @@ async function main(): Promise<void> {
     console.error(parsed.error);
     console.error(USAGE);
     process.exit(1);
+    return;
+  }
+
+  if (parsed.command === "bench") {
+    // A dry run needs no key: it builds no client and makes no call.
+    const keyError = parsed.yes ? apiKeyError(process.env) : null;
+    if (keyError) {
+      console.error(keyError);
+      process.exit(1);
+      return;
+    }
+    // The bench sets effort per variant; a KAMBUZ_EFFORT_* from .env must not leak into
+    // a variant written without one.
+    const benchConfig = { ...config, effort: {} };
+    const { result, files } = await benchCommand(
+      { agent: parsed.agent, variants: parsed.variants, repeat: parsed.repeat, yes: parsed.yes },
+      { config: benchConfig, vocab: await loadVocab(config.paths.vocab), makeLlm: (ledger) => createLlmClient(benchConfig, ledger) },
+      (line) => console.log(line),
+      process.stderr.isTTY ? (done, total) => process.stderr.write(`\r${done}/${total} calls${done === total ? "\n" : ""}`) : undefined,
+    );
+    if (parsed.yes && !result) process.exit(1);
+    if (files && parsed.open) await openInBrowser(files.html);
     return;
   }
 

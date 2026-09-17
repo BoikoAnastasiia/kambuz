@@ -108,6 +108,30 @@ provenance). The command prints a table and exits non-zero if any check fails,
 so a prompt or vocabulary change can be regression-tested. Without `--ingest`
 it never calls the API — it only reads what is already in `catalog/`.
 
+## Bench
+
+Compares models and thinking effort for one agent on the same cached inputs
+(`.cache/<videoId>/scout.json` segments and their `extract-<i>.json` drafts),
+without touching the catalog:
+
+    npm run kambuz -- bench categorizer --models claude-sonnet-5,claude-sonnet-5:low,claude-haiku-4-5
+    npm run kambuz -- bench verifier --models claude-sonnet-5,claude-sonnet-5:low --repeat 2 --yes --open
+
+Each variant is `model[:effort]` (`low`, `medium`, `high`). Without `--yes` the
+command only prints the plan ("N calls across M variants on K segments") and
+calls nothing; with it, it writes `reports/bench-<agent>-<timestamp>.json` and
+`.html` and prints a table per variant with scores, tokens, cost and latency.
+
+- `categorizer` scores cuisine, category and meal types against hand labels in
+  `eval/bench/categorizer.json` (format in `eval/bench/README.md`), plus dishKey
+  stability across `--repeat` runs.
+- `verifier` needs no labels: it plants an extra ingredient, a tripled quantity
+  and an invented step into each draft and measures how often each is flagged,
+  alongside flags on the untouched draft and extra noise.
+
+A variant the API rejects (for example an effort on a model without it) is
+recorded as errors in the report; the rest of the bench still runs.
+
 ## Configuration
 
 `.env` (copied from `.env.example`) holds `ANTHROPIC_API_KEY` and, optionally:

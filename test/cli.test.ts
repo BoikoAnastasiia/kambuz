@@ -96,4 +96,34 @@ describe("parseCliArgs", () => {
     const result = parseCliArgs(["ingest", "https://youtu.be/xyz", "extra"]);
     expect(result.ok).toBe(false);
   });
+
+  it("parses bench with variants, repeat, --yes and --open", () => {
+    expect(parseCliArgs(["bench", "categorizer", "--models", "claude-sonnet-5,claude-sonnet-5:low", "--repeat", "3", "--yes", "--open"])).toEqual({
+      ok: true,
+      command: "bench",
+      agent: "categorizer",
+      variants: [
+        { id: "claude-sonnet-5", model: "claude-sonnet-5" },
+        { id: "claude-sonnet-5:low", model: "claude-sonnet-5", effort: "low" },
+      ],
+      repeat: 3,
+      yes: true,
+      open: true,
+    });
+  });
+
+  it("defaults bench to one repeat and a dry run", () => {
+    expect(parseCliArgs(["bench", "verifier", "--models", "claude-haiku-4-5"])).toMatchObject({ ok: true, command: "bench", agent: "verifier", repeat: 1, yes: false, open: false });
+  });
+
+  it("rejects a bench without an agent, with an unknown agent, without --models, or with a bad --repeat or variant", () => {
+    expect(parseCliArgs(["bench", "--models", "a"]).ok).toBe(false);
+    expect(parseCliArgs(["bench", "scout", "--models", "a"]).ok).toBe(false);
+    expect(parseCliArgs(["bench", "verifier"]).ok).toBe(false);
+    expect(parseCliArgs(["bench", "verifier", "--models", "a", "--repeat", "0"]).ok).toBe(false);
+    expect(parseCliArgs(["bench", "verifier", "--models", "a", "--repeat", "1.5"]).ok).toBe(false);
+    expect(parseCliArgs(["bench", "verifier", "--models", "a:turbo"]).ok).toBe(false);
+    expect(parseCliArgs(["bench", "verifier", "extra", "--models", "a"]).ok).toBe(false);
+  });
 });
+
