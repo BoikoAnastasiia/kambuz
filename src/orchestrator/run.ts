@@ -218,6 +218,9 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
             if (recipe.completeness < config.minCompleteness) {
               report.tooThin.push({ recipeId: recipe.id, completeness: recipe.completeness, ingredients: recipe.ingredients.length, steps: recipe.steps.length });
               emit({ type: "placement", videoId, recipeId: recipe.id, action: "too-thin" });
+              // This segment's earlier catalog entry (if any) is obsolete either way — a
+              // too-thin re-processing must not leave a stale version of the same segment behind.
+              await withCatalogLock(() => supersedeSegment(recipe.source, videoId));
               continue;
             }
             for (const f of recipe.flags) report.flags.push({ recipeId: recipe.id, ...f });
@@ -236,20 +239,39 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
   report.usage = deps.usageText?.() ?? "";
   return report;
 
+  // A recipe's identity for re-processing is its segment (same videoId + segmentStart),
+  // regardless of id — the categorizer's dishKey can drift between runs. Archives every
+  // catalog recipe for that segment except `keepId` (the id this placement just wrote, or
+  // undefined when nothing from this segment was written this time — e.g. keep-existing or
+  // too-thin). The newest processing of a segment is authoritative, so this never compares
+  // completeness. Must run inside withCatalogLock — callers either already hold it
+  // (placeInCatalog) or must take it themselves (the too-thin path in the main loop).
+  async function supersedeSegment(source: Recipe["source"], videoId: string, keepId?: string): Promise<void> {
+    const all = await catalog.load();
+    const previous = all.filter((r) => r.source.videoId === source.videoId && r.source.segmentStart === source.segmentStart && r.id !== keepId);
+    for (const p of previous) {
+      await catalog.archive(p);
+      report.superseded.push(p.id);
+      emit({ type: "placement", videoId, recipeId: p.id, action: "superseded" });
+    }
+  }
+
   async function placeInCatalog(incoming: Recipe): Promise<void> {
     const videoId = incoming.source.videoId;
-    const existingAll = (await catalog.load()).filter((r) => r.id !== incoming.id);
+    const all = await catalog.load();
+    // Earlier catalog entries for this exact segment (any id) are not candidates for the
+    // judge/completeness comparison below — that comparison is only meaningful across
+    // DIFFERENT segments. Re-processing the same segment always wins outright.
+    const previousIds = new Set(
+      all.filter((r) => r.source.videoId === incoming.source.videoId && r.source.segmentStart === incoming.source.segmentStart).map((r) => r.id),
+    );
+    const existingAll = all.filter((r) => r.id !== incoming.id && !previousIds.has(r.id));
     const candidates = findCandidates(incoming, existingAll);
-    const self = (await catalog.load()).find((r) => r.id === incoming.id);
     if (candidates.length === 0) {
-      if (self && self.completeness >= incoming.completeness) {
-        report.keptExisting.push(self.id);
-        emit({ type: "placement", videoId, recipeId: self.id, action: "kept-existing" });
-        return;
-      }
       await catalog.write(incoming);
       report.written.push(incoming.id);
       emit({ type: "placement", videoId, recipeId: incoming.id, action: "written" });
+      await supersedeSegment(incoming.source, videoId, incoming.id);
       return;
     }
     const existing = candidates[0];
@@ -261,14 +283,19 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
       await catalog.write(result.incoming);
       report.written.push(result.incoming.id);
       emit({ type: "placement", videoId, recipeId: result.incoming.id, action: "replaced" });
+      await supersedeSegment(incoming.source, videoId, result.incoming.id);
     } else if (result.action === "keep-existing") {
       report.keptExisting.push(existing.id);
       emit({ type: "placement", videoId, recipeId: existing.id, action: "kept-existing" });
+      // Another segment's recipe won the comparison, but this segment's own previous
+      // output is still obsolete now that it has been re-processed.
+      await supersedeSegment(incoming.source, videoId);
     } else {
       if (result.existing.nameRu !== existing.nameRu) await catalog.rename(existing, result.existing.nameRu);
       await catalog.write(result.incoming);
       emit({ type: "placement", videoId, recipeId: result.incoming.id, action: "kept-both" });
       report.written.push(result.incoming.id);
+      await supersedeSegment(incoming.source, videoId, result.incoming.id);
     }
   }
 }

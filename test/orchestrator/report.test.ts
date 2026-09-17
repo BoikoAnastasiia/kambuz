@@ -34,4 +34,14 @@ describe("renderReport", () => {
     expect(md).toMatch(/1 ingredient/);
     expect(md).toMatch(/5 steps/);
   });
+
+  it("renders superseded ids under Catalog changes", () => {
+    const r = emptyReport("https://youtu.be/v1");
+    r.superseded.push("lasagna-bolognese--v1");
+
+    const md = renderReport(r);
+
+    expect(md).toContain("- superseded by a re-run: 1");
+    expect(md).toContain("lasagna-bolognese--v1");
+  });
 });

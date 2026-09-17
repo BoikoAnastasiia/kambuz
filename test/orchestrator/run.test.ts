@@ -92,14 +92,15 @@ describe("ingest", () => {
     expect((await deps.catalog.load())[0].nameRu).toBe("Лазанья с соусом болоньезе");
   });
 
-  it("uses the cache on a second run and keeps the existing recipe without calling the judge", async () => {
+  it("uses the cache on a second run and overwrites the same-segment entry without calling the judge", async () => {
     const deps = await setup();
     await ingest("https://youtu.be/v1", deps, {});
     deps.llm.callStructured.mockClear();
     const report = await ingest("https://youtu.be/v1", deps, {});
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
     expect(agents).toEqual([]);
-    expect(report.keptExisting).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.superseded).toEqual([]);
     expect(await deps.catalog.load()).toHaveLength(1);
   });
 
@@ -250,9 +251,10 @@ describe("ingest", () => {
     const report = await ingest("https://youtu.be/v1", deps, { onlyStage: "scout" });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
     // scout, extract, verify, categorize all re-run (ordinal downstream force); the
-    // recipe is unchanged so it lands back on the self-completeness early-return, no judge call.
+    // recipe is unchanged and re-processing a segment always overwrites its own entry
+    // directly, with no self-completeness comparison and no judge call.
     expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer"]);
-    expect(report.keptExisting).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
   it("--only-stage extract without --force re-runs extract, verify, categorize but not scout", async () => {
@@ -262,7 +264,7 @@ describe("ingest", () => {
     const report = await ingest("https://youtu.be/v1", deps, { onlyStage: "extract" });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
     expect(agents).toEqual(["extractor", "verifier", "categorizer"]);
-    expect(report.keptExisting).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
   it("--only-stage categorize alone re-runs only categorize", async () => {
@@ -272,7 +274,7 @@ describe("ingest", () => {
     const report = await ingest("https://youtu.be/v1", deps, { onlyStage: "categorize" });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
     expect(agents).toEqual(["categorizer"]);
-    expect(report.keptExisting).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
   it("--only-stage and --force together behave exactly like --only-stage alone", async () => {
@@ -282,7 +284,7 @@ describe("ingest", () => {
     const report = await ingest("https://youtu.be/v1", deps, { force: true, onlyStage: "extract" });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
     expect(agents).toEqual(["extractor", "verifier", "categorizer"]);
-    expect(report.keptExisting).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
   it("--force alone (no --only-stage) re-runs every agent stage but keeps the cached source", async () => {
@@ -292,7 +294,7 @@ describe("ingest", () => {
     const report = await ingest("https://youtu.be/v1", deps, { force: true });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
     expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer"]);
-    expect(report.keptExisting).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
     // fetch is never re-invoked past the first run: the source stage stays cached under both flags.
     expect(deps.fetch).toHaveBeenCalledTimes(1);
   });
@@ -598,7 +600,7 @@ describe("ingest", () => {
     expect(events[5]).toEqual({ type: "stage:cached", videoId: "v1", stage: "extract", segmentIndex: 0 });
     expect(events[6]).toEqual({ type: "stage:cached", videoId: "v1", stage: "verify", segmentIndex: 0 });
     expect(events[7]).toEqual({ type: "stage:cached", videoId: "v1", stage: "categorize", segmentIndex: 0 });
-    expect(events[8]).toEqual({ type: "placement", videoId: "v1", recipeId: "lasagna-bolognese--v1", action: "kept-existing" });
+    expect(events[8]).toEqual({ type: "placement", videoId: "v1", recipeId: "lasagna-bolognese--v1", action: "written" });
     expect(events[9]).toEqual({ type: "video:done", videoId: "v1", status: "done", recipes: 1 });
   });
 
@@ -672,5 +674,110 @@ describe("ingest", () => {
     // The healthy segment (index 0) is unaffected: full start/done chain, no stage:error.
     const segment0Types = events.filter((e): e is Extract<IngestEvent, { type: "stage:start" | "stage:done" | "stage:error" }> => (e.type === "stage:start" || e.type === "stage:done" || e.type === "stage:error") && e.segmentIndex === 0).map((e) => e.type);
     expect(segment0Types).toEqual(["stage:start", "stage:done", "stage:start", "stage:done", "stage:start", "stage:done"]);
+  });
+
+  // --- re-processing a segment supersedes its old catalog entry ---
+
+  it("re-running the same segment with a lower-scoring extraction overwrites the catalog with the new, lower score and calls no judge", async () => {
+    const deps = await setup();
+    await ingest("https://youtu.be/v1", deps, {});
+    const before = (await deps.catalog.load())[0];
+    expect(before.completeness).toBeCloseTo(0.37, 2);
+
+    deps.llm.callStructured.mockClear();
+    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+      switch (agent) {
+        case "extractor": return {
+          nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
+          ingredients: richIngredients().slice(0, 2),
+          steps: [
+            { order: 1, text: "Нарезать лук.", timestamp: 100 },
+            { order: 2, text: "Нарезать чеснок.", timestamp: 110 },
+            { order: 3, text: "Обжарить.", timestamp: 120 },
+            { order: 4, text: "Подать.", timestamp: 130 },
+          ],
+        };
+        case "verifier": return {
+          ingredients: [
+            { rawName: "лук", quote: "нарежем лук", supported: true },
+            { rawName: "чеснок", quote: "нарежем лук", supported: true },
+          ],
+          steps: [1, 2, 3, 4].map((n) => ({ order: n, quote: "нарежем лук", supported: true })),
+          confidence: 0.9,
+        };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+        default: throw new Error(agent);
+      }
+    });
+
+    const report = await ingest("https://youtu.be/v1", deps, { onlyStage: "extract" });
+
+    const agents = deps.llm.callStructured.mock.calls.map((c: any) => c[0].agent);
+    expect(agents).toEqual(["extractor", "verifier", "categorizer"]);
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.superseded).toEqual([]);
+    const recipes = await deps.catalog.load();
+    expect(recipes).toHaveLength(1);
+    expect(recipes[0].completeness).toBeCloseTo(0.34, 2);
+    expect(recipes[0].completeness).toBeLessThan(before.completeness);
+  });
+
+  it("re-running with a drifted dishKey archives the old id under superseded and writes the new id, with no judge call", async () => {
+    const deps = await setup();
+    await ingest("https://youtu.be/v1", deps, {});
+
+    deps.llm.callStructured.mockClear();
+    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+      switch (agent) {
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "zharkoye" };
+        default: throw new Error(agent);
+      }
+    });
+
+    const events: IngestEvent[] = [];
+    const report = await ingest("https://youtu.be/v1", { ...deps, onEvent: (e) => events.push(e) }, { onlyStage: "categorize" });
+
+    const agents = deps.llm.callStructured.mock.calls.map((c: any) => c[0].agent);
+    expect(agents).toEqual(["categorizer"]);
+    expect(report.written).toEqual(["zharkoye--v1"]);
+    expect(report.superseded).toEqual(["lasagna-bolognese--v1"]);
+    const recipes = await deps.catalog.load();
+    expect(recipes.map((r) => r.id)).toEqual(["zharkoye--v1"]);
+    const placements = events.filter((e): e is Extract<IngestEvent, { type: "placement" }> => e.type === "placement");
+    expect(placements.map((p) => p.action).sort()).toEqual(["superseded", "written"]);
+  });
+
+  it("re-running a segment that is now too thin archives its old catalog entry and records it in tooThin", async () => {
+    const deps = await setup();
+    await ingest("https://youtu.be/v1", deps, {});
+
+    deps.llm.callStructured.mockClear();
+    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+      switch (agent) {
+        case "extractor": return {
+          nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
+          ingredients: [{ ingredient: "onion", rawName: "лук", quantity: null, unit: null, provenance: "stated", note: null }],
+          steps: [{ order: 1, text: "Нарезать лук.", timestamp: 100 }],
+        };
+        case "verifier": return {
+          ingredients: [{ rawName: "лук", quote: null, supported: true }],
+          steps: [{ order: 1, quote: null, supported: true }],
+          confidence: 0.9,
+        };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+        default: throw new Error(agent);
+      }
+    });
+
+    const events: IngestEvent[] = [];
+    const report = await ingest("https://youtu.be/v1", { ...deps, onEvent: (e) => events.push(e) }, { onlyStage: "extract" });
+
+    expect(report.tooThin).toHaveLength(1);
+    expect(report.tooThin[0].recipeId).toBe("lasagna-bolognese--v1");
+    expect(report.written).toEqual([]);
+    expect(report.superseded).toEqual(["lasagna-bolognese--v1"]);
+    expect(await deps.catalog.load()).toHaveLength(0);
+    const placements = events.filter((e): e is Extract<IngestEvent, { type: "placement" }> => e.type === "placement");
+    expect(placements.map((p) => p.action).sort()).toEqual(["superseded", "too-thin"]);
   });
 });

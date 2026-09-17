@@ -8,6 +8,7 @@ export interface RunReport {
   written: string[];
   archived: string[];
   keptExisting: string[];
+  superseded: string[];
   unmapped: Record<string, number>;
   flags: { recipeId: string; kind: string; ref: string; reason: string }[];
   validationErrors: { recipeId: string; errors: string[] }[];
@@ -18,7 +19,7 @@ export interface RunReport {
 
 export function emptyReport(url: string, minCompleteness = 0.3): RunReport {
   return {
-    startedAt: new Date().toISOString(), url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [],
+    startedAt: new Date().toISOString(), url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [], superseded: [],
     unmapped: {}, flags: [], validationErrors: [], tooThin: [], minCompleteness, usage: "",
   };
 }
@@ -47,6 +48,7 @@ export function renderReport(r: RunReport): string {
     `- written: ${r.written.length}`, ...r.written.map((id) => `  - ${id}`),
     `- archived (replaced by a more complete version): ${r.archived.length}`, ...r.archived.map((id) => `  - ${id}`),
     `- kept existing (duplicate not better): ${r.keptExisting.length}`, ...r.keptExisting.map((id) => `  - ${id}`),
+    `- superseded by a re-run: ${r.superseded.length}`, ...r.superseded.map((id) => `  - ${id}`),
     "",
     "## Unmapped ingredients (add to vocab/ingredients.json, then rerun with --only-stage extract)",
     "",
