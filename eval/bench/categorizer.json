@@ -1,1 +1,253 @@
-[]
+[
+  {
+    "videoId": "n6fmm5zLmhs",
+    "segmentIndex": 0,
+    "dish": "Овсянка",
+    "cuisine": "other",
+    "category": "breakfast-dish",
+    "mealTypes": [
+      "breakfast"
+    ]
+  },
+  {
+    "videoId": "n6fmm5zLmhs",
+    "segmentIndex": 1,
+    "dish": "Яйца Бенедикт",
+    "cuisine": "french",
+    "category": "breakfast-dish",
+    "mealTypes": [
+      "breakfast"
+    ]
+  },
+  {
+    "videoId": "n6fmm5zLmhs",
+    "segmentIndex": 2,
+    "dish": "Грушевый кекс",
+    "cuisine": "other",
+    "category": "dessert",
+    "mealTypes": [
+      "breakfast",
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "n6fmm5zLmhs",
+    "segmentIndex": 3,
+    "dish": "Суп с колбасками",
+    "cuisine": "other",
+    "category": "soup",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "n6fmm5zLmhs",
+    "segmentIndex": 4,
+    "dish": "Жаркое из свинины",
+    "cuisine": "other",
+    "category": "stew",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "n6fmm5zLmhs",
+    "segmentIndex": 5,
+    "dish": "Тушёная рыба с овощами и макаронами",
+    "cuisine": "other",
+    "category": "stew",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "n6fmm5zLmhs",
+    "segmentIndex": 7,
+    "dish": "Перловка с зажаркой",
+    "cuisine": "russian",
+    "category": "side",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "nq5HW8nt-AU",
+    "segmentIndex": 1,
+    "dish": "Салат с курицей и тунцом",
+    "cuisine": "other",
+    "category": "salad",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "nq5HW8nt-AU",
+    "segmentIndex": 2,
+    "dish": "Треска капрезе",
+    "cuisine": "italian",
+    "category": "bake",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "TWYLP8st0pQ",
+    "segmentIndex": 0,
+    "dish": "Тосты с ветчиной и кабачком",
+    "cuisine": "other",
+    "category": "breakfast-dish",
+    "mealTypes": [
+      "breakfast"
+    ]
+  },
+  {
+    "videoId": "TWYLP8st0pQ",
+    "segmentIndex": 1,
+    "dish": "Грибной суп со свининой",
+    "cuisine": "other",
+    "category": "soup",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "TWYLP8st0pQ",
+    "segmentIndex": 2,
+    "dish": "Курица карри",
+    "cuisine": "asian",
+    "category": "bake",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "TWYLP8st0pQ",
+    "segmentIndex": 3,
+    "dish": "Запечённый лосось",
+    "cuisine": "other",
+    "category": "bake",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "TWYLP8st0pQ",
+    "segmentIndex": 5,
+    "dish": "Салат из капусты, моркови и свёклы",
+    "cuisine": "ukrainian",
+    "category": "salad",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "TWYLP8st0pQ",
+    "segmentIndex": 6,
+    "dish": "Запечённая говядина",
+    "cuisine": "other",
+    "category": "bake",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "TWYLP8st0pQ",
+    "segmentIndex": 7,
+    "dish": "Печёная картошка с устричным соусом",
+    "cuisine": "other",
+    "category": "bake",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "FRXZitSnjco",
+    "segmentIndex": 0,
+    "dish": "Куриные отбивные",
+    "cuisine": "other",
+    "category": "grill",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "FRXZitSnjco",
+    "segmentIndex": 1,
+    "dish": "Картофельное пюре с морковью",
+    "cuisine": "other",
+    "category": "stew",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "FRXZitSnjco",
+    "segmentIndex": 2,
+    "dish": "Жареный рис с треской",
+    "cuisine": "asian",
+    "category": "side",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "AUEC-8K4ikI",
+    "segmentIndex": 0,
+    "dish": "Грибной суп с курицей",
+    "cuisine": "other",
+    "category": "soup",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "AUEC-8K4ikI",
+    "segmentIndex": 1,
+    "dish": "Тефтели с рисом и картошкой",
+    "cuisine": "other",
+    "category": "bake",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "AUEC-8K4ikI",
+    "segmentIndex": 2,
+    "dish": "Курица с кускусом и стручковой фасолью",
+    "cuisine": "other",
+    "category": "stew",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  },
+  {
+    "videoId": "AUEC-8K4ikI",
+    "segmentIndex": 3,
+    "dish": "Салат с помидорами, луком и кукурузой",
+    "cuisine": "other",
+    "category": "salad",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ]
+  }
+]
