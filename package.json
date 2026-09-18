@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "kambuz": "tsx src/cli.ts",
-    "eval": "tsx src/cli.ts eval"
+    "eval": "tsx src/cli.ts eval",
+    "migrate-catalog": "tsx scripts/migrate-catalog.ts"
   },
   "keywords": [],
   "author": "",
