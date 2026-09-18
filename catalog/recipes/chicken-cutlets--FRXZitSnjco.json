@@ -8,7 +8,8 @@
     "lunch",
     "dinner"
   ],
-  "category": "grill",
+  "course": "main",
+  "method": "grill",
   "richness": "medium",
   "servings": null,
   "activeMinutes": 25,

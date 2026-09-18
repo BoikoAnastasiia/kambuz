@@ -8,7 +8,8 @@
     "lunch",
     "dinner"
   ],
-  "category": "soup",
+  "course": "soup",
+  "method": null,
   "richness": "medium",
   "servings": null,
   "activeMinutes": 35,

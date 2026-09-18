@@ -8,7 +8,8 @@
     "lunch",
     "dinner"
   ],
-  "category": "stew",
+  "course": "main",
+  "method": "stew",
   "richness": "medium",
   "servings": null,
   "activeMinutes": 20,

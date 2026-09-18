@@ -8,7 +8,8 @@
     "breakfast",
     "lunch"
   ],
-  "category": "bake",
+  "course": "main",
+  "method": "bake",
   "richness": "medium",
   "servings": null,
   "activeMinutes": 20,

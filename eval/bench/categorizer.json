@@ -4,7 +4,8 @@
     "segmentIndex": 0,
     "dish": "Овсянка",
     "cuisine": "other",
-    "category": "breakfast-dish",
+    "course": "breakfast",
+    "method": "boil",
     "mealTypes": [
       "breakfast"
     ]
@@ -14,7 +15,8 @@
     "segmentIndex": 1,
     "dish": "Яйца Бенедикт",
     "cuisine": "french",
-    "category": "breakfast-dish",
+    "course": "breakfast",
+    "method": "boil",
     "mealTypes": [
       "breakfast"
     ]
@@ -24,7 +26,8 @@
     "segmentIndex": 2,
     "dish": "Грушевый кекс",
     "cuisine": "other",
-    "category": "dessert",
+    "course": "dessert",
+    "method": "bake",
     "mealTypes": [
       "breakfast",
       "lunch",
@@ -36,7 +39,8 @@
     "segmentIndex": 3,
     "dish": "Суп с колбасками",
     "cuisine": "other",
-    "category": "soup",
+    "course": "soup",
+    "method": "boil",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -47,7 +51,8 @@
     "segmentIndex": 4,
     "dish": "Жаркое из свинины",
     "cuisine": "other",
-    "category": "stew",
+    "course": "main",
+    "method": "stew",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -58,7 +63,8 @@
     "segmentIndex": 5,
     "dish": "Тушёная рыба с овощами и макаронами",
     "cuisine": "other",
-    "category": "stew",
+    "course": "main",
+    "method": "stew",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -69,7 +75,8 @@
     "segmentIndex": 7,
     "dish": "Перловка с зажаркой",
     "cuisine": "russian",
-    "category": "side",
+    "course": "side",
+    "method": "boil",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -80,7 +87,8 @@
     "segmentIndex": 1,
     "dish": "Салат с курицей и тунцом",
     "cuisine": "other",
-    "category": "salad",
+    "course": "salad",
+    "method": "no-cook",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -91,7 +99,8 @@
     "segmentIndex": 2,
     "dish": "Треска капрезе",
     "cuisine": "italian",
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -102,7 +111,8 @@
     "segmentIndex": 0,
     "dish": "Тосты с ветчиной и кабачком",
     "cuisine": "other",
-    "category": "breakfast-dish",
+    "course": "breakfast",
+    "method": "bake",
     "mealTypes": [
       "breakfast"
     ]
@@ -112,7 +122,8 @@
     "segmentIndex": 1,
     "dish": "Грибной суп со свининой",
     "cuisine": "other",
-    "category": "soup",
+    "course": "soup",
+    "method": "boil",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -123,7 +134,8 @@
     "segmentIndex": 2,
     "dish": "Курица карри",
     "cuisine": "asian",
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -134,7 +146,8 @@
     "segmentIndex": 3,
     "dish": "Запечённый лосось",
     "cuisine": "other",
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -145,7 +158,8 @@
     "segmentIndex": 5,
     "dish": "Салат из капусты, моркови и свёклы",
     "cuisine": "ukrainian",
-    "category": "salad",
+    "course": "salad",
+    "method": "raw",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -156,7 +170,8 @@
     "segmentIndex": 6,
     "dish": "Запечённая говядина",
     "cuisine": "other",
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -167,7 +182,8 @@
     "segmentIndex": 7,
     "dish": "Печёная картошка с устричным соусом",
     "cuisine": "other",
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -178,7 +194,8 @@
     "segmentIndex": 0,
     "dish": "Куриные отбивные",
     "cuisine": "other",
-    "category": "grill",
+    "course": "main",
+    "method": "grill",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -189,7 +206,8 @@
     "segmentIndex": 1,
     "dish": "Картофельное пюре с морковью",
     "cuisine": "other",
-    "category": "stew",
+    "course": "main",
+    "method": "stew",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -200,7 +218,8 @@
     "segmentIndex": 2,
     "dish": "Жареный рис с треской",
     "cuisine": "asian",
-    "category": "side",
+    "course": "side",
+    "method": "fry",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -211,7 +230,8 @@
     "segmentIndex": 0,
     "dish": "Грибной суп с курицей",
     "cuisine": "other",
-    "category": "soup",
+    "course": "soup",
+    "method": "boil",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -222,7 +242,8 @@
     "segmentIndex": 1,
     "dish": "Тефтели с рисом и картошкой",
     "cuisine": "other",
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -233,7 +254,8 @@
     "segmentIndex": 2,
     "dish": "Курица с кускусом и стручковой фасолью",
     "cuisine": "other",
-    "category": "stew",
+    "course": "main",
+    "method": "stew",
     "mealTypes": [
       "lunch",
       "dinner"
@@ -244,7 +266,8 @@
     "segmentIndex": 3,
     "dish": "Салат с помидорами, луком и кукурузой",
     "cuisine": "other",
-    "category": "salad",
+    "course": "salad",
+    "method": "raw",
     "mealTypes": [
       "lunch",
       "dinner"

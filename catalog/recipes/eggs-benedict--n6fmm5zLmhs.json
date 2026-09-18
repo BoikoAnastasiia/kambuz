@@ -7,7 +7,8 @@
   "mealTypes": [
     "breakfast"
   ],
-  "category": "breakfast-dish",
+  "course": "breakfast",
+  "method": null,
   "richness": "hearty",
   "servings": null,
   "activeMinutes": 30,

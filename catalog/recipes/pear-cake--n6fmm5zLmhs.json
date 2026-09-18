@@ -7,7 +7,8 @@
   "mealTypes": [
     "breakfast"
   ],
-  "category": "dessert",
+  "course": "dessert",
+  "method": null,
   "richness": "medium",
   "servings": null,
   "activeMinutes": 20,

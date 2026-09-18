@@ -8,7 +8,8 @@
     "lunch",
     "dinner"
   ],
-  "category": "salad",
+  "course": "salad",
+  "method": null,
   "richness": "light",
   "servings": null,
   "activeMinutes": 10,

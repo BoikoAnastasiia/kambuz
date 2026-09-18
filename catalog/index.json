@@ -9,7 +9,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "completeness": 0.9166666666666667,
     "videoId": "TWYLP8st0pQ"
   },
@@ -23,7 +24,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "completeness": 0.6000000000000001,
     "videoId": "TWYLP8st0pQ"
   },
@@ -37,7 +39,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "completeness": 0.65,
     "videoId": "TWYLP8st0pQ"
   },
@@ -51,7 +54,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "salad",
+    "course": "salad",
+    "method": null,
     "completeness": 0.54,
     "videoId": "TWYLP8st0pQ"
   },
@@ -65,7 +69,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "stew",
+    "course": "main",
+    "method": "stew",
     "completeness": 0.9,
     "videoId": "AUEC-8K4ikI"
   },
@@ -79,7 +84,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "completeness": 0.9222222222222223,
     "videoId": "TWYLP8st0pQ"
   },
@@ -93,7 +99,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "grill",
+    "course": "main",
+    "method": "grill",
     "completeness": 0.9,
     "videoId": "FRXZitSnjco"
   },
@@ -107,7 +114,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "salad",
+    "course": "salad",
+    "method": null,
     "completeness": 0.6428571428571428,
     "videoId": "nq5HW8nt-AU"
   },
@@ -121,7 +129,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "completeness": 0.9166666666666667,
     "videoId": "nq5HW8nt-AU"
   },
@@ -134,7 +143,8 @@
     "mealTypes": [
       "breakfast"
     ],
-    "category": "breakfast-dish",
+    "course": "breakfast",
+    "method": null,
     "completeness": 0.9400000000000001,
     "videoId": "n6fmm5zLmhs"
   },
@@ -148,7 +158,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "side",
+    "course": "side",
+    "method": null,
     "completeness": 0.8105263157894738,
     "videoId": "FRXZitSnjco"
   },
@@ -162,7 +173,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "side",
+    "course": "side",
+    "method": null,
     "completeness": 0.65,
     "videoId": "FRXZitSnjco"
   },
@@ -176,7 +188,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "completeness": 0.54,
     "videoId": "AUEC-8K4ikI"
   },
@@ -190,7 +203,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "soup",
+    "course": "soup",
+    "method": null,
     "completeness": 0.9,
     "videoId": "AUEC-8K4ikI"
   },
@@ -204,7 +218,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "soup",
+    "course": "soup",
+    "method": null,
     "completeness": 0.9125,
     "videoId": "TWYLP8st0pQ"
   },
@@ -217,7 +232,8 @@
     "mealTypes": [
       "breakfast"
     ],
-    "category": "breakfast-dish",
+    "course": "breakfast",
+    "method": null,
     "completeness": 0.5733333333333334,
     "videoId": "n6fmm5zLmhs"
   },
@@ -230,7 +246,8 @@
     "mealTypes": [
       "breakfast"
     ],
-    "category": "dessert",
+    "course": "dessert",
+    "method": null,
     "completeness": 0.9888888888888889,
     "videoId": "n6fmm5zLmhs"
   },
@@ -244,7 +261,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "side",
+    "course": "side",
+    "method": null,
     "completeness": 0.5450000000000002,
     "videoId": "n6fmm5zLmhs"
   },
@@ -258,7 +276,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "soup",
+    "course": "soup",
+    "method": null,
     "completeness": 0.9,
     "videoId": "n6fmm5zLmhs"
   },
@@ -272,7 +291,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "stew",
+    "course": "main",
+    "method": "stew",
     "completeness": 0.9,
     "videoId": "n6fmm5zLmhs"
   },
@@ -286,7 +306,8 @@
       "breakfast",
       "lunch"
     ],
-    "category": "bake",
+    "course": "main",
+    "method": "bake",
     "completeness": 0.9272727272727272,
     "videoId": "TWYLP8st0pQ"
   },
@@ -300,7 +321,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "salad",
+    "course": "salad",
+    "method": null,
     "completeness": 0.35,
     "videoId": "AUEC-8K4ikI"
   },
@@ -314,7 +336,8 @@
       "lunch",
       "dinner"
     ],
-    "category": "stew",
+    "course": "main",
+    "method": "stew",
     "completeness": 0.9,
     "videoId": "n6fmm5zLmhs"
   }
