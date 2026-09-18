@@ -241,9 +241,9 @@ export async function executeBench(plan: BenchPlan, deps: BenchDeps, onProgress?
   if (plan.agent === "categorizer") {
     const cases = await Promise.all(
       plan.jobs.map(async (job): Promise<CategorizerCase> => {
-        const { outcome, ms, usage } = await timed<{ categorization: Categorization; rawCuisine: string }>(job, (llm) => runCategorizerDetailed(job.input.draft, deps.vocab, llm, promptsDir));
+        const { outcome, ms, usage } = await timed<{ categorization: Categorization; rawCuisine: string; rawMethod: string | null }>(job, (llm) => runCategorizerDetailed(job.input.draft, deps.vocab, llm, promptsDir));
         return outcome.ok
-          ? { ...base(job), ok: true, output: outcome.value.categorization, rawCuisine: outcome.value.rawCuisine, ms, usage }
+          ? { ...base(job), ok: true, output: outcome.value.categorization, rawCuisine: outcome.value.rawCuisine, rawMethod: outcome.value.rawMethod, ms, usage }
           : { ...base(job), ok: false, error: outcome.error, ms, usage };
       }),
     );
@@ -282,6 +282,8 @@ function assertRescorable(raw: unknown, file: string): asserts raw is BenchResul
     if (c.usage === undefined) throw new Error(`${file}: case has no stored usage, cannot rescore (${where})`);
     if (r.agent === "verifier" && c.draft === undefined) throw new Error(`${file}: verifier case has no stored draft, cannot rescore (${where})`);
     if (r.agent === "categorizer" && c.ok === true && c.rawCuisine === undefined) throw new Error(`${file}: categorizer case has no stored rawCuisine, cannot rescore (${where})`);
+    // rawMethod can legitimately be null (the model answered null); only "never stored" (undefined) is a problem.
+    if (r.agent === "categorizer" && c.ok === true && c.rawMethod === undefined) throw new Error(`${file}: categorizer case has no stored rawMethod, cannot rescore (${where})`);
   }
 }
 

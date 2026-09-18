@@ -23,22 +23,24 @@ export function buildCategorizerUser(draft: DraftRecipe, vocab: Vocab): string {
 }
 
 /**
- * Also returns the cuisine exactly as the model answered, before an off-vocabulary answer is
- * coerced to "other" — a bench scoring "other" must not credit a model for inventing a cuisine.
+ * Also returns the cuisine and method exactly as the model answered, before an off-vocabulary
+ * answer is coerced (cuisine to "other", method to null) — a bench scoring the coerced value
+ * would credit a model for inventing a cuisine, or for inventing a method that happens to
+ * coerce to the same null a genuinely-unknown-method label carries.
  */
 export async function runCategorizerDetailed(
   draft: DraftRecipe,
   vocab: Vocab,
   llm: LlmClient,
   promptsDir: string,
-): Promise<{ categorization: Categorization; rawCuisine: string }> {
+): Promise<{ categorization: Categorization; rawCuisine: string; rawMethod: string | null }> {
   const system = await loadPrompt("categorizer", promptsDir);
   const raw = await llm.callStructured({ agent: "categorizer", system, user: buildCategorizerUser(draft, vocab), schema: CategorizationWireSchema });
   const cuisine = vocab.cuisines.some((c) => c.id === raw.cuisine) ? raw.cuisine : "other";
   // An off-vocabulary course is kept as-is: validateRecipe reports it and the
   // orchestrator drops that one recipe, rather than a throw killing the whole video.
   const method = raw.method !== null && vocab.methods.some((m) => m.id === raw.method) ? raw.method : null;
-  return { categorization: { ...raw, cuisine, method, dishKey: slugify(raw.dishKey) }, rawCuisine: raw.cuisine };
+  return { categorization: { ...raw, cuisine, method, dishKey: slugify(raw.dishKey) }, rawCuisine: raw.cuisine, rawMethod: raw.method };
 }
 
 export async function runCategorizer(draft: DraftRecipe, vocab: Vocab, llm: LlmClient, promptsDir: string): Promise<Categorization> {

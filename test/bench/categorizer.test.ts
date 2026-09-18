@@ -47,8 +47,16 @@ const truth: CategorizerLabel[] = [
 function out(p: Partial<Categorization>): Categorization {
   return { cuisine: "italian", course: "main", method: "bake", mealTypes: ["dinner"], activeMinutes: null, totalMinutes: null, richness: "medium", dishKey: "lasagna", ...p };
 }
-function ok(variant: string, repeat: number, segmentIndex: number, output: Categorization, ms = 100, rawCuisine = output.cuisine): CategorizerCase {
-  return { variant, repeat, videoId: "v1", segmentIndex, ok: true, output, rawCuisine, ms };
+function ok(
+  variant: string,
+  repeat: number,
+  segmentIndex: number,
+  output: Categorization,
+  ms = 100,
+  rawCuisine = output.cuisine,
+  rawMethod: string | null = output.method,
+): CategorizerCase {
+  return { variant, repeat, videoId: "v1", segmentIndex, ok: true, output, rawCuisine, rawMethod, ms };
 }
 
 describe("scoreCategorizer", () => {
@@ -99,6 +107,22 @@ describe("scoreCategorizer", () => {
     const otherTruth: CategorizerLabel[] = [{ ...truth[0], cuisine: "other" }];
     const s = scoreCategorizer([ok("x", 0, 0, out({ cuisine: "other" }), 1, "klingon"), ok("x", 1, 0, out({ cuisine: "other" }), 1, "other")], otherTruth, ["x"], 2);
     expect(s.variants[0].cuisine).toMatchObject({ hits: 1, total: 2 });
+  });
+
+  it("scores the raw method, so an invented method coerced to null is not credited against a null label", () => {
+    const nullMethodTruth: CategorizerLabel[] = [{ ...truth[0], method: null }];
+    const s = scoreCategorizer(
+      [
+        // model invented "sous-vide"; the agent coerces the output to null, but rawMethod keeps the invention
+        ok("x", 0, 0, out({ method: null }), 1, undefined, "sous-vide"),
+        // model genuinely answered null
+        ok("x", 1, 0, out({ method: null }), 1, undefined, null),
+      ],
+      nullMethodTruth,
+      ["x"],
+      2,
+    );
+    expect(s.variants[0].method).toMatchObject({ hits: 1, total: 2 });
   });
 
   it("leaves stability empty for a single repeat", () => {

@@ -154,7 +154,7 @@ describe("benchCommand categorizer", () => {
     expect(json.schemaVersion).toBe(BENCH_SCHEMA_VERSION);
     // the categorizer plants nothing, so there is no donor pool to hash
     expect(json.donorPoolHash).toBeNull();
-    expect(json.cases.find((c: any) => c.variant === "claude-haiku-4-5" && c.ok)).toMatchObject({ rawCuisine: "other", usage: { model: "claude-haiku-4-5", calls: 1, input: 100, output: 10 } });
+    expect(json.cases.find((c: any) => c.variant === "claude-haiku-4-5" && c.ok)).toMatchObject({ rawCuisine: "other", rawMethod: null, usage: { model: "claude-haiku-4-5", calls: 1, input: 100, output: 10 } });
     expect(path.basename(out.files!.json)).toMatch(/^bench-categorizer-.+\.json$/);
     expect(json.cases).toHaveLength(12);
     const html = await readFile(out.files!.html, "utf8");
@@ -269,7 +269,7 @@ describe("benchCommand verifier", () => {
     await expect(rescoreCommand(future, () => {})).rejects.toThrow(/schema version/);
   });
 
-  it("refuses a report whose cases are missing usage, draft or rawCuisine", async () => {
+  it("refuses a report whose cases are missing usage, draft, rawCuisine or rawMethod", async () => {
     const config = await setup([]);
     const usage = { model: "m", calls: 1, input: 1, output: 1, costUsd: 0, unbilled: 0 };
     const base = { schemaVersion: BENCH_SCHEMA_VERSION, variants: [{ id: "v", model: "m" }], segments: [] };
@@ -283,5 +283,9 @@ describe("benchCommand verifier", () => {
 
     await write("no-rawcuisine.json", { ...base, agent: "categorizer", cases: [{ variant: "v", repeat: 0, videoId: "v1", segmentIndex: 0, ok: true, usage, output: {} }] });
     await expect(rescoreCommand(path.join(config.paths.eval, "no-rawcuisine.json"), () => {})).rejects.toThrow(/no stored rawCuisine/);
+
+    // rawMethod can legitimately be null, so this case has rawCuisine but no rawMethod at all
+    await write("no-rawmethod.json", { ...base, agent: "categorizer", cases: [{ variant: "v", repeat: 0, videoId: "v1", segmentIndex: 0, ok: true, usage, output: {}, rawCuisine: "other" }] });
+    await expect(rescoreCommand(path.join(config.paths.eval, "no-rawmethod.json"), () => {})).rejects.toThrow(/no stored rawMethod/);
   });
 });

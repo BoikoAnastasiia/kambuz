@@ -85,4 +85,25 @@ describe("runCategorizer", () => {
     expect(r.categorization.cuisine).toBe("other");
     expect(r.rawCuisine).toBe("klingon");
   });
+
+  it("runCategorizerDetailed keeps the raw method next to the coerced one, so an invented method scored against a null label isn't credited", async () => {
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", method: "sous-vide", dishKey: "x" })) };
+    const r = await runCategorizerDetailed(draft, vocab, llm as any, config.paths.prompts);
+    expect(r.categorization.method).toBeNull();
+    expect(r.rawMethod).toBe("sous-vide");
+  });
+
+  it("runCategorizerDetailed's rawMethod is null when the model legitimately answers null", async () => {
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", method: null, dishKey: "x" })) };
+    const r = await runCategorizerDetailed(draft, vocab, llm as any, config.paths.prompts);
+    expect(r.categorization.method).toBeNull();
+    expect(r.rawMethod).toBeNull();
+  });
+
+  it("runCategorizerDetailed's rawMethod matches the coerced value when the method is in vocab", async () => {
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", method: "bake", dishKey: "x" })) };
+    const r = await runCategorizerDetailed(draft, vocab, llm as any, config.paths.prompts);
+    expect(r.categorization.method).toBe("bake");
+    expect(r.rawMethod).toBe("bake");
+  });
 });

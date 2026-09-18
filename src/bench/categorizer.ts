@@ -79,13 +79,13 @@ interface CaseBase {
   /** Tokens and cost of this case's API attempts (absent in hand-built test cases). */
   usage?: CaseUsage;
 }
-export type CategorizerCase = CaseBase & ({ ok: true; output: Categorization; rawCuisine: string } | { ok: false; error: string });
+export type CategorizerCase = CaseBase & ({ ok: true; output: Categorization; rawCuisine: string; rawMethod: string | null } | { ok: false; error: string });
 
 export interface CategorizerVariantScore {
   variant: string;
   cases: number;
   errors: number;
-  /** Over every case: a failed call is a miss, never left out. Cuisine is the model's raw answer. */
+  /** Over every case: a failed call is a miss, never left out. Cuisine and method are the model's raw answer. */
   cuisine: Proportion;
   course: Proportion;
   method: Proportion;
@@ -150,7 +150,10 @@ export function scoreCategorizer(
       errors: mine.filter((c) => !c.ok).length,
       cuisine: proportion(hits((c) => c.rawCuisine === t(c).cuisine), mine.length),
       course: proportion(hits((c) => c.output.course === t(c).course), mine.length),
-      method: proportion(hits((c) => c.output.method === t(c).method), mine.length),
+      // Scored on the raw method, same reasoning as cuisine: the agent coerces an invented
+      // method to null, and scoring the coerced value would credit a model that hallucinated
+      // a method against a label whose method is genuinely null.
+      method: proportion(hits((c) => c.rawMethod === t(c).method), mine.length),
       mealTypesExact: proportion(hits((c) => jaccard(c.output.mealTypes, t(c).mealTypes) === 1), mine.length),
       mealTypesJaccard: mean(mine.map((c) => (c.ok ? jaccard(c.output.mealTypes, t(c).mealTypes) : 0))),
       dishKeyStability: stability,
