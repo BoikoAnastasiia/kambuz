@@ -1,0 +1,134 @@
+{
+  "id": "tomato-onion-corn-salad--AUEC-8K4ikI",
+  "nameRu": "Салат с помидорами, луком и кукурузой",
+  "nameEn": "Tomato, Onion and Corn Salad",
+  "dishKey": "tomato-onion-corn-salad",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "salad",
+  "richness": "light",
+  "servings": null,
+  "activeMinutes": 10,
+  "totalMinutes": 10,
+  "ingredients": [
+    {
+      "ingredient": "tomato",
+      "rawName": "томаты",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "onion",
+      "rawName": "лук",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "кукуруза консервированная",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Не найдено в справочнике ингредиентов"
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "olive-oil",
+      "rawName": "оливковое масло",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Подготовить ингредиенты для салата: помидоры, лук и консервированную кукурузу.",
+      "timestamp": 240
+    },
+    {
+      "order": 2,
+      "text": "Перейти к приготовлению салата.",
+      "timestamp": 670
+    },
+    {
+      "order": 3,
+      "text": "Нарезать лук и помидоры для салата.",
+      "timestamp": 711
+    },
+    {
+      "order": 4,
+      "text": "Заправить салат солью, перцем и оливковым маслом, перемешать.",
+      "timestamp": 715
+    },
+    {
+      "order": 5,
+      "text": "Отставить готовый салат в сторону.",
+      "timestamp": 715
+    }
+  ],
+  "flags": [
+    {
+      "kind": "ingredient",
+      "ref": "соль",
+      "reason": "presence not found in transcript"
+    },
+    {
+      "kind": "ingredient",
+      "ref": "перец",
+      "reason": "presence not found in transcript"
+    },
+    {
+      "kind": "ingredient",
+      "ref": "оливковое масло",
+      "reason": "presence not found in transcript"
+    },
+    {
+      "kind": "step",
+      "ref": "4",
+      "reason": "action not found in transcript"
+    }
+  ],
+  "completeness": 0.35,
+  "source": {
+    "videoId": "AUEC-8K4ikI",
+    "url": "https://www.youtube.com/watch?v=AUEC-8K4ikI",
+    "videoTitle": "ВОТ ЧТО ЕДЯТ МОРЯКИ НА УЖИН | Рабочий день судового повара",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 240,
+    "segmentEnd": 731,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T09:04:16.575Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

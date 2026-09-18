@@ -1,0 +1,94 @@
+{
+  "id": "meatballs-rice-potatoes--AUEC-8K4ikI",
+  "nameRu": "Тефтели с рисом и картошкой",
+  "nameEn": "Meatballs with rice and potatoes",
+  "dishKey": "meatballs-rice-potatoes",
+  "cuisine": "russian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "bake",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 15,
+  "totalMinutes": 40,
+  "ingredients": [
+    {
+      "ingredient": "rice",
+      "rawName": "рис",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "рис использован в тефтелях, заготовленных заранее; количество не названо"
+    },
+    {
+      "ingredient": "cheese-hard",
+      "rawName": "сыр",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "сыр внутри тефтелей, количество не названо"
+    },
+    {
+      "ingredient": "potato",
+      "rawName": "картошечка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "картофель на гарнир, количество не названо"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Достать заранее приготовленные (со вчера) тефтели с рисом и сыром внутри",
+      "timestamp": 130
+    },
+    {
+      "order": 2,
+      "text": "Подготовить печёный картофель для гарнира",
+      "timestamp": 138
+    },
+    {
+      "order": 3,
+      "text": "Выложить тефтели (фрикадельки) на противень",
+      "timestamp": 540
+    },
+    {
+      "order": 4,
+      "text": "Поставить тефтели в духовку",
+      "timestamp": 542
+    },
+    {
+      "order": 5,
+      "text": "Подготовить картошку с устричным соусом для гарнира",
+      "timestamp": 567
+    },
+    {
+      "order": 6,
+      "text": "Поставить картошку в духовку вместе с тефтелями",
+      "timestamp": 570
+    }
+  ],
+  "flags": [],
+  "completeness": 0.54,
+  "source": {
+    "videoId": "AUEC-8K4ikI",
+    "url": "https://www.youtube.com/watch?v=AUEC-8K4ikI",
+    "videoTitle": "ВОТ ЧТО ЕДЯТ МОРЯКИ НА УЖИН | Рабочий день судового повара",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 130,
+    "segmentEnd": 745,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T09:04:06.235Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

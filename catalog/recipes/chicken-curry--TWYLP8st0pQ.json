@@ -1,0 +1,217 @@
+{
+  "id": "chicken-curry--TWYLP8st0pQ",
+  "nameRu": "Курица карри",
+  "nameEn": "Chicken curry",
+  "dishKey": "chicken-curry",
+  "cuisine": "asian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "bake",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 30,
+  "totalMinutes": 90,
+  "ingredients": [
+    {
+      "ingredient": "chicken",
+      "rawName": "курятина",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "paprika",
+      "rawName": "паприка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "cilantro",
+      "rawName": "кориандр",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "кориандр используется как специя, соответствует alias 'coriander' для cilantro"
+    },
+    {
+      "ingredient": null,
+      "rawName": "карри",
+      "quantity": 2,
+      "unit": "tbsp",
+      "provenance": "stated",
+      "note": "две столовые ложки карри с горкой на две курицы"
+    },
+    {
+      "ingredient": "onion",
+      "rawName": "луковица",
+      "quantity": 1,
+      "unit": "pc",
+      "provenance": "inferred",
+      "note": "большую луковицу"
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чеснок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "чеснок планировалось добавить позже через чесночное масло, но явного добавления в курицу в этом фрагменте не показано"
+    },
+    {
+      "ingredient": "cream",
+      "rawName": "сливки",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Замариновать курицу.",
+      "timestamp": 489
+    },
+    {
+      "order": 2,
+      "text": "Разобрать курицу на кусочки.",
+      "timestamp": 496
+    },
+    {
+      "order": 3,
+      "text": "Срезать всё лишнее и нарезать курицу на порции.",
+      "timestamp": 506
+    },
+    {
+      "order": 4,
+      "text": "Заправить курицу солью и перцем.",
+      "timestamp": 532
+    },
+    {
+      "order": 5,
+      "text": "Отложить добавление чеснока на потом, когда будет готово чесночное масло.",
+      "timestamp": 543
+    },
+    {
+      "order": 6,
+      "text": "Добавить паприку.",
+      "timestamp": 553
+    },
+    {
+      "order": 7,
+      "text": "Добавить кориандр.",
+      "timestamp": 561
+    },
+    {
+      "order": 8,
+      "text": "Добавить карри.",
+      "timestamp": 571
+    },
+    {
+      "order": 9,
+      "text": "Использовать две столовые ложки карри с горкой на две курицы.",
+      "timestamp": 590
+    },
+    {
+      "order": 10,
+      "text": "Перемешать курицу со специями и оставить мариноваться.",
+      "timestamp": 605
+    },
+    {
+      "order": 11,
+      "text": "Добавить крупно нарезанную луковицу в маринад.",
+      "timestamp": 621
+    },
+    {
+      "order": 12,
+      "text": "Запечь курицу в сухом виде, а затем залить сливками.",
+      "timestamp": 633
+    },
+    {
+      "order": 13,
+      "text": "Поставить курицу запекаться в духовку.",
+      "timestamp": 1050
+    },
+    {
+      "order": 14,
+      "text": "Запекать курицу до румяного цвета.",
+      "timestamp": 1064
+    },
+    {
+      "order": 15,
+      "text": "Залить курицу сливками и прогреть около 5 минут до закипения, затем снять с огня.",
+      "timestamp": 1066
+    },
+    {
+      "order": 16,
+      "text": "Достать курицу и залить её сливками.",
+      "timestamp": 1078
+    },
+    {
+      "order": 17,
+      "text": "Отложить курицу в сторону.",
+      "timestamp": 1093
+    },
+    {
+      "order": 18,
+      "text": "Залить курицу сливками, чтобы смягчить остроту и сбалансировать вкус.",
+      "timestamp": 1119
+    },
+    {
+      "order": 19,
+      "text": "Вылить все сливки без остатка.",
+      "timestamp": 1146
+    },
+    {
+      "order": 20,
+      "text": "Вернуть курицу с соусом обратно в форму.",
+      "timestamp": 1150
+    },
+    {
+      "order": 21,
+      "text": "Прогреть блюдо, чтобы выровнять температуру и объединить вкус.",
+      "timestamp": 1154
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9222222222222223,
+  "source": {
+    "videoId": "TWYLP8st0pQ",
+    "url": "https://www.youtube.com/watch?v=TWYLP8st0pQ",
+    "videoTitle": "Рабочий день судового повара | Готовим завтрак, обед и ужин",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 489,
+    "segmentEnd": 1189,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:57:43.192Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

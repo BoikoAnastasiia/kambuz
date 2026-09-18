@@ -1,0 +1,118 @@
+{
+  "id": "baked-beef--TWYLP8st0pQ",
+  "nameRu": "Запечённая говядина",
+  "nameEn": "Baked beef",
+  "dishKey": "baked-beef",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "bake",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 180,
+  "ingredients": [
+    {
+      "ingredient": "beef",
+      "rawName": "говядина",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Количество не указано, упомянута как «говядинка»."
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Предположительно чёрный перец, использован как приправа к мясу."
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чеснок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "кетчуп",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Кетчуп отсутствует в словаре ингредиентов."
+    },
+    {
+      "ingredient": null,
+      "rawName": "базилик",
+      "quantity": 1,
+      "unit": "pinch",
+      "provenance": "inferred",
+      "note": "Чеф сказал «немножко базилика», что подразумевает небольшое количество (щепотку); ингредиент отсутствует в словаре."
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Замариновать говядину с солью, перцем, чесноком, кетчупом и базиликом.",
+      "timestamp": 1211
+    },
+    {
+      "order": 2,
+      "text": "Убрать говядину в холодильник для маринования.",
+      "timestamp": 1228
+    },
+    {
+      "order": 3,
+      "text": "Поставить говядину в духовку запекаться.",
+      "timestamp": 1287
+    },
+    {
+      "order": 4,
+      "text": "Достать говядину из духовки.",
+      "timestamp": 1392
+    },
+    {
+      "order": 5,
+      "text": "Нарезать говядину.",
+      "timestamp": 1407
+    },
+    {
+      "order": 6,
+      "text": "Подать говядину к столу.",
+      "timestamp": 1475
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9166666666666667,
+  "source": {
+    "videoId": "TWYLP8st0pQ",
+    "url": "https://www.youtube.com/watch?v=TWYLP8st0pQ",
+    "videoTitle": "Рабочий день судового повара | Готовим завтрак, обед и ужин",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1211,
+    "segmentEnd": 1481,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:57:39.403Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

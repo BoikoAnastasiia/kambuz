@@ -1,0 +1,203 @@
+{
+  "id": "toast-ham-zucchini--TWYLP8st0pQ",
+  "nameRu": "Тосты с ветчиной и кабачком",
+  "nameEn": "Ham and Zucchini Toasts",
+  "dishKey": "toast-ham-zucchini",
+  "cuisine": "other",
+  "mealTypes": [
+    "breakfast",
+    "lunch"
+  ],
+  "category": "bake",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 35,
+  "ingredients": [
+    {
+      "ingredient": null,
+      "rawName": "ветчина",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "No exact match in vocabulary for plain ham (only jamon exists); left unmapped."
+    },
+    {
+      "ingredient": "zucchini",
+      "rawName": "кабачок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "onion",
+      "rawName": "лук",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "bread",
+      "rawName": "хлеб",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "egg",
+      "rawName": "яйца",
+      "quantity": 2,
+      "unit": "pc",
+      "provenance": "stated",
+      "note": null
+    },
+    {
+      "ingredient": "flour",
+      "rawName": "мука",
+      "quantity": 1,
+      "unit": "tbsp",
+      "provenance": "stated",
+      "note": null
+    },
+    {
+      "ingredient": "tomato-paste",
+      "rawName": "томатный соус",
+      "quantity": 4,
+      "unit": "tbsp",
+      "provenance": "stated",
+      "note": "Chef describes it as a pizza‑style tomato sauce (crushed tomatoes, salt, pepper, sugar, spices, herbs); mapped to tomato-paste as the closest vocabulary entry."
+    },
+    {
+      "ingredient": "oats",
+      "rawName": "овсянка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "jamon",
+      "rawName": "испанский хамон",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Натираем ветчину и кабачок на тёрке.",
+      "timestamp": 60
+    },
+    {
+      "order": 2,
+      "text": "Мелко нарезаем лук кубиком.",
+      "timestamp": 63
+    },
+    {
+      "order": 3,
+      "text": "Формируем тосты на хлебе.",
+      "timestamp": 68
+    },
+    {
+      "order": 4,
+      "text": "Закидываем тосты в духовку.",
+      "timestamp": 72
+    },
+    {
+      "order": 5,
+      "text": "Солим и перчим начинку.",
+      "timestamp": 87
+    },
+    {
+      "order": 6,
+      "text": "Добавляем два яйца для клейкости.",
+      "timestamp": 94
+    },
+    {
+      "order": 7,
+      "text": "Перемешиваем массу.",
+      "timestamp": 102
+    },
+    {
+      "order": 8,
+      "text": "Добавляем муку, примерно столовую ложку.",
+      "timestamp": 117
+    },
+    {
+      "order": 9,
+      "text": "Добавляем томатный соус, примерно четыре столовые ложки.",
+      "timestamp": 137
+    },
+    {
+      "order": 10,
+      "text": "Насыпаем овсянку в кипящую воду.",
+      "timestamp": 174
+    },
+    {
+      "order": 11,
+      "text": "Берём тостовый хлеб и намазываем сверху смесью.",
+      "timestamp": 186
+    },
+    {
+      "order": 12,
+      "text": "Выкладываем тосты и отправляем в духовку до подрумянивания.",
+      "timestamp": 203
+    },
+    {
+      "order": 13,
+      "text": "Делаем скрембл, пока тосты пекутся.",
+      "timestamp": 216
+    },
+    {
+      "order": 14,
+      "text": "Добавляем испанский хамон в скрембл.",
+      "timestamp": 224
+    },
+    {
+      "order": 15,
+      "text": "Прогреваем тосты до полного пропекания и подрумянивания.",
+      "timestamp": 251
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9272727272727272,
+  "source": {
+    "videoId": "TWYLP8st0pQ",
+    "url": "https://www.youtube.com/watch?v=TWYLP8st0pQ",
+    "videoTitle": "Рабочий день судового повара | Готовим завтрак, обед и ужин",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 60,
+    "segmentEnd": 258,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:57:26.111Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

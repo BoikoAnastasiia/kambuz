@@ -1,0 +1,94 @@
+{
+  "id": "cabbage-carrot-beet-salad--TWYLP8st0pQ",
+  "nameRu": "Салат из капусты, моркови и свёклы",
+  "nameEn": "Cabbage, Carrot and Beet Salad",
+  "dishKey": "cabbage-carrot-beet-salad",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "salad",
+  "richness": "light",
+  "servings": null,
+  "activeMinutes": 15,
+  "totalMinutes": 15,
+  "ingredients": [
+    {
+      "ingredient": "cabbage",
+      "rawName": "капуста белокочанная",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "carrot",
+      "rawName": "морковка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "beet",
+      "rawName": "свежая свекла",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Подготовить капусту белокочанную, морковь и свежую свёклу для салата.",
+      "timestamp": 356
+    },
+    {
+      "order": 2,
+      "text": "Заправить салат майонезом.",
+      "timestamp": 364
+    },
+    {
+      "order": 3,
+      "text": "Нарезать капусту белокочанную.",
+      "timestamp": 1039
+    },
+    {
+      "order": 4,
+      "text": "Натереть морковь.",
+      "timestamp": 1039
+    },
+    {
+      "order": 5,
+      "text": "Натереть свежую свёклу.",
+      "timestamp": 1039
+    },
+    {
+      "order": 6,
+      "text": "Собрать салат.",
+      "timestamp": 1074
+    }
+  ],
+  "flags": [],
+  "completeness": 0.54,
+  "source": {
+    "videoId": "TWYLP8st0pQ",
+    "url": "https://www.youtube.com/watch?v=TWYLP8st0pQ",
+    "videoTitle": "Рабочий день судового повара | Готовим завтрак, обед и ужин",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 353,
+    "segmentEnd": 1198,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:57:30.185Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

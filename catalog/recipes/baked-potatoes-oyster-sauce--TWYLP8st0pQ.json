@@ -1,0 +1,97 @@
+{
+  "id": "baked-potatoes-oyster-sauce--TWYLP8st0pQ",
+  "nameRu": "Печёная картошка с устричным соусом",
+  "nameEn": "Baked potatoes with oyster sauce",
+  "dishKey": "baked-potatoes-oyster-sauce",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "bake",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 10,
+  "totalMinutes": 40,
+  "ingredients": [
+    {
+      "ingredient": "potato",
+      "rawName": "картошку",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "paprika",
+      "rawName": "паприка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать картошку",
+      "timestamp": 1300
+    },
+    {
+      "order": 2,
+      "text": "Заправить картошку солью, перцем, паприкой и устричным соусом",
+      "timestamp": 1300
+    },
+    {
+      "order": 3,
+      "text": "Перемешать и добавить чесночное масло",
+      "timestamp": 1300
+    },
+    {
+      "order": 4,
+      "text": "Отправить картошку в духовку и запекать примерно 30 минут",
+      "timestamp": 1382
+    },
+    {
+      "order": 5,
+      "text": "Достать готовую картошку с румяной корочкой и подать",
+      "timestamp": 1466
+    }
+  ],
+  "flags": [],
+  "completeness": 0.6000000000000001,
+  "source": {
+    "videoId": "TWYLP8st0pQ",
+    "url": "https://www.youtube.com/watch?v=TWYLP8st0pQ",
+    "videoTitle": "Рабочий день судового повара | Готовим завтрак, обед и ужин",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 1300,
+    "segmentEnd": 1470,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:57:34.144Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

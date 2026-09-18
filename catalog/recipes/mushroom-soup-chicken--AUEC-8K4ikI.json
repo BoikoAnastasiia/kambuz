@@ -1,0 +1,179 @@
+{
+  "id": "mushroom-soup-chicken--AUEC-8K4ikI",
+  "nameRu": "Грибной суп с курицей",
+  "nameEn": "Mushroom soup with chicken",
+  "dishKey": "mushroom-soup-chicken",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "soup",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 35,
+  "totalMinutes": 75,
+  "ingredients": [
+    {
+      "ingredient": "chicken",
+      "rawName": "курочка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Курица варится для бульона, затем разбирается и добавляется в суп."
+    },
+    {
+      "ingredient": "mushroom",
+      "rawName": "шампиньоны",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "onion",
+      "rawName": "лучок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "carrot",
+      "rawName": "морковка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "potato",
+      "rawName": "картошка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "stock-chicken",
+      "rawName": "бульон",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Тот же бульон, в котором варилась курица для супа."
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Поставить курицу вариться в кастрюле — сделать бульон для супа.",
+      "timestamp": 125
+    },
+    {
+      "order": 2,
+      "text": "Снять пену с бульона.",
+      "timestamp": 129
+    },
+    {
+      "order": 3,
+      "text": "Нарезать лук для супа.",
+      "timestamp": 259
+    },
+    {
+      "order": 4,
+      "text": "Обжарить лук, сделать зажарку.",
+      "timestamp": 262
+    },
+    {
+      "order": 5,
+      "text": "Натереть морковь на тёрке.",
+      "timestamp": 272
+    },
+    {
+      "order": 6,
+      "text": "Добавить нарезанный картофель в суп.",
+      "timestamp": 275
+    },
+    {
+      "order": 7,
+      "text": "Добавить бульон в суп.",
+      "timestamp": 284
+    },
+    {
+      "order": 8,
+      "text": "Обжарить морковь для зажарки.",
+      "timestamp": 286
+    },
+    {
+      "order": 9,
+      "text": "Нарезать шампиньоны.",
+      "timestamp": 436
+    },
+    {
+      "order": 10,
+      "text": "Добавить шампиньоны в зажарку и обжарить.",
+      "timestamp": 440
+    },
+    {
+      "order": 11,
+      "text": "Добавить обжаренную зажарку с грибами в суп.",
+      "timestamp": 442
+    },
+    {
+      "order": 12,
+      "text": "Достать сваренную курицу из бульона.",
+      "timestamp": 527
+    },
+    {
+      "order": 13,
+      "text": "Разобрать и нарезать курицу.",
+      "timestamp": 530
+    },
+    {
+      "order": 14,
+      "text": "Посолить и поперчить суп.",
+      "timestamp": 533
+    },
+    {
+      "order": 15,
+      "text": "Добавить нарезанную курицу в суп.",
+      "timestamp": 535
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9,
+  "source": {
+    "videoId": "AUEC-8K4ikI",
+    "url": "https://www.youtube.com/watch?v=AUEC-8K4ikI",
+    "videoTitle": "ВОТ ЧТО ЕДЯТ МОРЯКИ НА УЖИН | Рабочий день судового повара",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 119,
+    "segmentEnd": 537,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T09:05:47.854Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

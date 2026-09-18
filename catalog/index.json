@@ -1,5 +1,89 @@
 [
   {
+    "id": "baked-beef--TWYLP8st0pQ",
+    "nameRu": "Запечённая говядина",
+    "nameEn": "Baked beef",
+    "dishKey": "baked-beef",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "bake",
+    "completeness": 0.9166666666666667,
+    "videoId": "TWYLP8st0pQ"
+  },
+  {
+    "id": "baked-potatoes-oyster-sauce--TWYLP8st0pQ",
+    "nameRu": "Печёная картошка с устричным соусом",
+    "nameEn": "Baked potatoes with oyster sauce",
+    "dishKey": "baked-potatoes-oyster-sauce",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "bake",
+    "completeness": 0.6000000000000001,
+    "videoId": "TWYLP8st0pQ"
+  },
+  {
+    "id": "baked-salmon--TWYLP8st0pQ",
+    "nameRu": "Запечённый лосось",
+    "nameEn": "Baked salmon",
+    "dishKey": "baked-salmon",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "bake",
+    "completeness": 0.65,
+    "videoId": "TWYLP8st0pQ"
+  },
+  {
+    "id": "cabbage-carrot-beet-salad--TWYLP8st0pQ",
+    "nameRu": "Салат из капусты, моркови и свёклы",
+    "nameEn": "Cabbage, Carrot and Beet Salad",
+    "dishKey": "cabbage-carrot-beet-salad",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "salad",
+    "completeness": 0.54,
+    "videoId": "TWYLP8st0pQ"
+  },
+  {
+    "id": "chicken-couscous-green-beans--AUEC-8K4ikI",
+    "nameRu": "Курица с кускусом и стручковой фасолью",
+    "nameEn": "Chicken with couscous and green beans",
+    "dishKey": "chicken-couscous-green-beans",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "stew",
+    "completeness": 0.9,
+    "videoId": "AUEC-8K4ikI"
+  },
+  {
+    "id": "chicken-curry--TWYLP8st0pQ",
+    "nameRu": "Курица карри",
+    "nameEn": "Chicken curry",
+    "dishKey": "chicken-curry",
+    "cuisine": "asian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "bake",
+    "completeness": 0.9222222222222223,
+    "videoId": "TWYLP8st0pQ"
+  },
+  {
     "id": "chicken-cutlets--FRXZitSnjco",
     "nameRu": "Куриные отбивные",
     "nameEn": "Chicken Cutlets",
@@ -83,6 +167,48 @@
     "videoId": "FRXZitSnjco"
   },
   {
+    "id": "meatballs-rice-potatoes--AUEC-8K4ikI",
+    "nameRu": "Тефтели с рисом и картошкой",
+    "nameEn": "Meatballs with rice and potatoes",
+    "dishKey": "meatballs-rice-potatoes",
+    "cuisine": "russian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "bake",
+    "completeness": 0.54,
+    "videoId": "AUEC-8K4ikI"
+  },
+  {
+    "id": "mushroom-soup-chicken--AUEC-8K4ikI",
+    "nameRu": "Грибной суп с курицей",
+    "nameEn": "Mushroom soup with chicken",
+    "dishKey": "mushroom-soup-chicken",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "soup",
+    "completeness": 0.9,
+    "videoId": "AUEC-8K4ikI"
+  },
+  {
+    "id": "mushroom-soup-pork--TWYLP8st0pQ",
+    "nameRu": "Грибной суп со свининой",
+    "nameEn": "Mushroom soup",
+    "dishKey": "mushroom-soup-pork",
+    "cuisine": "russian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "soup",
+    "completeness": 0.9125,
+    "videoId": "TWYLP8st0pQ"
+  },
+  {
     "id": "oatmeal--n6fmm5zLmhs",
     "nameRu": "Овсянка",
     "nameEn": "Oatmeal",
@@ -149,6 +275,34 @@
     "category": "stew",
     "completeness": 0.9,
     "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "toast-ham-zucchini--TWYLP8st0pQ",
+    "nameRu": "Тосты с ветчиной и кабачком",
+    "nameEn": "Ham and Zucchini Toasts",
+    "dishKey": "toast-ham-zucchini",
+    "cuisine": "other",
+    "mealTypes": [
+      "breakfast",
+      "lunch"
+    ],
+    "category": "bake",
+    "completeness": 0.9272727272727272,
+    "videoId": "TWYLP8st0pQ"
+  },
+  {
+    "id": "tomato-onion-corn-salad--AUEC-8K4ikI",
+    "nameRu": "Салат с помидорами, луком и кукурузой",
+    "nameEn": "Tomato, Onion and Corn Salad",
+    "dishKey": "tomato-onion-corn-salad",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "salad",
+    "completeness": 0.35,
+    "videoId": "AUEC-8K4ikI"
   },
   {
     "id": "zharkoe-pork--n6fmm5zLmhs",

@@ -1,0 +1,164 @@
+{
+  "id": "mushroom-soup-pork--TWYLP8st0pQ",
+  "nameRu": "Грибной суп со свининой",
+  "nameEn": "Mushroom soup",
+  "dishKey": "mushroom-soup-pork",
+  "cuisine": "russian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "soup",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 30,
+  "totalMinutes": 60,
+  "ingredients": [
+    {
+      "ingredient": "pork",
+      "rawName": "свинина",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Used as the meat base for the broth; no amount given."
+    },
+    {
+      "ingredient": "potato",
+      "rawName": "картофель",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Added to the soup to cook; amount not stated."
+    },
+    {
+      "ingredient": "onion",
+      "rawName": "лучок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Cut for the soup's zazharka (fry base); amount not stated."
+    },
+    {
+      "ingredient": "carrot",
+      "rawName": "морковка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Cut for the soup's zazharka along with onion; amount not stated."
+    },
+    {
+      "ingredient": "mushroom",
+      "rawName": "грибы",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Fried dry on a pan and added to the soup; amount not stated."
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Used to season the soup, no amount stated."
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Used to season the soup, no amount stated."
+    },
+    {
+      "ingredient": "butter",
+      "rawName": "сливочное масло",
+      "quantity": 1,
+      "unit": "tbsp",
+      "provenance": "stated",
+      "note": "One tablespoon added to the browned mushrooms; chef says butter enhances the soup's flavor, so it's sливочное (butter), not oil."
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Поставить свинину вариться на суп.",
+      "timestamp": 301
+    },
+    {
+      "order": 2,
+      "text": "Закинуть картофель вариться в суп.",
+      "timestamp": 608
+    },
+    {
+      "order": 3,
+      "text": "Нарезать лук и морковку на зажарку для супа.",
+      "timestamp": 679
+    },
+    {
+      "order": 4,
+      "text": "Начать обжаривать грибы дольками на сухой сковороде.",
+      "timestamp": 679
+    },
+    {
+      "order": 5,
+      "text": "Добавить готовую зажарку (лук с морковью) в суп.",
+      "timestamp": 733
+    },
+    {
+      "order": 6,
+      "text": "Посолить и поперчить.",
+      "timestamp": 743
+    },
+    {
+      "order": 7,
+      "text": "Добавить грибы на сковороду и обжаривать до румяного цвета.",
+      "timestamp": 753
+    },
+    {
+      "order": 8,
+      "text": "Достать сваренную свинину из бульона.",
+      "timestamp": 764
+    },
+    {
+      "order": 9,
+      "text": "Нарезать мясо и вернуть его обратно в суп.",
+      "timestamp": 769
+    },
+    {
+      "order": 10,
+      "text": "Взять сливочное масло.",
+      "timestamp": 847
+    },
+    {
+      "order": 11,
+      "text": "Добавить столовую ложку сливочного масла к подрумянившимся грибам.",
+      "timestamp": 859
+    },
+    {
+      "order": 12,
+      "text": "Добавить свинину в суп и оставить довариваться.",
+      "timestamp": 955
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9125,
+  "source": {
+    "videoId": "TWYLP8st0pQ",
+    "url": "https://www.youtube.com/watch?v=TWYLP8st0pQ",
+    "videoTitle": "Рабочий день судового повара | Готовим завтрак, обед и ужин",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 301,
+    "segmentEnd": 961,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:57:32.136Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

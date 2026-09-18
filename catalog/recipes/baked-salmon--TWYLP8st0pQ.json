@@ -1,0 +1,111 @@
+{
+  "id": "baked-salmon--TWYLP8st0pQ",
+  "nameRu": "Запечённый лосось",
+  "nameEn": "Baked salmon",
+  "dishKey": "baked-salmon",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "bake",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 10,
+  "totalMinutes": 17,
+  "ingredients": [
+    {
+      "ingredient": "salmon",
+      "rawName": "рыбка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Целая рыба (лосось), нарезанная на порционные кусочки; количество не указано."
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перчик",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чеснок (для чесночного масла)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Использован для приготовления чесночного масла, которым поливают рыбу; количество не указано."
+    },
+    {
+      "ingredient": null,
+      "rawName": "чесночное масло",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Тип масла (оливковое или подсолнечное) не уточнён; контекст полива рыбы перед запеканием не даёт явного указания, поэтому оставлено неопределённым."
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать рыбу (лосось) на кусочки.",
+      "timestamp": 969
+    },
+    {
+      "order": 2,
+      "text": "Посолить и поперчить рыбу.",
+      "timestamp": 973
+    },
+    {
+      "order": 3,
+      "text": "Приготовить чесночное масло: дать осадку чеснока опуститься на дно и взять только верхний слой масла, чтобы вкус не был слишком чесночным, и полить этим маслом рыбу.",
+      "timestamp": 985
+    },
+    {
+      "order": 4,
+      "text": "Равномерно распределить рыбу на противне.",
+      "timestamp": 998
+    },
+    {
+      "order": 5,
+      "text": "Запекать рыбу при 180°C (в домашней духовке — при 200°C) в течение 7 минут.",
+      "timestamp": 1011
+    }
+  ],
+  "flags": [
+    {
+      "kind": "step",
+      "ref": "1",
+      "reason": "action not found in transcript"
+    }
+  ],
+  "completeness": 0.65,
+  "source": {
+    "videoId": "TWYLP8st0pQ",
+    "url": "https://www.youtube.com/watch?v=TWYLP8st0pQ",
+    "videoTitle": "Рабочий день судового повара | Готовим завтрак, обед и ужин",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 969,
+    "segmentEnd": 1209,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:57:28.315Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

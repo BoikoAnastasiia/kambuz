@@ -1,0 +1,148 @@
+{
+  "id": "chicken-couscous-green-beans--AUEC-8K4ikI",
+  "nameRu": "Курица с кускусом и стручковой фасолью",
+  "nameEn": "Chicken with couscous and green beans",
+  "dishKey": "chicken-couscous-green-beans",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "stew",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 25,
+  "totalMinutes": 35,
+  "ingredients": [
+    {
+      "ingredient": "onion",
+      "rawName": "лучок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "chicken-breast",
+      "rawName": "курица (филе)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "чеф упомянул, что использует филе курицы"
+    },
+    {
+      "ingredient": "beans",
+      "rawName": "стручковая фасоль (замороженная)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "замороженная стручковая фасоль, количество не указано"
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чесночком",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "количество не указано явно"
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать лук для курицы с фасолью",
+      "timestamp": 514
+    },
+    {
+      "order": 2,
+      "text": "Нарезать курицу слайсами",
+      "timestamp": 516
+    },
+    {
+      "order": 3,
+      "text": "Разогреть сковороду и обжарить лук",
+      "timestamp": 522
+    },
+    {
+      "order": 4,
+      "text": "Обжарить курицу",
+      "timestamp": 525
+    },
+    {
+      "order": 5,
+      "text": "Обжаривать курицу до полного испарения влаги",
+      "timestamp": 579
+    },
+    {
+      "order": 6,
+      "text": "Добавить замороженную стручковую фасоль к курице",
+      "timestamp": 586
+    },
+    {
+      "order": 7,
+      "text": "Запарить кускус",
+      "timestamp": 595
+    },
+    {
+      "order": 8,
+      "text": "Накрыть кускус крышкой и оставить настояться",
+      "timestamp": 641
+    },
+    {
+      "order": 9,
+      "text": "Смешать чеснок, соль, перец и соевый соус для заправки курицы",
+      "timestamp": 648
+    },
+    {
+      "order": 10,
+      "text": "Обжарить курицу с фасолью в заправке",
+      "timestamp": 659
+    },
+    {
+      "order": 11,
+      "text": "Как только фасоль готова, пересыпать курицу с фасолью в кускус",
+      "timestamp": 661
+    },
+    {
+      "order": 12,
+      "text": "Добавить курицу к кускусу и перемешать, дав кускусу впитать соевый соус",
+      "timestamp": 686
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9,
+  "source": {
+    "videoId": "AUEC-8K4ikI",
+    "url": "https://www.youtube.com/watch?v=AUEC-8K4ikI",
+    "videoTitle": "ВОТ ЧТО ЕДЯТ МОРЯКИ НА УЖИН | Рабочий день судового повара",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 138,
+    "segmentEnd": 755,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T09:04:24.208Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}
