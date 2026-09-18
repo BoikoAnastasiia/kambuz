@@ -162,11 +162,30 @@ was cooked — and has been split into `course` and `method` (`method` may be
 
 It rewrites `catalog/recipes/*.json`, `catalog/archive/*.json`,
 `catalog/index.json` and `eval/bench/categorizer.json`, printing a table of
-what changed. It is idempotent — running it again after the first pass finds
-nothing left to change. It never calls the API and never touches `.cache/`:
+what changed. Pass `--dry-run` to see that table (and any warnings) without
+writing anything:
+
+    npm run migrate-catalog -- --dry-run
+
+It is idempotent — running it again after the first pass finds nothing left
+to change. Every file is written atomically (temp file + rename), and a
+problem with one file (unreadable JSON, a write failure, an unmapped legacy
+value) is reported per file rather than aborting the run or leaving a
+half-written file behind. It never calls the API and never touches `.cache/`:
 a cached `categorize-<i>.json` still has the old `category` field, so it will
 fail the new schema and be treated as a cache miss on the next `ingest` —
 just that one stage re-runs for the affected segment, nothing is lost.
+
+**The bench labels need a follow-up by hand.** The old `category` value only
+ever named a cooking method for `bake`/`stew`/`grill`; every other old
+category (soup, salad, dessert, bread, sauce, side, breakfast-dish, pasta,
+dumplings) maps to `method: null`. In `eval/bench/categorizer.json` that
+comes out to 12 of its 23 rows with no method — the migration table prints
+the exact count under "bench truth: N/M row(s) have method: null" so you can
+see it after running. Re-watch those segments and fill in a real method by
+hand before the categorizer bench's method rate is worth reading; until then
+it's measuring "did the model also guess null", not "did it get the method
+right".
 
 ## Configuration
 
