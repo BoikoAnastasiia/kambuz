@@ -34,9 +34,16 @@ export function mapLegacyCategory(category: string): CourseMethod {
  * Migrates one JSON object in place: a string `category` field becomes `course` + `method` at
  * the same position, every other field untouched. An object with no string `category` field is
  * returned unchanged (`changed: false`) — either already migrated, or not this kind of object.
+ *
+ * An object that has `category` AND an existing `course` or `method` is refused (throws) rather
+ * than silently overwriting a hand-set value — that combination should not occur from the
+ * mechanical map alone, so it means something touched the file by hand and needs a human look.
  */
 export function migrateCategoryObject(obj: Record<string, unknown>): { value: Record<string, unknown>; changed: boolean; from?: string } {
   if (typeof obj.category !== "string") return { value: obj, changed: false };
+  if ("course" in obj || "method" in obj) {
+    throw new Error(`refusing to migrate: object already has course/method alongside category "${obj.category}" — resolve by hand`);
+  }
   const from = obj.category;
   const { course, method } = mapLegacyCategory(from);
   const value: Record<string, unknown> = {};

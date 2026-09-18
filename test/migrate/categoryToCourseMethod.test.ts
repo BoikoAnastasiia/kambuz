@@ -52,6 +52,11 @@ describe("migrateCategoryObject", () => {
   it("throws on an unmapped category value", () => {
     expect(() => migrateCategoryObject({ category: "casserole" })).toThrow(/unknown legacy category/);
   });
+
+  it("refuses to migrate an object that already has course or method alongside category, instead of silently overwriting it", () => {
+    expect(() => migrateCategoryObject({ category: "bake", course: "side" })).toThrow(/already has course\/method/);
+    expect(() => migrateCategoryObject({ category: "bake", method: "grill" })).toThrow(/already has course\/method/);
+  });
 });
 
 describe("migrateCategoryDocument", () => {

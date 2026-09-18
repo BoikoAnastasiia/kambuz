@@ -1,5 +1,6 @@
 import path from "node:path";
 import { config } from "../src/config.js";
+import { loadVocab } from "../src/vocab/load.js";
 import { runMigration, renderMigrationTable } from "../src/migrate/runMigration.js";
 
 /**
@@ -9,19 +10,26 @@ import { runMigration, renderMigrationTable } from "../src/migrate/runMigration.
  * the new schema on next read, which StageCache treats as a cache miss (see README).
  *
  * Run with: npm run migrate-catalog
+ * Preview without writing anything: npm run migrate-catalog -- --dry-run
  */
 async function main(): Promise<void> {
-  const result = await runMigration({
-    recipesDir: path.join(config.paths.catalog, "recipes"),
-    archiveDir: path.join(config.paths.catalog, "archive"),
-    indexFile: path.join(config.paths.catalog, "index.json"),
-    benchTruthFile: path.join(config.paths.eval, "bench", "categorizer.json"),
-  });
+  const dryRun = process.argv.includes("--dry-run");
+  const vocab = await loadVocab(config.paths.vocab);
+  const result = await runMigration(
+    {
+      recipesDir: path.join(config.paths.catalog, "recipes"),
+      archiveDir: path.join(config.paths.catalog, "archive"),
+      indexFile: path.join(config.paths.catalog, "index.json"),
+      benchTruthFile: path.join(config.paths.eval, "bench", "categorizer.json"),
+    },
+    { vocab, dryRun },
+  );
   console.log(renderMigrationTable(result));
+  if (dryRun) console.log("\n(dry run: nothing was written — re-run without --dry-run to apply)");
   if (result.errors.length) process.exitCode = 1;
 }
 
 main().catch((e) => {
-  console.error(e instanceof Error ? e.stack ?? e.message : String(e));
+  console.error(e instanceof Error ? (e.stack ?? e.message) : String(e));
   process.exitCode = 1;
 });
