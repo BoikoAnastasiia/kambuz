@@ -56,7 +56,7 @@ export class Catalog {
     const all = await this.load();
     const index = all.map((r) => ({
       id: r.id, nameRu: r.nameRu, nameEn: r.nameEn, dishKey: r.dishKey, cuisine: r.cuisine,
-      mealTypes: r.mealTypes, category: r.category, completeness: r.completeness, videoId: r.source.videoId,
+      mealTypes: r.mealTypes, course: r.course, method: r.method, completeness: r.completeness, videoId: r.source.videoId,
     }));
     await writeFile(path.join(this.root, "index.json"), JSON.stringify(index, null, 2));
   }

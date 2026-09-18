@@ -4,12 +4,12 @@ import type { BenchSegment } from "../../src/bench/inputs.js";
 import type { DraftRecipe } from "../../src/schemas/recipe.js";
 import { lasagnaDraft, lasagnaSegment, soupDraft, soupSegment, vocab } from "./fixtures.js";
 
-const lasagna: BenchSegment = { videoId: "v1", segmentIndex: 0, segment: lasagnaSegment, draft: lasagnaDraft, category: "pasta" };
-const soup: BenchSegment = { videoId: "v1", segmentIndex: 1, segment: soupSegment, draft: soupDraft, category: "soup" };
+const lasagna: BenchSegment = { videoId: "v1", segmentIndex: 0, segment: lasagnaSegment, draft: lasagnaDraft, course: "main" };
+const soup: BenchSegment = { videoId: "v1", segmentIndex: 1, segment: soupSegment, draft: soupDraft, course: "soup" };
 
-function donor(videoId: string, category: string, rawName: string, quantity: number | null, unit: string | null): BenchSegment {
+function donor(videoId: string, course: string, rawName: string, quantity: number | null, unit: string | null): BenchSegment {
   const draft: DraftRecipe = { ...soupDraft, ingredients: [{ ingredient: `id-${rawName}`, rawName, quantity, unit, provenance: "stated", note: null }] };
-  return { videoId, segmentIndex: 0, segment: soupSegment, draft, category };
+  return { videoId, segmentIndex: 0, segment: soupSegment, draft, course };
 }
 
 const ctx: MutationContext = { vocab, segments: [lasagna, soup] };
@@ -93,8 +93,8 @@ describe("generateMutations", () => {
     expect(lasagnaDraft).toEqual(before);
   });
 
-  it("extra-ingredient prefers a same-category draft, then any other draft, then the vocabulary", () => {
-    const pasta = donor("p", "pasta", "пармезан", 50, "g");
+  it("extra-ingredient prefers a same-course draft, then any other draft, then the vocabulary", () => {
+    const pasta = donor("p", "main", "пармезан", 50, "g");
     const other = donor("o", "dessert", "шоколад", null, null);
     const same = find(generateMutations(lasagna, { vocab, segments: [lasagna, pasta, other] }), "extra-ingredient")!;
     expect(same.draft.ingredients.at(-1)).toEqual({ ingredient: "id-пармезан", rawName: "пармезан", quantity: 50, unit: "g", provenance: "stated", note: null });

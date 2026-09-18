@@ -13,7 +13,8 @@ export interface CategorizerLabel {
   segmentIndex: number;
   dish: string;
   cuisine: string;
-  category: string;
+  course: string;
+  method: string | null;
   mealTypes: MealType[];
 }
 
@@ -22,7 +23,8 @@ const RowShape = z.object({
   segmentIndex: z.number().int().min(0),
   dish: z.string(),
   cuisine: z.string(),
-  category: z.string(),
+  course: z.string(),
+  method: z.string().nullable(),
   mealTypes: z.array(z.string()).min(1),
 });
 
@@ -36,14 +38,15 @@ export function validateCategorizerTruth(raw: unknown, vocab: Vocab): { labels: 
     const where = `row ${i + 1}`;
     const shape = RowShape.safeParse(item);
     if (!shape.success) {
-      errors.push(`${where}: expected { videoId, segmentIndex, dish, cuisine, category, mealTypes[] } (${shape.error.issues.map((x) => `${x.path.join(".") || "row"}: ${x.message}`).join("; ")})`);
+      errors.push(`${where}: expected { videoId, segmentIndex, dish, cuisine, course, method, mealTypes[] } (${shape.error.issues.map((x) => `${x.path.join(".") || "row"}: ${x.message}`).join("; ")})`);
       return;
     }
     const row = shape.data;
     const label = `${where} (${segmentKey(row)})`;
     const problems: string[] = [];
     if (!vocab.cuisines.some((c) => c.id === row.cuisine)) problems.push(`unknown cuisine "${row.cuisine}"`);
-    if (!vocab.categories.some((c) => c.id === row.category)) problems.push(`unknown category "${row.category}"`);
+    if (!vocab.courses.some((c) => c.id === row.course)) problems.push(`unknown course "${row.course}"`);
+    if (row.method !== null && !vocab.methods.some((m) => m.id === row.method)) problems.push(`unknown method "${row.method}"`);
     for (const m of row.mealTypes) if (!MealTypeSchema.safeParse(m).success) problems.push(`unknown mealType "${m}"`);
     if (seen.has(segmentKey(row))) problems.push("duplicate of an earlier row for this segment");
     if (problems.length) {
@@ -84,7 +87,8 @@ export interface CategorizerVariantScore {
   errors: number;
   /** Over every case: a failed call is a miss, never left out. Cuisine is the model's raw answer. */
   cuisine: Proportion;
-  category: Proportion;
+  course: Proportion;
+  method: Proportion;
   mealTypesExact: Proportion;
   /** Mean over every case, a failed call counting 0. */
   mealTypesJaccard: number | null;
@@ -145,7 +149,8 @@ export function scoreCategorizer(
       cases: mine.length,
       errors: mine.filter((c) => !c.ok).length,
       cuisine: proportion(hits((c) => c.rawCuisine === t(c).cuisine), mine.length),
-      category: proportion(hits((c) => c.output.category === t(c).category), mine.length),
+      course: proportion(hits((c) => c.output.course === t(c).course), mine.length),
+      method: proportion(hits((c) => c.output.method === t(c).method), mine.length),
       mealTypesExact: proportion(hits((c) => jaccard(c.output.mealTypes, t(c).mealTypes) === 1), mine.length),
       mealTypesJaccard: mean(mine.map((c) => (c.ok ? jaccard(c.output.mealTypes, t(c).mealTypes) : 0))),
       dishKeyStability: stability,

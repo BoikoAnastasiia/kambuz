@@ -18,7 +18,7 @@ Six stages run per video. Every LLM stage is a pure function with a typed
 | scout | splits the transcript into one segment per dish actually cooked; says when a video is not a recipe at all | yes |
 | extractor | one call per segment: name, ingredients with quantities, ordered steps | yes |
 | verifier | checks every ingredient and step against the raw transcript and quotes the evidence | yes |
-| categorizer | cuisine, meal type, category, timing, and a `dishKey` slug used for duplicate detection | yes |
+| categorizer | cuisine, meal type, course, cooking method, timing, and a `dishKey` slug used for duplicate detection | yes |
 | judge | finds candidate duplicates in the catalog, scores completeness, decides same dish or variant | yes |
 
 Nothing is invented. Every ingredient and step must be supported by what the
@@ -122,7 +122,7 @@ command only prints the plan ("N calls across M variants on K segments") and
 calls nothing; with it, it writes `reports/bench-<agent>-<timestamp>.json` and
 `.html` and prints a table per variant with scores, tokens, cost and latency.
 
-- `categorizer` scores cuisine, category and meal types against hand labels in
+- `categorizer` scores cuisine, course, method and meal types against hand labels in
   `eval/bench/categorizer.json` (format in `eval/bench/README.md`), plus dishKey
   stability across `--repeat` runs.
 - `verifier` needs no labels: it plants errors into each cached draft (an
@@ -151,6 +151,22 @@ usage could not be recorded.
 
 A variant the API rejects (for example an effort on a model without it) is
 recorded as errors in the report; the rest of the bench still runs.
+
+## Migrating category → course/method
+
+The old `category` field mixed two axes — what a dish is in a meal and how it
+was cooked — and has been split into `course` and `method` (`method` may be
+`null`). A one-time script rewrites everything that used to hold `category`:
+
+    npm run migrate-catalog
+
+It rewrites `catalog/recipes/*.json`, `catalog/archive/*.json`,
+`catalog/index.json` and `eval/bench/categorizer.json`, printing a table of
+what changed. It is idempotent — running it again after the first pass finds
+nothing left to change. It never calls the API and never touches `.cache/`:
+a cached `categorize-<i>.json` still has the old `category` field, so it will
+fail the new schema and be treated as a cache miss on the next `ingest` —
+just that one stage re-runs for the affected segment, nothing is lost.
 
 ## Configuration
 
@@ -184,7 +200,9 @@ temporary directory.
       orchestrator/  stage cache, catalog, pipeline
       schemas/       Zod schemas for every stage
       vocab/         loader and validator for vocab/*.json
-    vocab/           cuisines, categories, ingredients (human-edited)
+      migrate/       one-time category → course/method migration logic
+    vocab/           cuisines, courses, methods, ingredients (human-edited)
+    scripts/         migrate-catalog.ts (npm run migrate-catalog)
     docs/specs/      design document
     docs/plans/      implementation plan
 

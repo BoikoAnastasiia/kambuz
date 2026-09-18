@@ -11,6 +11,8 @@ const CaseSchema = z.object({
     dishCount: z.number(),
     names: z.array(z.string()),
     cuisines: z.array(z.string()),
+    courses: z.array(z.string()),
+    methods: z.array(z.string().nullable()).optional(),
     mealTypes: z.array(z.array(z.string())),
     ingredients: z
       .object({
@@ -63,6 +65,8 @@ export async function runEval(deps: IngestDeps, caseDir: string, opts: RunEvalOp
     row("dishCount", c.expect.dishCount, recipes.length);
     row("names", c.expect.names, recipes.map((r) => r.nameRu));
     row("cuisines", c.expect.cuisines, recipes.map((r) => r.cuisine));
+    row("courses", c.expect.courses, recipes.map((r) => r.course));
+    if (c.expect.methods) row("methods", c.expect.methods, recipes.map((r) => r.method));
     row("mealTypes", c.expect.mealTypes, recipes.map((r) => r.mealTypes));
     if (c.expect.ingredients) {
       const dish = recipes[c.expect.ingredients.dishIndex];

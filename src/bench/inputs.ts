@@ -10,23 +10,23 @@ export interface BenchSegment {
   segmentIndex: number;
   segment: ScoutSegment;
   draft: DraftRecipe;
-  /** The category from the cached categorize-<i>.json, when there is one; used to pick realistic planted ingredients. */
-  category: string | null;
+  /** The course from the cached categorize-<i>.json, when there is one; used to pick realistic planted ingredients. */
+  course: string | null;
 }
 
-const CachedCategorySchema = z.object({ category: z.string() });
+const CachedCourseSchema = z.object({ course: z.string() });
 
 export function segmentKey(s: { videoId: string; segmentIndex: number }): string {
   return `${s.videoId}#${s.segmentIndex}`;
 }
 
 /**
- * sha256 of the sorted `videoId#segmentIndex:category` rows of the segments a verifier bench run
+ * sha256 of the sorted `videoId#segmentIndex:course` rows of the segments a verifier bench run
  * could draw a planted extra-ingredient donor from. Two reports plant comparable errors only when
  * this matches; it is stored so that can be checked by eye, not compared automatically.
  */
 export function donorPoolHash(segments: readonly BenchSegment[]): string {
-  const rows = segments.map((s) => `${segmentKey(s)}:${s.category ?? ""}`).sort();
+  const rows = segments.map((s) => `${segmentKey(s)}:${s.course ?? ""}`).sort();
   return createHash("sha256").update(rows.join("\n")).digest("hex");
 }
 
@@ -70,8 +70,8 @@ export async function loadBenchInputs(cacheRoot: string): Promise<{ segments: Be
       const draft = await readStage(path.join(dir, `extract-${segmentIndex}.json`), DraftRecipeSchema);
       if ("missing" in draft) { skipped.push(`${key}: no extract-${segmentIndex}.json`); continue; }
       if ("error" in draft) { skipped.push(`${key}: unusable extract-${segmentIndex}.json (${draft.error})`); continue; }
-      const categorized = await readStage(path.join(dir, `categorize-${segmentIndex}.json`), CachedCategorySchema);
-      segments.push({ videoId, segmentIndex, segment, draft: draft.value, category: "value" in categorized ? categorized.value.category : null });
+      const categorized = await readStage(path.join(dir, `categorize-${segmentIndex}.json`), CachedCourseSchema);
+      segments.push({ videoId, segmentIndex, segment, draft: draft.value, course: "value" in categorized ? categorized.value.course : null });
     }
   }
   return { segments, skipped };

@@ -6,7 +6,7 @@ import { config } from "../../src/config.js";
 function recipe(over: Partial<Recipe> & { ingredientIds?: string[] }): Recipe {
   const { ingredientIds = [], ...rest } = over;
   return {
-    id: "x", nameRu: "X", nameEn: "X", dishKey: "x", cuisine: "other", mealTypes: ["dinner"], category: "stew", richness: "medium",
+    id: "x", nameRu: "X", nameEn: "X", dishKey: "x", cuisine: "other", mealTypes: ["dinner"], course: "main", method: "stew", richness: "medium",
     servings: null, activeMinutes: null, totalMinutes: null, flags: [], completeness: 0.5, extractedAt: "", models: {},
     ingredients: ingredientIds.map((id) => ({ ingredient: id, rawName: id, quantity: 1, unit: "pc", provenance: "stated" as const, note: null })),
     steps: [],

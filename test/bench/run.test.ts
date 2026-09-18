@@ -32,10 +32,10 @@ const variants = (s: string) => {
 };
 
 const LABELS = [
-  { videoId: "v1", segmentIndex: 0, dish: "Лазанья", cuisine: "italian", category: "pasta", mealTypes: ["dinner"] },
-  { videoId: "v1", segmentIndex: 1, dish: "Суп", cuisine: "russian", category: "soup", mealTypes: ["lunch"] },
-  { videoId: "v2", segmentIndex: 0, dish: "Суп без черновика", cuisine: "russian", category: "soup", mealTypes: ["lunch"] },
-  { videoId: "v1", segmentIndex: 5, dish: "плохая строка", cuisine: "klingon", category: "soup", mealTypes: ["lunch"] },
+  { videoId: "v1", segmentIndex: 0, dish: "Лазанья", cuisine: "italian", course: "main", method: null, mealTypes: ["dinner"] },
+  { videoId: "v1", segmentIndex: 1, dish: "Суп", cuisine: "russian", course: "soup", method: null, mealTypes: ["lunch"] },
+  { videoId: "v2", segmentIndex: 0, dish: "Суп без черновика", cuisine: "russian", course: "soup", method: null, mealTypes: ["lunch"] },
+  { videoId: "v1", segmentIndex: 5, dish: "плохая строка", cuisine: "klingon", course: "soup", method: null, mealTypes: ["lunch"] },
 ];
 
 /**
@@ -57,7 +57,8 @@ function fakeLlmFactory() {
         const lasagna = opts.user.includes("Лазанья");
         return {
           cuisine: strong ? (lasagna ? "italian" : "russian") : "other",
-          category: lasagna ? "pasta" : "soup",
+          course: lasagna ? "main" : "soup",
+          method: null,
           mealTypes: lasagna ? ["dinner"] : ["lunch"],
           activeMinutes: null,
           totalMinutes: null,
@@ -131,9 +132,9 @@ describe("benchCommand categorizer", () => {
     const by = (id: string) => r.scores.variants.find((v) => v.variant === id)!;
     expect(by("claude-sonnet-5")).toMatchObject({
       cases: 4, errors: 0, mealTypesJaccard: 1,
-      cuisine: { hits: 4, total: 4 }, category: { hits: 4, total: 4 }, mealTypesExact: { hits: 4, total: 4 }, dishKeyStability: { hits: 2, total: 2 },
+      cuisine: { hits: 4, total: 4 }, course: { hits: 4, total: 4 }, method: { hits: 4, total: 4 }, mealTypesExact: { hits: 4, total: 4 }, dishKeyStability: { hits: 2, total: 2 },
     });
-    expect(by("claude-haiku-4-5")).toMatchObject({ cases: 4, errors: 0, cuisine: { hits: 0, total: 4 }, category: { hits: 4, total: 4 } });
+    expect(by("claude-haiku-4-5")).toMatchObject({ cases: 4, errors: 0, cuisine: { hits: 0, total: 4 }, course: { hits: 4, total: 4 }, method: { hits: 4, total: 4 } });
     // failed calls are misses, not missing data
     expect(by("claude-haiku-4-5:low")).toMatchObject({ cases: 4, errors: 4, cuisine: { hits: 0, total: 4, rate: 0 }, mealTypesJaccard: 0 });
     expect(r.cases.find((c) => c.variant === "claude-haiku-4-5:low" && !c.ok)).toMatchObject({ error: expect.stringMatching(/effort is not supported/) });
@@ -150,7 +151,7 @@ describe("benchCommand categorizer", () => {
     const json = JSON.parse(await readFile(out.files!.json, "utf8"));
     expect(json.promptsHash).toMatch(/^[0-9a-f]{64}$/);
     expect(json.vocabHash).toMatch(/^[0-9a-f]{64}$/);
-    expect(json.schemaVersion).toBe(2);
+    expect(json.schemaVersion).toBe(BENCH_SCHEMA_VERSION);
     // the categorizer plants nothing, so there is no donor pool to hash
     expect(json.donorPoolHash).toBeNull();
     expect(json.cases.find((c: any) => c.variant === "claude-haiku-4-5" && c.ok)).toMatchObject({ rawCuisine: "other", usage: { model: "claude-haiku-4-5", calls: 1, input: 100, output: 10 } });
@@ -223,13 +224,13 @@ describe("benchCommand verifier", () => {
     expect(html).toContain("claude-sonnet-5 (default effort: high)");
     expect(html).toMatch(/≥\$0\.\d+/);
 
-    // the donor pool (v1#0 pasta, v1#1 no category) is recorded so two reports' planted errors can be compared by eye
-    expect(html).toMatch(new RegExp(`donor pool ${donorPoolHash([{ videoId: "v1", segmentIndex: 0, category: "pasta" } as any, { videoId: "v1", segmentIndex: 1, category: null } as any]).slice(0, 12)}`));
+    // the donor pool (v1#0 main, v1#1 no course) is recorded so two reports' planted errors can be compared by eye
+    expect(html).toMatch(new RegExp(`donor pool ${donorPoolHash([{ videoId: "v1", segmentIndex: 0, course: "main" } as any, { videoId: "v1", segmentIndex: 1, course: null } as any]).slice(0, 12)}`));
 
     // everything needed to re-score is in the JSON: drafts, verifier output, per-case usage
     const saved = JSON.parse(await readFile(out.files!.json, "utf8"));
     expect(saved.schemaVersion).toBe(BENCH_SCHEMA_VERSION);
-    expect(saved.donorPoolHash).toBe(donorPoolHash([{ videoId: "v1", segmentIndex: 0, category: "pasta" } as any, { videoId: "v1", segmentIndex: 1, category: null } as any]));
+    expect(saved.donorPoolHash).toBe(donorPoolHash([{ videoId: "v1", segmentIndex: 0, course: "main" } as any, { videoId: "v1", segmentIndex: 1, course: null } as any]));
     expect(saved.cases.find((c: any) => c.mutation === "unit-swap").draft.ingredients.some((i: any) => i.unit === "kg")).toBe(true);
     expect(saved.cases.find((c: any) => c.ok).usage).toMatchObject({ calls: 1, input: 100, output: 10 });
   });

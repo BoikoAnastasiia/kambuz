@@ -12,7 +12,7 @@ describe("assembleRecipe", () => {
         steps: [{ order: 1, text: "Сварить.", timestamp: 20 }],
       },
       verification: { ingredients: [{ rawName: "свёкла", quote: null, supported: false }], steps: [], confidence: 0.5 },
-      categorization: { cuisine: "ukrainian", mealTypes: ["lunch"], category: "soup", activeMinutes: 30, totalMinutes: 90, richness: "medium", dishKey: "borscht" },
+      categorization: { cuisine: "ukrainian", mealTypes: ["lunch"], course: "soup", method: "boil", activeMinutes: 30, totalMinutes: 90, richness: "medium", dishKey: "borscht" },
       models: { scout: "claude-sonnet-5" },
       now: new Date("2026-01-01T00:00:00Z"),
     });

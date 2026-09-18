@@ -11,7 +11,8 @@ function baseRecipe(overrides: Partial<Recipe> = {}): Recipe {
     dishKey: "borscht",
     cuisine: "russian",
     mealTypes: ["lunch"],
-    category: "soup",
+    course: "soup",
+    method: "boil",
     richness: "hearty",
     servings: 4,
     activeMinutes: 20,
@@ -85,6 +86,16 @@ describe("renderReportHtml", () => {
     const html = renderReportHtml(baseReport(), [baseRecipe()]);
     expect(html).toContain("&t=3725s");
     expect(html).toContain(">1:02:05<");
+  });
+
+  it("shows course and method separated by a middle dot", () => {
+    const html = renderReportHtml(baseReport(), [baseRecipe()]);
+    expect(html).toContain("soup · boil");
+  });
+
+  it("omits the method separator when method is null", () => {
+    const html = renderReportHtml(baseReport(), [baseRecipe({ course: "salad", method: null })]);
+    expect(html).toMatch(/salad <span/);
   });
 
   it("shows the vocab id / unmapped and the provenance chip for each ingredient", () => {

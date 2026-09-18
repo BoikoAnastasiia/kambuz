@@ -78,7 +78,7 @@ export function renderBenchConsole(result: BenchResult): string {
     out.push(`${label(result, s.variant)}  ${usageLine(result, s)}`);
     if (result.agent === "categorizer") {
       const c = result.scores.variants.find((x) => x.variant === s.variant)!;
-      out.push(row("cuisine", prop(c.cuisine)), row("category", prop(c.category)), row("meal types exact", prop(c.mealTypesExact)), row("meal types jaccard", num(c.mealTypesJaccard)), row("dishKey stable", c.dishKeyStability ? prop(c.dishKeyStability) : "— (needs --repeat 2+)"));
+      out.push(row("cuisine", prop(c.cuisine)), row("course", prop(c.course)), row("method", prop(c.method)), row("meal types exact", prop(c.mealTypesExact)), row("meal types jaccard", num(c.mealTypesJaccard)), row("dishKey stable", c.dishKeyStability ? prop(c.dishKeyStability) : "— (needs --repeat 2+)"));
     } else {
       const v = result.scores.find((x) => x.variant === s.variant)!;
       out.push(row("detected (all kinds)", kindLine(v.overall)));
@@ -133,10 +133,10 @@ const USAGE_HEAD = ["calls", "in", "out", "$", "latency"];
 
 function categorizerSections(result: CategorizerResult): string {
   const variants = table(
-    ["variant", "ok/err", "cuisine", "category", "meals exact", "meals J", "dishKey stable", ...USAGE_HEAD],
+    ["variant", "ok/err", "cuisine", "course", "method", "meals exact", "meals J", "dishKey stable", ...USAGE_HEAD],
     result.scores.variants.map((s) => ({
       cls: s.errors ? "has-errors" : undefined,
-      cells: [e(label(result, s.variant)), `${s.cases - s.errors}/${s.errors}`, prop(s.cuisine), prop(s.category), prop(s.mealTypesExact), num(s.mealTypesJaccard), s.dishKeyStability ? prop(s.dishKeyStability) : "—", ...usageCells(result, s)],
+      cells: [e(label(result, s.variant)), `${s.cases - s.errors}/${s.errors}`, prop(s.cuisine), prop(s.course), prop(s.method), prop(s.mealTypesExact), num(s.mealTypesJaccard), s.dishKeyStability ? prop(s.dishKeyStability) : "—", ...usageCells(result, s)],
     })),
   );
   const agreement = result.scores.agreement.length
@@ -154,16 +154,17 @@ function categorizerSections(result: CategorizerResult): string {
           if (!c.ok) return `<div class="err">error: ${e(c.error)}</div>`;
           const o = c.output;
           const cuisine = c.rawCuisine === o.cuisine ? c.rawCuisine : `${c.rawCuisine}→${o.cuisine}`;
-          return `<div>${mark(cuisine, c.rawCuisine === t.cuisine)} · ${mark(o.category, o.category === t.category)} · ${mark(o.mealTypes.join("+"), jaccard(o.mealTypes, t.mealTypes) === 1)} · <code>${e(o.dishKey)}</code></div>`;
+          const method = o.method ?? "—";
+          return `<div>${mark(cuisine, c.rawCuisine === t.cuisine)} · ${mark(o.course, o.course === t.course)} · ${mark(method, o.method === t.method)} · ${mark(o.mealTypes.join("+"), jaccard(o.mealTypes, t.mealTypes) === 1)} · <code>${e(o.dishKey)}</code></div>`;
         })
         .join("")}</div>`;
     });
-    return { cells: [segmentCell(s), e(`${t.cuisine} · ${t.category} · ${t.mealTypes.join("+")}`), ...cells] };
+    return { cells: [segmentCell(s), e(`${t.cuisine} · ${t.course} · ${t.method ?? "—"} · ${t.mealTypes.join("+")}`), ...cells] };
   });
   return `<h2>Variants</h2>
   <p class="meta">Every rate counts a failed call as a miss and shows hits/total with a 95% Wilson interval. Cuisine is scored on the model's raw answer, before an unknown cuisine becomes "other".</p>
   ${variants}${agreement}
-  <h2>Per segment</h2><p class="meta">cuisine · category · meal types · dishKey, one line per repeat; mismatches with the label in red.</p>
+  <h2>Per segment</h2><p class="meta">cuisine · course · method · meal types · dishKey, one line per repeat; mismatches with the label in red.</p>
   ${table(["segment", "truth", ...result.variants.map(variantLabel)], rows)}`;
 }
 

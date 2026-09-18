@@ -19,6 +19,8 @@ first.
     "dishCount": 0,
     "names": ["string"],
     "cuisines": ["string"],
+    "courses": ["string"],
+    "methods": ["string"],
     "mealTypes": [["string"]],
     "ingredients": {
       "dishIndex": 0,
@@ -40,12 +42,17 @@ first.
   dishes are cooked in the video (recipes are compared sorted by
   `source.segmentStart`). Must have exactly `dishCount` entries.
 - `expect.cuisines` — `cuisine` of every recipe, same order as `names`.
+- `expect.courses` — `course` of every recipe, same order as `names` (what the dish is in a
+  meal: main, side, soup, salad, breakfast, dessert, bread, sauce, snack, drink).
+- `expect.methods` (optional) — `method` of every recipe, same order as `names` (how it was
+  cooked: bake, stew, grill, fry, boil, steam, raw, no-cook, or `null` when the transcript
+  gives no basis for it). Omit the field entirely for a case that doesn't want to pin method.
 - `expect.mealTypes` — `mealTypes` of every recipe, same order as `names`.
   Each entry is itself an array, since one recipe can carry more than one
   meal type.
 - `expect.ingredients` (optional) — a spot check on one dish's ingredient
   list, for cases where getting quantities and provenance right matters most.
-  - `dishIndex` — which recipe in `names`/`cuisines`/`mealTypes` order to check.
+  - `dishIndex` — which recipe in `names`/`cuisines`/`courses`/`mealTypes` order to check.
   - `must` — ingredients that must appear on that dish, each with:
     - `ingredient` — the canonical vocabulary id (see `vocab/ingredients.json`),
       not the raw word the chef used.
@@ -93,6 +100,8 @@ without watching the video first.
     "dishCount": 1,
     "names": ["Лазанья с соусом болоньезе"],
     "cuisines": ["italian"],
+    "courses": ["main"],
+    "methods": ["bake"],
     "mealTypes": [["dinner"]],
     "ingredients": {
       "dishIndex": 0,

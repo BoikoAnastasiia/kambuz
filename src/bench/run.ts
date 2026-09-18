@@ -30,7 +30,7 @@ export type BenchAgent = (typeof BENCH_AGENTS)[number];
  * report silently wrong (a missing field scoring as 0% rather than failing loudly). `rescore`
  * refuses any file whose version does not match.
  */
-export const BENCH_SCHEMA_VERSION = 2;
+export const BENCH_SCHEMA_VERSION = 3;
 
 export interface BenchOptions {
   agent: BenchAgent;

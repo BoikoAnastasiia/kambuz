@@ -13,7 +13,8 @@ One row per cached segment you have labeled by hand:
     "segmentIndex": 1,
     "dish": "Яйца Бенедикт — free text, for humans only",
     "cuisine": "french",
-    "category": "breakfast-dish",
+    "course": "breakfast",
+    "method": "bake",
     "mealTypes": ["breakfast"]
   }
 ]
@@ -22,8 +23,10 @@ One row per cached segment you have labeled by hand:
 - `videoId` + `segmentIndex` point at `.cache/<videoId>/scout.json` segment `segmentIndex`
   and its draft `.cache/<videoId>/extract-<segmentIndex>.json`. A label whose segment is not
   cached is skipped and listed in the plan.
-- `cuisine` must be an id from `vocab/cuisines.json`, `category` an id from
-  `vocab/categories.json`, `mealTypes` a non-empty list of `breakfast`, `lunch`, `dinner`.
+- `cuisine` must be an id from `vocab/cuisines.json`, `course` an id from
+  `vocab/courses.json`, `method` an id from `vocab/methods.json` or `null` (a dish whose
+  transcript genuinely gives no basis for how it was cooked), `mealTypes` a non-empty list
+  of `breakfast`, `lunch`, `dinner`.
 - `dish` is not scored.
 - Cuisine is scored on the model's raw answer. The pipeline turns a cuisine that is not in the
   vocabulary into `other`; the bench does not, so labelling a dish `other` only credits a model

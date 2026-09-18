@@ -150,8 +150,14 @@ Output: `Categorization`:
 
 - `cuisine` — one id from the cuisine vocabulary.
 - `meal_types[]` — one or more of `breakfast`, `lunch`, `dinner`.
-- `category` — one id from the category vocabulary (soup, pasta, dumplings,
-  bake, salad, …).
+- `course` — one id from the course vocabulary: what the dish IS in a meal
+  (main, side, soup, salad, breakfast, dessert, bread, sauce, snack, drink).
+- `method` — one id from the method vocabulary, or `null`: HOW it was cooked
+  (bake, stew, grill, fry, boil, steam, raw, no-cook). `null` only when the
+  transcript genuinely gives no basis for it. Split from `course` because the
+  two axes are independent and conflating them produced dishes with two
+  defensible answers (e.g. a dish that is a `main` cooked by `stew` used to
+  force a single `category` pick between the two).
 - `active_minutes`, `total_minutes` — estimates from the steps; `null` if the
   steps don't support an estimate.
 - `richness` — `light` | `medium` | `hearty`.
@@ -237,7 +243,8 @@ Recipe {
   dish_key: string
   cuisine: CuisineId
   meal_types: ("breakfast"|"lunch"|"dinner")[]
-  category: CategoryId
+  course: CourseId
+  method: MethodId|null
   richness: "light"|"medium"|"hearty"
   servings: number|null
   active_minutes: number|null
@@ -273,8 +280,11 @@ Plain JSON files in `vocab/`, edited only by hand:
 
 - `cuisines.json` — id, name_ru, name_en. Initial list: ukrainian, russian,
   georgian, italian, french, spanish, turkish, asian (split later), other.
-- `categories.json` — soup, salad, pasta, dumplings, bake, stew, grill,
-  breakfast-dish, dessert, bread, sauce, side.
+- `courses.json` — what the dish IS in a meal: main, side, soup, salad,
+  breakfast, dessert, bread, sauce, snack, drink.
+- `methods.json` — how it was cooked: bake, stew, grill, fry, boil, steam,
+  raw, no-cook. A recipe's `method` may be `null` (validated separately from
+  `course`, which is always one of the ids above).
 - `ingredients.json` — id, name_ru, name_en, aliases[] (both languages,
   including common speech-to-text garbles once observed).
 
@@ -325,7 +335,7 @@ kambuz/
     schemas/           zod schemas per stage
     vocab/             load.ts, validate.ts
     llm/               client.ts (SDK wrapper: model per agent, usage logging, structured output)
-  vocab/               cuisines.json, categories.json, ingredients.json
+  vocab/               cuisines.json, courses.json, methods.json, ingredients.json
   eval/                regression videos + expected values
   catalog/             recipes/, archive/, index.json   (git-tracked output)
   reports/             run reports (git-ignored)

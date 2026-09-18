@@ -137,7 +137,7 @@ function recipeCard(r: Recipe): string {
   return `<div class="card">
     <h3>${escapeHtml(r.nameRu)}</h3>
     <div class="sub">${escapeHtml(r.nameEn)}</div>
-    <div class="sub">${escapeHtml(r.cuisine)} · ${r.mealTypes.map(escapeHtml).join(", ")} · ${escapeHtml(r.category)} ${scoreBadge(r.completeness)}</div>
+    <div class="sub">${escapeHtml(r.cuisine)} · ${r.mealTypes.map(escapeHtml).join(", ")} · ${escapeHtml(r.course)}${r.method ? ` · ${escapeHtml(r.method)}` : ""} ${scoreBadge(r.completeness)}</div>
     <table>
       <thead><tr><th>Ingredient</th><th>Vocab id</th><th>Qty</th><th>Provenance</th></tr></thead>
       <tbody>${ingredientRows}</tbody>

@@ -10,7 +10,7 @@ import { loadVocab } from "../../src/vocab/load.js";
 import type { Recipe } from "../../src/schemas/recipe.js";
 
 const base: Recipe = {
-  id: "base--v0", nameRu: "Base", nameEn: "Base", dishKey: "base", cuisine: "italian", mealTypes: ["dinner"], category: "pasta", richness: "medium",
+  id: "base--v0", nameRu: "Base", nameEn: "Base", dishKey: "base", cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, richness: "medium",
   servings: null, activeMinutes: null, totalMinutes: null,
   ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
   steps: [], flags: [], completeness: 0.5,
@@ -52,6 +52,8 @@ describe("runEval", () => {
           dishCount: 1,
           names: ["Лазанья"],
           cuisines: ["italian"],
+          courses: ["main"],
+          methods: [null],
           mealTypes: [["dinner"]],
           ingredients: { dishIndex: 0, must: [{ ingredient: "onion", provenance: "inferred" }] },
         },
@@ -62,6 +64,8 @@ describe("runEval", () => {
 
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((r) => r.pass)).toBe(true);
+    expect(rows.some((r) => r.check === "courses")).toBe(true);
+    expect(rows.some((r) => r.check === "methods")).toBe(true);
     expect(llm.callStructured).not.toHaveBeenCalled();
   });
 
@@ -82,6 +86,7 @@ describe("runEval", () => {
           dishCount: 2,
           names: ["Суп", "Второе"],
           cuisines: ["russian", "russian"],
+          courses: ["main", "main"],
           mealTypes: [["lunch"], ["dinner"]],
         },
       }),
@@ -114,6 +119,7 @@ describe("runEval", () => {
           dishCount: 1,
           names: ["Борщ"],
           cuisines: ["ukrainian"],
+          courses: ["main"],
           mealTypes: [["lunch"]],
           ingredients: { dishIndex: 0, must: [{ ingredient: "beetroot", provenance: "stated", quantity: 2 }] },
         },

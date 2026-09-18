@@ -58,7 +58,7 @@ function fakeLlm() {
         case "extractor": return { nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: ["хамон"],
           ingredients: richIngredients(), steps: richSteps(100) };
         case "verifier": return richVerification();
-        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
         case "judge": return { relation: "same", reason: "r", newNameRu: null, existingNameRu: null };
         default: throw new Error(agent);
       }
@@ -146,8 +146,8 @@ describe("ingest", () => {
           case "categorizer": {
             const isSoup = (user as string).includes("Суп");
             return isSoup
-              ? { cuisine: "russian", mealTypes: ["lunch"], category: "soup", activeMinutes: 20, totalMinutes: 40, richness: "light", dishKey: "soup" }
-              : { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+              ? { cuisine: "russian", mealTypes: ["lunch"], course: "soup", method: null, activeMinutes: 20, totalMinutes: 40, richness: "light", dishKey: "soup" }
+              : { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
           }
           case "judge": return { relation: "same", reason: "r", newNameRu: null, existingNameRu: null };
           default: throw new Error(agent);
@@ -193,7 +193,7 @@ describe("ingest", () => {
           ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
           steps: [{ order: 1, text: "Нарезать лук.", timestamp: 100 }] };
         case "verifier": return { ingredients: [{ rawName: "лук", quote: "нарежем лук", supported: true }], steps: [{ order: 1, quote: "нарежем лук", supported: true }], confidence: 0.9 };
-        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "!!!" };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "!!!" };
         default: throw new Error(agent);
       }
     });
@@ -222,7 +222,7 @@ describe("ingest", () => {
           steps: [1, 2, 3, 4, 5].map((n) => ({ order: n, quote: null, supported: true })),
           confidence: 0.9,
         };
-        case "categorizer": return { cuisine: "other", mealTypes: ["dinner"], category: "grill", activeMinutes: 20, totalMinutes: 30, richness: "medium", dishKey: "meatballs-with-cheese" };
+        case "categorizer": return { cuisine: "other", mealTypes: ["dinner"], course: "main", method: "grill", activeMinutes: 20, totalMinutes: 30, richness: "medium", dishKey: "meatballs-with-cheese" };
         default: throw new Error(agent);
       }
     });
@@ -324,7 +324,7 @@ describe("ingest", () => {
             };
           }
           case "verifier": return richVerification();
-          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
           case "judge": return { relation: "variant", reason: "two portions of the same dish", newNameRu: null, existingNameRu: null };
           default: throw new Error(agent);
         }
@@ -364,7 +364,7 @@ describe("ingest", () => {
           case "extractor": return { nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
             ingredients: richIngredients(), steps: richSteps(100) };
           case "verifier": return richVerification();
-          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
           case "judge": return { relation: "variant", reason: "a meat and a veggie version", newNameRu: "Лазанья с соусом болоньезе (v2)", existingNameRu: "Лазанья с соусом болоньезе (v1)" };
           default: throw new Error(agent);
         }
@@ -394,7 +394,7 @@ describe("ingest", () => {
           case "extractor": return { nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
             ingredients: richIngredients(), steps: richSteps(100) };
           case "verifier": return richVerification();
-          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
           case "judge": return { relation: "variant", reason: "a meat and a veggie version", newNameRu: "Лазанья с соусом болоньезе (new)", existingNameRu: "Лазанья с соусом болоньезе (existing)" };
           default: throw new Error(agent);
         }
@@ -463,8 +463,8 @@ describe("ingest", () => {
             // "russian" is absent from the trimmed vocab, so runCategorizer's own fallback
             // coerces it to "other" — which, unlike the real vocab, is also absent here.
             return isSoup
-              ? { cuisine: "russian", mealTypes: ["lunch"], category: "soup", activeMinutes: 20, totalMinutes: 40, richness: "light", dishKey: "mystery-soup" }
-              : { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+              ? { cuisine: "russian", mealTypes: ["lunch"], course: "soup", method: null, activeMinutes: 20, totalMinutes: 40, richness: "light", dishKey: "mystery-soup" }
+              : { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
           }
           case "judge": return { relation: "same", reason: "r", newNameRu: null, existingNameRu: null };
           default: throw new Error(agent);
@@ -516,7 +516,7 @@ describe("ingest", () => {
             ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
             steps: [{ order: 1, text: "Нарезать лук.", timestamp: 0 }] };
           case "verifier": return { ingredients: [{ rawName: "лук", quote: "нарежем лук", supported: true }], steps: [{ order: 1, quote: "нарежем лук", supported: true }], confidence: 0.9 };
-          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: `dish-${user.length}` };
+          case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: `dish-${user.length}` };
           case "judge": return { relation: "variant", reason: "r", newNameRu: null, existingNameRu: null };
           default: throw new Error(agent);
         }
@@ -705,7 +705,7 @@ describe("ingest", () => {
           steps: [1, 2, 3, 4].map((n) => ({ order: n, quote: "нарежем лук", supported: true })),
           confidence: 0.9,
         };
-        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
         default: throw new Error(agent);
       }
     });
@@ -729,7 +729,7 @@ describe("ingest", () => {
     deps.llm.callStructured.mockClear();
     deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
       switch (agent) {
-        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "zharkoye" };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "zharkoye" };
         default: throw new Error(agent);
       }
     });
@@ -764,7 +764,7 @@ describe("ingest", () => {
           steps: [{ order: 1, quote: null, supported: true }],
           confidence: 0.9,
         };
-        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
+        case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "lasagna-bolognese" };
         default: throw new Error(agent);
       }
     });

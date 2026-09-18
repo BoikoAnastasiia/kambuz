@@ -11,10 +11,11 @@ export const vocab: Vocab = {
     { id: "russian", nameRu: "Русская", nameEn: "Russian" },
     { id: "other", nameRu: "Другая", nameEn: "Other" },
   ],
-  categories: [
-    { id: "pasta", nameRu: "Паста", nameEn: "Pasta" },
+  courses: [
+    { id: "main", nameRu: "Основное блюдо", nameEn: "Main" },
     { id: "soup", nameRu: "Суп", nameEn: "Soup" },
   ],
+  methods: [{ id: "bake", nameRu: "Запекание", nameEn: "Bake" }],
   ingredients: [
     { id: "onion", nameRu: "Лук", nameEn: "Onion", aliases: ["репчатый лук"] },
     { id: "beef-mince", nameRu: "Говяжий фарш", nameEn: "Beef mince", aliases: ["фарш"] },
@@ -69,7 +70,7 @@ export async function makeCache(): Promise<string> {
   await write("v1", "scout", { isRecipeVideo: true, segments: [lasagnaSegment, soupSegment] });
   await write("v1", "extract-0", lasagnaDraft);
   await write("v1", "extract-1", soupDraft);
-  await write("v1", "categorize-0", { category: "pasta" });
+  await write("v1", "categorize-0", { course: "main" });
   await write("v2", "scout", { isRecipeVideo: true, segments: [soupSegment] });
   await mkdir(path.join(root, "v3"), { recursive: true });
   return root;

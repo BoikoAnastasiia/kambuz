@@ -243,7 +243,7 @@ function extraIngredient(seed: string, input: BenchSegment, ctx: MutationContext
     return out;
   };
   const tiers: DraftIngredient[][] = [
-    input.category ? fromDrafts(others.filter((s) => s.category === input.category)) : [],
+    input.course ? fromDrafts(others.filter((s) => s.course === input.course)) : [],
     fromDrafts(others),
     ctx.vocab.ingredients
       .filter((v) => absent(v.nameRu, v.id))
