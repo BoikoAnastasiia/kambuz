@@ -1,4 +1,4 @@
-import { access, readFile, readdir, rename, writeFile } from "node:fs/promises";
+import { access, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import { migrateCategoryDocument } from "./categoryToCourseMethod.js";
@@ -100,13 +100,18 @@ async function migrateFile(file: string, kind: FileKind, result: MigrationResult
   if (!opts.dryRun) {
     // Write to a sibling temp file and rename over the original: a crash or a failed write
     // (e.g. EACCES) never truncates a file git — and the owner — has never seen the new content
-    // of. jsonFilesIn only picks up `*.json`, so a stray `.tmp` left by an interrupted run is
-    // harmless and simply ignored by the next pass.
+    // of. A caught write/rename failure cleans up its own tmp file (see below); only a hard
+    // process kill mid-write could leave one behind, and jsonFilesIn only picks up `*.json`, so
+    // even that stray `.tmp` is harmless and ignored by the next pass.
     const tmp = `${file}.tmp`;
     try {
       await writeFile(tmp, JSON.stringify(migrated.value, null, 2));
       await rename(tmp, file);
     } catch (e) {
+      // Best-effort cleanup: writeFile may have succeeded even though rename then failed (e.g.
+      // the target is immutable/unwritable), which would otherwise leave `<file>.tmp` behind
+      // forever. If the tmp file never got created, unlink just fails too — ignored either way.
+      await unlink(tmp).catch(() => {});
       result.errors.push({ file, detail: `cannot write: ${errMsg(e)}` });
       return;
     }

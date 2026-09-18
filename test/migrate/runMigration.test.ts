@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { chmod, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { runMigration, renderMigrationTable, type MigrationPaths } from "../../src/migrate/runMigration.js";
@@ -301,6 +302,35 @@ describe("runMigration", () => {
       const after = await readFile(target, "utf8");
       expect(after).toBe(before);
       expect(JSON.parse(after).category).toBe("bake"); // never truncated, never half-written
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("cleans up the leftover .tmp file when rename fails, instead of littering the catalog forever", async () => {
+    const { root, paths } = await setup();
+    try {
+      const vocab = await realVocab();
+      const target = path.join(paths.recipesDir, "baked-beef--v1.json");
+      const before = await readFile(target, "utf8");
+      // uchg (macOS immutable flag): the directory stays writable (so writeFile(`${target}.tmp`)
+      // succeeds), but the target itself can't be replaced, so rename() fails — this reproduces
+      // writeFile-succeeds-then-rename-fails without touching directory permissions.
+      execFileSync("chflags", ["uchg", target]);
+      try {
+        const result = await runMigration(paths, { vocab });
+        const failure = result.errors.find((e) => e.file === target);
+        expect(failure).toBeDefined();
+        expect(failure!.detail).toMatch(/cannot write/);
+      } finally {
+        execFileSync("chflags", ["nouchg", target]);
+      }
+
+      const after = await readFile(target, "utf8");
+      expect(after).toBe(before); // rename never completed, original untouched
+
+      const leftoverTmp = (await readdir(paths.recipesDir)).filter((f) => f.endsWith(".tmp"));
+      expect(leftoverTmp).toEqual([]); // the failed rename's tmp file was cleaned up, not left behind
     } finally {
       await rm(root, { recursive: true, force: true });
     }
