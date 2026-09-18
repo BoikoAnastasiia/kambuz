@@ -11,7 +11,8 @@ export function buildCategorizerUser(draft: DraftRecipe, vocab: Vocab): string {
   return [
     `Recipe: ${draft.nameRu} / ${draft.nameEn}`,
     `Cuisines: ${vocab.cuisines.map((c) => c.id).join(", ")}`,
-    `Categories: ${vocab.categories.map((c) => c.id).join(", ")}`,
+    `Courses: ${vocab.courses.map((c) => c.id).join(", ")}`,
+    `Methods: ${vocab.methods.map((m) => m.id).join(", ")}`,
     "",
     "Ingredients:",
     draft.ingredients.map((i) => `- ${i.rawName} ${i.quantity ?? ""} ${i.unit ?? ""}`.trim()).join("\n"),
@@ -34,9 +35,10 @@ export async function runCategorizerDetailed(
   const system = await loadPrompt("categorizer", promptsDir);
   const raw = await llm.callStructured({ agent: "categorizer", system, user: buildCategorizerUser(draft, vocab), schema: CategorizationWireSchema });
   const cuisine = vocab.cuisines.some((c) => c.id === raw.cuisine) ? raw.cuisine : "other";
-  // An off-vocabulary category is kept as-is: validateRecipe reports it and the
+  // An off-vocabulary course is kept as-is: validateRecipe reports it and the
   // orchestrator drops that one recipe, rather than a throw killing the whole video.
-  return { categorization: { ...raw, cuisine, dishKey: slugify(raw.dishKey) }, rawCuisine: raw.cuisine };
+  const method = raw.method !== null && vocab.methods.some((m) => m.id === raw.method) ? raw.method : null;
+  return { categorization: { ...raw, cuisine, method, dishKey: slugify(raw.dishKey) }, rawCuisine: raw.cuisine };
 }
 
 export async function runCategorizer(draft: DraftRecipe, vocab: Vocab, llm: LlmClient, promptsDir: string): Promise<Categorization> {

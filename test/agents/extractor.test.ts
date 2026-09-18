@@ -5,7 +5,7 @@ import type { Vocab } from "../../src/vocab/load.js";
 import { config } from "../../src/config.js";
 
 const vocab: Vocab = {
-  cuisines: [], categories: [],
+  cuisines: [], courses: [], methods: [],
   ingredients: [{ id: "onion", nameRu: "Лук", nameEn: "Onion", aliases: [] }],
 };
 const segment: ScoutSegment = { workingName: "лазанья", start: 30, end: 200, rawText: "raw", cleanText: "Нарежем кубиком лук. Добавим фарш." };

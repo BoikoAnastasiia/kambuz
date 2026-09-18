@@ -6,11 +6,12 @@ import { config } from "../../src/config.js";
 
 const vocab: Vocab = {
   cuisines: [{ id: "italian", nameRu: "", nameEn: "" }, { id: "other", nameRu: "", nameEn: "" }],
-  categories: [{ id: "pasta", nameRu: "", nameEn: "" }],
+  courses: [{ id: "main", nameRu: "", nameEn: "" }],
+  methods: [{ id: "bake", nameRu: "", nameEn: "" }],
   ingredients: [],
 };
 const draft: DraftRecipe = { nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, ingredients: [], steps: [], unmappedIngredients: [] };
-const base = { mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
+const base = { mealTypes: ["dinner"], course: "main", method: "bake", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
 
 describe("slugify", () => {
   it("normalizes to a dish key", () => {
@@ -25,12 +26,13 @@ describe("slugify", () => {
 });
 
 describe("buildCategorizerUser", () => {
-  it("includes the draft name and the cuisine and category ids from vocab", () => {
+  it("includes the draft name and the cuisine, course and method ids from vocab", () => {
     const u = buildCategorizerUser(draft, vocab);
     expect(u).toContain("Лазанья с соусом болоньезе");
     expect(u).toContain("italian");
     expect(u).toContain("other");
-    expect(u).toContain("pasta");
+    expect(u).toContain("main");
+    expect(u).toContain("bake");
   });
 });
 
@@ -42,12 +44,30 @@ describe("runCategorizer", () => {
     expect(c.dishKey).toBe("lasagna-bolognese");
     expect(llm.callStructured.mock.calls[0][0].agent).toBe("categorizer");
   });
-  it("keeps an unknown category instead of throwing, so only that recipe is rejected later", async () => {
-    // Throwing here killed the whole video; validateRecipe reports the bad category and
+  it("keeps an unknown course instead of throwing, so only that recipe is rejected later", async () => {
+    // Throwing here killed the whole video; validateRecipe reports the bad course and
     // the orchestrator drops just this recipe.
-    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", category: "casserole", dishKey: "x" })) };
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", course: "casserole", dishKey: "x" })) };
     const c = await runCategorizer(draft, vocab, llm as any, config.paths.prompts);
-    expect(c.category).toBe("casserole");
+    expect(c.course).toBe("casserole");
+  });
+
+  it("coerces an unknown method to null", async () => {
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", method: "sous-vide", dishKey: "x" })) };
+    const c = await runCategorizer(draft, vocab, llm as any, config.paths.prompts);
+    expect(c.method).toBeNull();
+  });
+
+  it("keeps a null method as-is", async () => {
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", method: null, dishKey: "x" })) };
+    const c = await runCategorizer(draft, vocab, llm as any, config.paths.prompts);
+    expect(c.method).toBeNull();
+  });
+
+  it("keeps a known method as-is", async () => {
+    const llm = { callStructured: vi.fn(async () => ({ ...base, cuisine: "italian", method: "bake", dishKey: "x" })) };
+    const c = await runCategorizer(draft, vocab, llm as any, config.paths.prompts);
+    expect(c.method).toBe("bake");
   });
 
   it("asks the model for a loose dishKey and slugifies the answer itself", async () => {
