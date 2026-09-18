@@ -1,0 +1,10 @@
+[
+  { "id": "bake", "nameRu": "Запекание", "nameEn": "Bake" },
+  { "id": "stew", "nameRu": "Тушение", "nameEn": "Stew" },
+  { "id": "grill", "nameRu": "Гриль", "nameEn": "Grill" },
+  { "id": "fry", "nameRu": "Жарка", "nameEn": "Fry" },
+  { "id": "boil", "nameRu": "Варка", "nameEn": "Boil" },
+  { "id": "steam", "nameRu": "Приготовление на пару", "nameEn": "Steam" },
+  { "id": "raw", "nameRu": "Без готовки", "nameEn": "Raw" },
+  { "id": "no-cook", "nameRu": "Без термообработки", "nameEn": "No-cook" }
+]

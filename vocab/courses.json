@@ -1,0 +1,12 @@
+[
+  { "id": "main", "nameRu": "Основное блюдо", "nameEn": "Main" },
+  { "id": "side", "nameRu": "Гарнир", "nameEn": "Side" },
+  { "id": "soup", "nameRu": "Суп", "nameEn": "Soup" },
+  { "id": "salad", "nameRu": "Салат", "nameEn": "Salad" },
+  { "id": "breakfast", "nameRu": "Завтрак", "nameEn": "Breakfast" },
+  { "id": "dessert", "nameRu": "Десерт", "nameEn": "Dessert" },
+  { "id": "bread", "nameRu": "Хлеб", "nameEn": "Bread" },
+  { "id": "sauce", "nameRu": "Соус", "nameEn": "Sauce" },
+  { "id": "snack", "nameRu": "Закуска", "nameEn": "Snack" },
+  { "id": "drink", "nameRu": "Напиток", "nameEn": "Drink" }
+]

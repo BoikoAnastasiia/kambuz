@@ -31,9 +31,13 @@ describe("DraftRecipeSchema", () => {
 
 describe("CategorizationSchema", () => {
   it("rejects a dishKey with spaces or uppercase", () => {
-    const base = { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
+    const base = { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: "bake", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
     expect(() => CategorizationSchema.parse({ ...base, dishKey: "Lasagna Bolognese" })).toThrow();
     expect(CategorizationSchema.parse({ ...base, dishKey: "lasagna-bolognese" }).dishKey).toBe("lasagna-bolognese");
+  });
+  it("accepts a null method", () => {
+    const base = { cuisine: "italian", mealTypes: ["dinner"], course: "salad", method: null, activeMinutes: 40, totalMinutes: 90, richness: "light", dishKey: "cabbage-salad" };
+    expect(CategorizationSchema.parse(base).method).toBeNull();
   });
 });
 
@@ -42,7 +46,7 @@ describe("CategorizationSchema", () => {
 // writes something the Zod schema then rejects. The wire schemas are what the model is
 // asked for; the agents normalize, and the strict schemas guard what is persisted.
 describe("wire schemas for structured output", () => {
-  const base = { cuisine: "italian", mealTypes: ["dinner"], category: "pasta", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
+  const base = { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: "bake", activeMinutes: 40, totalMinutes: 90, richness: "hearty" };
 
   it("accepts an un-slugified dishKey that the strict schema rejects", () => {
     expect(CategorizationWireSchema.parse({ ...base, dishKey: "Lasagna Bolognese!" }).dishKey).toBe("Lasagna Bolognese!");

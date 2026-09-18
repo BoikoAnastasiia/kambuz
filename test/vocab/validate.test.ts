@@ -6,20 +6,25 @@ import { config } from "../../src/config.js";
 
 const vocab: Vocab = {
   cuisines: [{ id: "italian", nameRu: "Итальянская", nameEn: "Italian" }],
-  categories: [{ id: "pasta", nameRu: "Паста", nameEn: "Pasta" }],
+  courses: [{ id: "main", nameRu: "Основное блюдо", nameEn: "Main" }],
+  methods: [{ id: "bake", nameRu: "Запекание", nameEn: "Bake" }],
   ingredients: [{ id: "onion", nameRu: "Лук", nameEn: "Onion", aliases: ["лук репчатый"] }],
 };
 const ing = (ingredient: string | null) => ({ ingredient, rawName: "x", quantity: null, unit: null, provenance: "unknown" as const, note: null });
 
 describe("validateRecipe", () => {
   it("returns no errors for known ids", () => {
-    expect(validateRecipe({ cuisine: "italian", category: "pasta", ingredients: [ing("onion"), ing(null)] }, vocab)).toEqual([]);
+    expect(validateRecipe({ cuisine: "italian", course: "main", method: "bake", ingredients: [ing("onion"), ing(null)] }, vocab)).toEqual([]);
   });
-  it("reports unknown cuisine, category and ingredient ids", () => {
-    const errors = validateRecipe({ cuisine: "martian", category: "soup", ingredients: [ing("unicorn")] }, vocab);
+  it("accepts a null method", () => {
+    expect(validateRecipe({ cuisine: "italian", course: "main", method: null, ingredients: [] }, vocab)).toEqual([]);
+  });
+  it("reports unknown cuisine, course, method and ingredient ids", () => {
+    const errors = validateRecipe({ cuisine: "martian", course: "soup", method: "sous-vide", ingredients: [ing("unicorn")] }, vocab);
     expect(errors).toEqual([
       "unknown cuisine: martian",
-      "unknown category: soup",
+      "unknown course: soup",
+      "unknown method: sous-vide",
       "unknown ingredient: unicorn",
     ]);
   });
@@ -34,7 +39,7 @@ describe("ingredientPromptList", () => {
 describe("loadVocab", () => {
   it("loads the real vocab files and every id is a slug", async () => {
     const v = await loadVocab(config.paths.vocab);
-    for (const e of [...v.cuisines, ...v.categories, ...v.ingredients]) {
+    for (const e of [...v.cuisines, ...v.courses, ...v.methods, ...v.ingredients]) {
       expect(e.id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
     }
     expect(v.ingredients.length).toBeGreaterThanOrEqual(60);
