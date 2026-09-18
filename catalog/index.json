@@ -1,5 +1,47 @@
 [
   {
+    "id": "chicken-cutlets--FRXZitSnjco",
+    "nameRu": "Куриные отбивные",
+    "nameEn": "Chicken Cutlets",
+    "dishKey": "chicken-cutlets",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "grill",
+    "completeness": 0.9,
+    "videoId": "FRXZitSnjco"
+  },
+  {
+    "id": "chicken-tuna-salad--nq5HW8nt-AU",
+    "nameRu": "Салат с курицей и тунцом",
+    "nameEn": "Chicken and Tuna Salad",
+    "dishKey": "chicken-tuna-salad",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "salad",
+    "completeness": 0.6428571428571428,
+    "videoId": "nq5HW8nt-AU"
+  },
+  {
+    "id": "cod-caprese--nq5HW8nt-AU",
+    "nameRu": "Треска капрезе",
+    "nameEn": "Cod Caprese",
+    "dishKey": "cod-caprese",
+    "cuisine": "italian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "bake",
+    "completeness": 0.9166666666666667,
+    "videoId": "nq5HW8nt-AU"
+  },
+  {
     "id": "eggs-benedict--n6fmm5zLmhs",
     "nameRu": "Яйца Бенедикт",
     "nameEn": "Eggs Benedict",
@@ -11,6 +53,34 @@
     "category": "breakfast-dish",
     "completeness": 0.9400000000000001,
     "videoId": "n6fmm5zLmhs"
+  },
+  {
+    "id": "fried-rice-cod--FRXZitSnjco",
+    "nameRu": "Жареный рис с треской",
+    "nameEn": "Fried rice with cod",
+    "dishKey": "fried-rice-cod",
+    "cuisine": "asian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "side",
+    "completeness": 0.8105263157894738,
+    "videoId": "FRXZitSnjco"
+  },
+  {
+    "id": "mashed-potatoes-carrot--FRXZitSnjco",
+    "nameRu": "Картофельное пюре с морковью",
+    "nameEn": "Mashed potatoes with carrot",
+    "dishKey": "mashed-potatoes-carrot",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "category": "side",
+    "completeness": 0.65,
+    "videoId": "FRXZitSnjco"
   },
   {
     "id": "oatmeal--n6fmm5zLmhs",

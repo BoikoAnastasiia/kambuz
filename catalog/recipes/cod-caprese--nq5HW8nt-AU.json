@@ -1,0 +1,163 @@
+{
+  "id": "cod-caprese--nq5HW8nt-AU",
+  "nameRu": "Треска капрезе",
+  "nameEn": "Cod Caprese",
+  "dishKey": "cod-caprese",
+  "cuisine": "italian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "bake",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 15,
+  "totalMinutes": 35,
+  "ingredients": [
+    {
+      "ingredient": "fish-white",
+      "rawName": "треска",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "филе трески, количество не указано"
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "посолить",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "поперчить",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "соус песто",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "нет в словаре ингредиентов"
+    },
+    {
+      "ingredient": "tomato",
+      "rawName": "помидорки",
+      "quantity": 2,
+      "unit": "pc",
+      "provenance": "stated",
+      "note": null
+    },
+    {
+      "ingredient": "mozzarella",
+      "rawName": "моцарелла",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "количество определено по числу помидоров, но точное значение не названо"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Включить духовку разогреваться на 200°.",
+      "timestamp": 345
+    },
+    {
+      "order": 2,
+      "text": "Выложить филе трески на противень.",
+      "timestamp": 371
+    },
+    {
+      "order": 3,
+      "text": "Удалить кости из рыбы, если они есть.",
+      "timestamp": 388
+    },
+    {
+      "order": 4,
+      "text": "Посолить рыбу.",
+      "timestamp": 404
+    },
+    {
+      "order": 5,
+      "text": "Поперчить рыбу.",
+      "timestamp": 410
+    },
+    {
+      "order": 6,
+      "text": "Взять соус песто и обильно растереть по каждому кусочку рыбы.",
+      "timestamp": 421
+    },
+    {
+      "order": 7,
+      "text": "Взять помидоры и удалить у них попку.",
+      "timestamp": 483
+    },
+    {
+      "order": 8,
+      "text": "Нарезать помидоры кольцами толщиной примерно по сантиметру.",
+      "timestamp": 503
+    },
+    {
+      "order": 9,
+      "text": "Выложить кольца помидоров сверху на рыбу.",
+      "timestamp": 514
+    },
+    {
+      "order": 10,
+      "text": "Нарезать моцареллу такой же толщины, как помидоры.",
+      "timestamp": 542
+    },
+    {
+      "order": 11,
+      "text": "Выложить моцареллу внахлёст к помидорам поверх рыбы.",
+      "timestamp": 556
+    },
+    {
+      "order": 12,
+      "text": "Слегка подсолить сверху ещё раз.",
+      "timestamp": 603
+    },
+    {
+      "order": 13,
+      "text": "Включить в разогретой до 200° духовке режим конвекции вверх-вниз.",
+      "timestamp": 619
+    },
+    {
+      "order": 14,
+      "text": "Поставить противень с рыбой в духовку на нижний уровень на 15-20 минут, пока не растает и не подрумянится моцарелла.",
+      "timestamp": 626
+    },
+    {
+      "order": 15,
+      "text": "Достать готовое блюдо, переложить на доску и дать немного остыть перед подачей.",
+      "timestamp": 680
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9166666666666667,
+  "source": {
+    "videoId": "nq5HW8nt-AU",
+    "url": "https://www.youtube.com/watch?v=nq5HW8nt-AU",
+    "videoTitle": "САМЫЙ ВКУСНЫЙ ОБЕД | Простые ПП рецепты с рыбой !",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 342,
+    "segmentEnd": 819,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-17T12:02:10.864Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

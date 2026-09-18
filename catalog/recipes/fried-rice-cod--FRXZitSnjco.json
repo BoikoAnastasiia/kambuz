@@ -1,0 +1,448 @@
+{
+  "id": "fried-rice-cod--FRXZitSnjco",
+  "nameRu": "Жареный рис с треской",
+  "nameEn": "Fried rice with cod",
+  "dishKey": "fried-rice-cod",
+  "cuisine": "asian",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "side",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 40,
+  "totalMinutes": 90,
+  "ingredients": [
+    {
+      "ingredient": "rice",
+      "rawName": "рис",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "залили водой в соотношении один к одному перед запеканием в духовке"
+    },
+    {
+      "ingredient": "fish-white",
+      "rawName": "треска",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "onion",
+      "rawName": "лук красный",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "красный лук, количество не названо"
+    },
+    {
+      "ingredient": null,
+      "rawName": "имбирь",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "имбиря нет в словаре, использован для зажарки и посыпки"
+    },
+    {
+      "ingredient": "garlic",
+      "rawName": "чеснок (зубчики)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "нарезанные зубчики для зажарки, число не указано"
+    },
+    {
+      "ingredient": null,
+      "rawName": "чесночное масло",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "отдельный ингредиент - чесночное масло, используется в конце на рис; отсутствует в словаре"
+    },
+    {
+      "ingredient": "bell-pepper",
+      "rawName": "сладкий перец",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "карри",
+      "quantity": 1,
+      "unit": "tsp",
+      "provenance": "stated",
+      "note": "чуть больше половины, но чуть меньше полной чайной ложки по словам шефа - взял значение 'полная чайная ложка'"
+    },
+    {
+      "ingredient": "paprika",
+      "rawName": "паприка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "розмарин (ошибочно назван тимьян)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "шеф сначала сказал тимьян, потом уточнил розмарин; отсутствует в словаре"
+    },
+    {
+      "ingredient": "butter",
+      "rawName": "сливочное масло",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "крупный кусок, точный вес не назван"
+    },
+    {
+      "ingredient": "parsley",
+      "rawName": "петрушка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "много зелени, количество не уточнено"
+    },
+    {
+      "ingredient": "cabbage",
+      "rawName": "капуста белокочанная",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "жменя (горсть) капусты"
+    },
+    {
+      "ingredient": "flour",
+      "rawName": "мука",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "для обваливания трески перед обжаркой"
+    },
+    {
+      "ingredient": "sunflower-oil",
+      "rawName": "масло",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "масло для обжарки рыбы на сковороде, определено по контексту жарки в муке"
+    },
+    {
+      "ingredient": "lemon",
+      "rawName": "лимон",
+      "quantity": 1,
+      "unit": "pc",
+      "provenance": "inferred",
+      "note": "взят целый лимон, использован сок"
+    },
+    {
+      "ingredient": "lemon",
+      "rawName": "лимонная цедра",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "цедра лимона добавлена для цвета"
+    },
+    {
+      "ingredient": "cilantro",
+      "rawName": "кинза",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "крупные листочки, количество не названо"
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "соль (подсолили)",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "использована и для рыбы, и для риса"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Промыть рис.",
+      "timestamp": 217
+    },
+    {
+      "order": 2,
+      "text": "Залить рис водой в соотношении один к одному.",
+      "timestamp": 244
+    },
+    {
+      "order": 3,
+      "text": "Накрыть рис фольгой и поставить в разогретую духовку на 20 минут при 180°C.",
+      "timestamp": 247
+    },
+    {
+      "order": 4,
+      "text": "Выключить духовку и оставить рис в ней ещё на 30 минут.",
+      "timestamp": 251
+    },
+    {
+      "order": 5,
+      "text": "Подготовить имбирь, лук, чеснок и другие ингредиенты для зажарки.",
+      "timestamp": 324
+    },
+    {
+      "order": 6,
+      "text": "Взять чеснок: чесночное масло отложить для использования в конце, а зубчики нарезать для зажарки.",
+      "timestamp": 331
+    },
+    {
+      "order": 7,
+      "text": "Почистить имбирь ложкой.",
+      "timestamp": 346
+    },
+    {
+      "order": 8,
+      "text": "Поставить сковороду на плиту разогреваться.",
+      "timestamp": 371
+    },
+    {
+      "order": 9,
+      "text": "Нарезать имбирь мелким кубиком.",
+      "timestamp": 385
+    },
+    {
+      "order": 10,
+      "text": "Раздавить и крупно порубить чеснок.",
+      "timestamp": 399
+    },
+    {
+      "order": 11,
+      "text": "Налить масло на сковороду.",
+      "timestamp": 425
+    },
+    {
+      "order": 12,
+      "text": "Добавить чеснок на сковороду.",
+      "timestamp": 431
+    },
+    {
+      "order": 13,
+      "text": "Добавить имбирь и обжаривать вместе с чесноком.",
+      "timestamp": 437
+    },
+    {
+      "order": 14,
+      "text": "Нарезать лук мелким кубиком.",
+      "timestamp": 457
+    },
+    {
+      "order": 15,
+      "text": "Добавить лук в сковороду.",
+      "timestamp": 476
+    },
+    {
+      "order": 16,
+      "text": "Нарезать сладкий перец кубиком.",
+      "timestamp": 484
+    },
+    {
+      "order": 17,
+      "text": "Достать готовый рис из духовки.",
+      "timestamp": 504
+    },
+    {
+      "order": 18,
+      "text": "Выключить и оставить рис.",
+      "timestamp": 507
+    },
+    {
+      "order": 19,
+      "text": "Перемешать зажарку.",
+      "timestamp": 522
+    },
+    {
+      "order": 20,
+      "text": "Добавить крупный кусок сливочного масла в зажарку.",
+      "timestamp": 526
+    },
+    {
+      "order": 21,
+      "text": "Добавить карри (примерно полную чайную ложку).",
+      "timestamp": 534
+    },
+    {
+      "order": 22,
+      "text": "Добавить паприку.",
+      "timestamp": 558
+    },
+    {
+      "order": 23,
+      "text": "Добавить розмарин (ранее ошибочно названный тимьян).",
+      "timestamp": 565
+    },
+    {
+      "order": 24,
+      "text": "Убавить температуру до средней.",
+      "timestamp": 587
+    },
+    {
+      "order": 25,
+      "text": "Добавить много зелени (петрушку).",
+      "timestamp": 605
+    },
+    {
+      "order": 26,
+      "text": "Добавить белокочанную капусту.",
+      "timestamp": 621
+    },
+    {
+      "order": 27,
+      "text": "Добавить сладкий перец в зажарку.",
+      "timestamp": 629
+    },
+    {
+      "order": 28,
+      "text": "Помять капусту руками и перемешать.",
+      "timestamp": 633
+    },
+    {
+      "order": 29,
+      "text": "Обжаривать всё на низкой температуре, чтобы капуста размягчилась.",
+      "timestamp": 657
+    },
+    {
+      "order": 30,
+      "text": "Достать рис и перемешать его.",
+      "timestamp": 683
+    },
+    {
+      "order": 31,
+      "text": "Подготовить рыбу (треску).",
+      "timestamp": 689
+    },
+    {
+      "order": 32,
+      "text": "Посолить рыбу.",
+      "timestamp": 694
+    },
+    {
+      "order": 33,
+      "text": "Поставить сковороду для рыбы разогреваться.",
+      "timestamp": 703
+    },
+    {
+      "order": 34,
+      "text": "Обвалять рыбу в муке.",
+      "timestamp": 715
+    },
+    {
+      "order": 35,
+      "text": "Добавить масло на сковороду.",
+      "timestamp": 721
+    },
+    {
+      "order": 36,
+      "text": "Обжарить рыбу.",
+      "timestamp": 727
+    },
+    {
+      "order": 37,
+      "text": "Убрать зажарку в сторону.",
+      "timestamp": 735
+    },
+    {
+      "order": 38,
+      "text": "Достать рис, перемешать его, пока рыба жарится, и подготовить добавление зажарки.",
+      "timestamp": 738
+    },
+    {
+      "order": 39,
+      "text": "Добавить рис к зажарке и перемешать.",
+      "timestamp": 780
+    },
+    {
+      "order": 40,
+      "text": "Выдавить сок лимона в рис.",
+      "timestamp": 793
+    },
+    {
+      "order": 41,
+      "text": "Добавить чесночное масло в рис.",
+      "timestamp": 806
+    },
+    {
+      "order": 42,
+      "text": "Посолить рис.",
+      "timestamp": 811
+    },
+    {
+      "order": 43,
+      "text": "Аккуратно перемешать рис.",
+      "timestamp": 823
+    },
+    {
+      "order": 44,
+      "text": "Пересыпать рис на противень для подачи.",
+      "timestamp": 836
+    },
+    {
+      "order": 45,
+      "text": "Попробовать рис на вкус.",
+      "timestamp": 873
+    },
+    {
+      "order": 46,
+      "text": "Положить рыбу сверху на рис.",
+      "timestamp": 910
+    },
+    {
+      "order": 47,
+      "text": "Добавить чеснок, имбирь и лимон сверху хаотично и равномерно.",
+      "timestamp": 920
+    },
+    {
+      "order": 48,
+      "text": "Добавить кинзу крупными листочками.",
+      "timestamp": 931
+    },
+    {
+      "order": 49,
+      "text": "Добавить немного лимонной цедры для цвета.",
+      "timestamp": 944
+    },
+    {
+      "order": 50,
+      "text": "Убрать блюдо на подогрев.",
+      "timestamp": 974
+    }
+  ],
+  "flags": [
+    {
+      "kind": "ingredient",
+      "ref": "лимон",
+      "reason": "quantity or presence not supported by transcript"
+    }
+  ],
+  "completeness": 0.8105263157894738,
+  "source": {
+    "videoId": "FRXZitSnjco",
+    "url": "https://www.youtube.com/watch?v=FRXZitSnjco",
+    "videoTitle": "Морской Vlog | Вкуснейший жареный рис с треской и куриные битки с пюрешкой!",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 186,
+    "segmentEnd": 1030,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:42:33.358Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

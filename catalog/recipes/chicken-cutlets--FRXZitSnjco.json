@@ -1,0 +1,110 @@
+{
+  "id": "chicken-cutlets--FRXZitSnjco",
+  "nameRu": "Куриные отбивные",
+  "nameEn": "Chicken Cutlets",
+  "dishKey": "chicken-cutlets",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "grill",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 25,
+  "totalMinutes": 30,
+  "ingredients": [
+    {
+      "ingredient": "chicken-breast",
+      "rawName": "куриное филе",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "посолили",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "поперчили",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "flour",
+      "rawName": "мука",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "egg",
+      "rawName": "яйцо",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать куриное филе на куски.",
+      "timestamp": 157
+    },
+    {
+      "order": 2,
+      "text": "Отбить нарезанные куски филе.",
+      "timestamp": 157
+    },
+    {
+      "order": 3,
+      "text": "Посолить и поперчить отбитое филе, оставить в стороне.",
+      "timestamp": 159
+    },
+    {
+      "order": 4,
+      "text": "Обвалять отбивные в муке, затем в яйце, повторить (мука, яйцо).",
+      "timestamp": 162
+    },
+    {
+      "order": 5,
+      "text": "Обжарить отбивные.",
+      "timestamp": 165
+    },
+    {
+      "order": 6,
+      "text": "Быстро обжарить куриные отбивные перед подачей.",
+      "timestamp": 974
+    }
+  ],
+  "flags": [],
+  "completeness": 0.9,
+  "source": {
+    "videoId": "FRXZitSnjco",
+    "url": "https://www.youtube.com/watch?v=FRXZitSnjco",
+    "videoTitle": "Морской Vlog | Вкуснейший жареный рис с треской и куриные битки с пюрешкой!",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 150,
+    "segmentEnd": 1038,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:40:37.749Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

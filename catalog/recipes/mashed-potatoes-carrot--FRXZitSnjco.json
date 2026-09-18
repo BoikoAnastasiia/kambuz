@@ -1,0 +1,111 @@
+{
+  "id": "mashed-potatoes-carrot--FRXZitSnjco",
+  "nameRu": "Картофельное пюре с морковью",
+  "nameEn": "Mashed potatoes with carrot",
+  "dishKey": "mashed-potatoes-carrot",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "side",
+  "richness": "medium",
+  "servings": null,
+  "activeMinutes": 15,
+  "totalMinutes": 30,
+  "ingredients": [
+    {
+      "ingredient": "potato",
+      "rawName": "картошка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "carrot",
+      "rawName": "морковка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "посолили",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "поперчили",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": null,
+      "rawName": "цветная капуста",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Шеф упомянул как опциональную добавку («если у вас есть цветная капуста, смело добавляйте»), но не подтвердил, что использовал её в этом приготовлении."
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать картофель для пюре.",
+      "timestamp": 221
+    },
+    {
+      "order": 2,
+      "text": "Поставить картофель с морковью на плиту вариться.",
+      "timestamp": 288
+    },
+    {
+      "order": 3,
+      "text": "Посолить и поперчить картофель с морковью.",
+      "timestamp": 293
+    },
+    {
+      "order": 4,
+      "text": "Варить картофель с морковью до готовности для пюре.",
+      "timestamp": 297
+    },
+    {
+      "order": 5,
+      "text": "Размять сваренный картофель с морковью в пюре.",
+      "timestamp": 976
+    }
+  ],
+  "flags": [
+    {
+      "kind": "ingredient",
+      "ref": "цветная капуста",
+      "reason": "presence not found in transcript"
+    }
+  ],
+  "completeness": 0.65,
+  "source": {
+    "videoId": "FRXZitSnjco",
+    "url": "https://www.youtube.com/watch?v=FRXZitSnjco",
+    "videoTitle": "Морской Vlog | Вкуснейший жареный рис с треской и куриные битки с пюрешкой!",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 167,
+    "segmentEnd": 1035,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-18T08:40:58.330Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

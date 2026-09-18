@@ -1,0 +1,152 @@
+{
+  "id": "chicken-tuna-salad--nq5HW8nt-AU",
+  "nameRu": "Салат с курицей и тунцом",
+  "nameEn": "Chicken and Tuna Salad",
+  "dishKey": "chicken-tuna-salad",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "category": "salad",
+  "richness": "light",
+  "servings": null,
+  "activeMinutes": 15,
+  "totalMinutes": 15,
+  "ingredients": [
+    {
+      "ingredient": "chicken",
+      "rawName": "детёныша курицы",
+      "quantity": 1,
+      "unit": "pc",
+      "provenance": "inferred",
+      "note": "Шутливое название одной куриной грудки/тушки, нарезаемой мелким кубиком"
+    },
+    {
+      "ingredient": "onion",
+      "rawName": "лучок",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Диминутив от 'лук', количество не указано"
+    },
+    {
+      "ingredient": "tomato",
+      "rawName": "небольшую помидорку",
+      "quantity": 1,
+      "unit": "pc",
+      "provenance": "inferred",
+      "note": "Указано 'небольшую', подразумевает один помидор"
+    },
+    {
+      "ingredient": null,
+      "rawName": "баночка тунца",
+      "quantity": 1,
+      "unit": "pc",
+      "provenance": "inferred",
+      "note": "Тунец не найден в словаре ингредиентов, использована банка консервированного тунца без сахара"
+    },
+    {
+      "ingredient": "lemon",
+      "rawName": "лимон",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "Добавлен для вкуса, количество не указано"
+    },
+    {
+      "ingredient": "salt",
+      "rawName": "посолить",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "black-pepper",
+      "rawName": "поперчить",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Нарезать курицу мелким кубиком.",
+      "timestamp": 161
+    },
+    {
+      "order": 2,
+      "text": "Мелко нарезать лук.",
+      "timestamp": 200
+    },
+    {
+      "order": 3,
+      "text": "Добавить небольшой нарезанный помидор.",
+      "timestamp": 208
+    },
+    {
+      "order": 4,
+      "text": "Открыть банку тунца без добавления сахара и добавить в салат.",
+      "timestamp": 220
+    },
+    {
+      "order": 5,
+      "text": "Добавить лимон.",
+      "timestamp": 237
+    },
+    {
+      "order": 6,
+      "text": "Посолить.",
+      "timestamp": 268
+    },
+    {
+      "order": 7,
+      "text": "Поперчить.",
+      "timestamp": 281
+    },
+    {
+      "order": 8,
+      "text": "Перемешать все ингредиенты.",
+      "timestamp": 284
+    }
+  ],
+  "flags": [
+    {
+      "kind": "ingredient",
+      "ref": "детёныша курицы",
+      "reason": "quantity or presence not supported by transcript"
+    },
+    {
+      "kind": "step",
+      "ref": "1",
+      "reason": "action not found in transcript"
+    },
+    {
+      "kind": "step",
+      "ref": "5",
+      "reason": "action not found in transcript"
+    }
+  ],
+  "completeness": 0.6428571428571428,
+  "source": {
+    "videoId": "nq5HW8nt-AU",
+    "url": "https://www.youtube.com/watch?v=nq5HW8nt-AU",
+    "videoTitle": "САМЫЙ ВКУСНЫЙ ОБЕД | Простые ПП рецепты с рыбой !",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 142,
+    "segmentEnd": 330,
+    "language": "ru"
+  },
+  "extractedAt": "2026-09-17T12:02:46.580Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}
