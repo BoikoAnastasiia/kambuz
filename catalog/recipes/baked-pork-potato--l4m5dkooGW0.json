@@ -1,0 +1,102 @@
+{
+  "id": "baked-pork-potato--l4m5dkooGW0",
+  "nameRu": "Запечённая свинина с картошкой",
+  "nameEn": "Baked pork with potato",
+  "dishKey": "baked-pork-potato",
+  "cuisine": "other",
+  "mealTypes": [
+    "lunch",
+    "dinner"
+  ],
+  "course": "main",
+  "method": "bake",
+  "richness": "hearty",
+  "servings": null,
+  "activeMinutes": 20,
+  "totalMinutes": 60,
+  "ingredients": [
+    {
+      "ingredient": "pork",
+      "rawName": "свининка, вырезка свиная",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": null
+    },
+    {
+      "ingredient": "potato",
+      "rawName": "картошечка",
+      "quantity": null,
+      "unit": null,
+      "provenance": "unknown",
+      "note": "отварная картошка на гарнир"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "text": "Замариновать свиную вырезку",
+      "timestamp": 74
+    },
+    {
+      "order": 2,
+      "text": "Нарезать картошку",
+      "timestamp": 108
+    },
+    {
+      "order": 3,
+      "text": "Поставить картошку запекаться",
+      "timestamp": 197
+    },
+    {
+      "order": 4,
+      "text": "Поставить свинину запекаться",
+      "timestamp": 197
+    },
+    {
+      "order": 5,
+      "text": "Достать замороженные овощи для подачи с мясом",
+      "timestamp": 254
+    },
+    {
+      "order": 6,
+      "text": "Выложить овощи посередине противня, а нарезанную свинину по бокам",
+      "timestamp": 258
+    },
+    {
+      "order": 7,
+      "text": "Нарезать готовую свинину",
+      "timestamp": 321
+    },
+    {
+      "order": 8,
+      "text": "Собрать готовое блюдо",
+      "timestamp": 325
+    },
+    {
+      "order": 9,
+      "text": "Попробовать и подать блюдо",
+      "timestamp": 360
+    }
+  ],
+  "flags": [],
+  "completeness": 0.36000000000000004,
+  "source": {
+    "videoId": "l4m5dkooGW0",
+    "url": "https://www.youtube.com/watch?v=l4m5dkooGW0",
+    "videoTitle": "Самое вкусное блюдо с уткой и пирог с говядиной ! Морской Vlog",
+    "channel": "Vishniakov kitchen",
+    "channelId": "UCi51Ivjt6EKC4OegheuJ4zQ",
+    "segmentStart": 74,
+    "segmentEnd": 374,
+    "language": "ru"
+  },
+  "extractedAt": "2026-10-07T14:43:22.286Z",
+  "models": {
+    "scout": "claude-sonnet-5",
+    "extractor": "claude-sonnet-5",
+    "verifier": "claude-sonnet-5",
+    "categorizer": "claude-sonnet-5",
+    "judge": "claude-sonnet-5"
+  }
+}

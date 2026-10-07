@@ -15,6 +15,21 @@
     "videoId": "TWYLP8st0pQ"
   },
   {
+    "id": "baked-pork-potato--l4m5dkooGW0",
+    "nameRu": "Запечённая свинина с картошкой",
+    "nameEn": "Baked pork with potato",
+    "dishKey": "baked-pork-potato",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "course": "main",
+    "method": "bake",
+    "completeness": 0.36000000000000004,
+    "videoId": "l4m5dkooGW0"
+  },
+  {
     "id": "baked-potatoes-oyster-sauce--TWYLP8st0pQ",
     "nameRu": "Печёная картошка с устричным соусом",
     "nameEn": "Baked potatoes with oyster sauce",
@@ -43,6 +58,21 @@
     "method": "bake",
     "completeness": 0.65,
     "videoId": "TWYLP8st0pQ"
+  },
+  {
+    "id": "beef-pie--l4m5dkooGW0",
+    "nameRu": "Пирог с говядиной",
+    "nameEn": "Beef Pie",
+    "dishKey": "beef-pie",
+    "cuisine": "russian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "course": "main",
+    "method": "bake",
+    "completeness": 0.9555555555555556,
+    "videoId": "l4m5dkooGW0"
   },
   {
     "id": "cabbage-carrot-beet-salad--TWYLP8st0pQ",
@@ -133,6 +163,21 @@
     "method": "bake",
     "completeness": 0.9166666666666667,
     "videoId": "nq5HW8nt-AU"
+  },
+  {
+    "id": "duck-rice--l4m5dkooGW0",
+    "nameRu": "Рис с уткой",
+    "nameEn": "Duck rice",
+    "dishKey": "duck-rice",
+    "cuisine": "asian",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "course": "main",
+    "method": "fry",
+    "completeness": 0.9142857142857143,
+    "videoId": "l4m5dkooGW0"
   },
   {
     "id": "eggs-benedict--n6fmm5zLmhs",
@@ -238,6 +283,20 @@
     "videoId": "n6fmm5zLmhs"
   },
   {
+    "id": "omelet-envelopes--l4m5dkooGW0",
+    "nameRu": "Конвертики из омлета",
+    "nameEn": "Omelet envelopes",
+    "dishKey": "omelet-envelopes",
+    "cuisine": "other",
+    "mealTypes": [
+      "breakfast"
+    ],
+    "course": "breakfast",
+    "method": "fry",
+    "completeness": 0.36,
+    "videoId": "l4m5dkooGW0"
+  },
+  {
     "id": "pear-cake--n6fmm5zLmhs",
     "nameRu": "Грушевый кекс",
     "nameEn": "Pear cake",
@@ -325,6 +384,21 @@
     "method": null,
     "completeness": 0.35,
     "videoId": "AUEC-8K4ikI"
+  },
+  {
+    "id": "vegetable-soup-chicken--l4m5dkooGW0",
+    "nameRu": "Суп овощной с курицей",
+    "nameEn": "Vegetable soup with chicken",
+    "dishKey": "vegetable-soup-chicken",
+    "cuisine": "other",
+    "mealTypes": [
+      "lunch",
+      "dinner"
+    ],
+    "course": "soup",
+    "method": "boil",
+    "completeness": 0.6450000000000001,
+    "videoId": "l4m5dkooGW0"
   },
   {
     "id": "zharkoe-pork--n6fmm5zLmhs",
