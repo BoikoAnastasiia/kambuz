@@ -42,12 +42,6 @@
   color: var(--ink);
 }
 
-.titleEn {
-  margin: 0;
-  color: var(--ink-soft);
-  font-weight: 600;
-}
-
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

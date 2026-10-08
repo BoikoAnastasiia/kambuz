@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PickerOptions } from "@/lib/suggest";
 import type { RecipeCard, Suggestion, VocabItem } from "@/lib/types";
-import { capitalize, clock, duration, methodLabel } from "@/lib/format";
+import { capitalize, clock, duration, methodLabel, plural } from "@/lib/format";
 import { watchUrl } from "@/lib/youtube";
 import styles from "./what-to-cook.module.css";
 
 const MEALS = [
-  { id: "breakfast", label: "Breakfast" },
-  { id: "lunch", label: "Lunch" },
-  { id: "dinner", label: "Dinner" },
-  { id: "dessert", label: "Dessert" },
+  { id: "breakfast", label: "Завтрак" },
+  { id: "lunch", label: "Обед" },
+  { id: "dinner", label: "Ужин" },
+  { id: "dessert", label: "Десерт" },
 ] as const;
 
 type Meal = (typeof MEALS)[number]["id"];
@@ -28,7 +28,7 @@ export function WhatToCook({ options, initial }: { options: PickerOptions; initi
   // The filters the result on screen was fetched for; the server rendered the defaults.
   const shownFor = useRef("dinner|random|");
 
-  const cuisineName = useMemo(() => new Map(options.cuisines.map((c) => [c.id, c.nameEn])), [options.cuisines]);
+  const cuisineName = useMemo(() => new Map(options.cuisines.map((c) => [c.id, c.nameRu])), [options.cuisines]);
   const ingredientById = useMemo(() => new Map(options.ingredients.map((i) => [i.id, i])), [options.ingredients]);
 
   async function load(exclude?: string) {
@@ -40,7 +40,7 @@ export function WhatToCook({ options, initial }: { options: PickerOptions; initi
     try {
       const res = await fetch(`/api/suggest?${q}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? "Something went wrong");
+      if (!res.ok) throw new Error(body.error ?? "Что-то пошло не так");
       setResult(body as Suggestion);
     } catch (e) {
       setError((e as Error).message);
@@ -61,28 +61,28 @@ export function WhatToCook({ options, initial }: { options: PickerOptions; initi
 
   return (
     <div className={styles.wrap}>
-      <section className={styles.filters} aria-label="Filters">
-        <div className={`${styles.row} ${styles.meals}`} role="group" aria-label="Meal">
+      <section className={styles.filters} aria-label="Фильтры">
+        <div className={`${styles.row} ${styles.meals}`} role="group" aria-label="Приём пищи">
           {MEALS.map((m) => (
             <button key={m.id} className="chip" aria-pressed={meal === m.id} onClick={() => setMeal(m.id)}>
               {m.label}
             </button>
           ))}
         </div>
-        <div className={`${styles.row} ${styles.scroll}`} role="group" aria-label="Cuisine">
+        <div className={`${styles.row} ${styles.scroll}`} role="group" aria-label="Кухня">
           <button className="chip" aria-pressed={cuisine === "random"} onClick={() => setCuisine("random")}>
-            🎲 Random
+            🎲 Любая
           </button>
           {options.cuisines.map((c) => (
             <button key={c.id} className="chip" aria-pressed={cuisine === c.id} onClick={() => setCuisine(c.id)}>
-              {c.nameEn}
+              {c.nameRu}
             </button>
           ))}
         </div>
 
         <div className={styles.advanced}>
           <button className={styles.advancedToggle} aria-expanded={advanced} onClick={() => setAdvanced((a) => !a)}>
-            <span aria-hidden>{advanced ? "▾" : "▸"}</span> Must include{include.length ? ` (${include.length})` : ""}
+            <span aria-hidden>{advanced ? "▾" : "▸"}</span> Обязательные ингредиенты{include.length ? ` (${include.length})` : ""}
           </button>
           {advanced && (
             <IngredientPicker
@@ -104,15 +104,15 @@ export function WhatToCook({ options, initial }: { options: PickerOptions; initi
             <PickCard card={result.pick} cuisineName={cuisineName.get(result.pick.cuisine)} />
             <div className={styles.reroll}>
               <button className="btn btn-ghost" disabled={loading || result.total < 2} onClick={() => load(result.pick?.id)}>
-                ↻ Something else
+                ↻ Другое блюдо
               </button>
               <span className="label">
-                {result.total} {result.total === 1 ? "recipe fits" : "recipes fit"}
+                {plural(result.total, ["подходит", "подходят", "подходят"])} {result.total} {plural(result.total, ["рецепт", "рецепта", "рецептов"])}
               </span>
             </div>
             {result.others.length > 0 && (
               <div className={styles.others}>
-                <h2 className={styles.othersTitle}>Also fits</h2>
+                <h2 className={styles.othersTitle}>Ещё подходят</h2>
                 <ul className={styles.otherList}>
                   {result.others.map((o) => (
                     <li key={o.id}>
@@ -130,9 +130,9 @@ export function WhatToCook({ options, initial }: { options: PickerOptions; initi
           </>
         ) : (
           <div className={styles.none}>
-            <p className={styles.noneTitle}>Nothing fits yet</p>
+            <p className={styles.noneTitle}>Пока ничего не подходит</p>
             <p>
-              Try another cuisine or fewer must-have ingredients — or <Link href="/add">add a video</Link> with a dish like this.
+              Попробуйте другую кухню или уберите часть обязательных ингредиентов — или <Link href="/add">добавьте видео</Link> с таким блюдом.
             </p>
           </div>
         )}
@@ -156,24 +156,23 @@ function PickCard({ card, cuisineName }: { card: RecipeCard; cuisineName?: strin
           ))}
         </div>
         <h2 className={styles.dish}>{card.nameRu}</h2>
-        <p className={styles.dishEn}>{card.nameEn}</p>
-        <p className="label">Ingredients</p>
+        <p className="label">Ингредиенты</p>
         <ul className={styles.ingredients}>
           {shown.map((name, i) => (
             <li key={`${name}-${i}`}>{name}</li>
           ))}
-          {more > 0 && <li className={styles.more}>+{more} more</li>}
+          {more > 0 && <li className={styles.more}>и ещё {more}</li>}
         </ul>
         <div className={styles.actions}>
           <Link href={`/recipe/${card.id}`} className="btn">
-            Open recipe →
+            Открыть рецепт →
           </Link>
           <a href={watchUrl(card.videoId, card.segmentStart)} target="_blank" rel="noreferrer" className="btn btn-ghost">
-            ▶ Video at {clock(card.segmentStart)}
+            ▶ Видео с {clock(card.segmentStart)}
           </a>
         </div>
       </div>
-      <a href={watchUrl(card.videoId, card.segmentStart)} target="_blank" rel="noreferrer" className={styles.thumb} aria-label="Watch on YouTube">
+      <a href={watchUrl(card.videoId, card.segmentStart)} target="_blank" rel="noreferrer" className={styles.thumb} aria-label="Смотреть на YouTube">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {/* maxresdefault is 16:9 with no letterbox bars but missing on some older videos; mqdefault always exists and is 16:9 too. */}
         <img
@@ -209,17 +208,17 @@ function IngredientPicker({
   const q = query.trim().toLowerCase();
   const matches = all
     .filter((i) => !selected.includes(i.id))
-    .filter((i) => !q || i.nameEn.toLowerCase().includes(q) || i.nameRu.toLowerCase().includes(q))
+    .filter((i) => !q || i.nameRu.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q))
     .slice(0, q ? 12 : 18);
 
   return (
     <div className={styles.picker}>
       {selected.length > 0 && (
-        <ul className={styles.selected} aria-label="Must include">
+        <ul className={styles.selected} aria-label="Обязательные ингредиенты">
           {selected.map((id) => (
             <li key={id}>
-              <button className={styles.selectedChip} onClick={() => onRemove(id)} aria-label={`Remove ${byId.get(id)?.nameEn ?? id}`}>
-                {byId.get(id)?.nameEn ?? id} <span aria-hidden>×</span>
+              <button className={styles.selectedChip} onClick={() => onRemove(id)} aria-label={`Убрать: ${byId.get(id)?.nameRu ?? id}`}>
+                {byId.get(id)?.nameRu ?? id} <span aria-hidden>×</span>
               </button>
             </li>
           ))}
@@ -228,7 +227,7 @@ function IngredientPicker({
       <input
         className={styles.search}
         type="search"
-        placeholder="Search ingredients — potato, курица…"
+        placeholder="Найти ингредиент — картофель, курица…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
@@ -237,7 +236,7 @@ function IngredientPicker({
             setQuery("");
           }
         }}
-        aria-label="Search ingredients"
+        aria-label="Найти ингредиент"
       />
       <ul className={styles.suggestions}>
         {matches.map((i) => (
@@ -249,11 +248,11 @@ function IngredientPicker({
                 setQuery("");
               }}
             >
-              + {i.nameEn} <span className={styles.ru}>{i.nameRu}</span>
+              + {i.nameRu}
             </button>
           </li>
         ))}
-        {matches.length === 0 && <li className={styles.ru}>No ingredient matches “{query}”</li>}
+        {matches.length === 0 && <li className={styles.ru}>Нет ингредиента «{query}»</li>}
       </ul>
     </div>
   );

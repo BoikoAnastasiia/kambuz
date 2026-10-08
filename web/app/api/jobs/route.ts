@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { url?: unknown } | null;
   const videoId = typeof body?.url === "string" ? videoIdFrom(body.url) : null;
   if (!videoId) {
-    return Response.json({ error: "Paste a link to a single YouTube video (youtube.com/watch?v=… or youtu.be/…)." }, { status: 400 });
+    return Response.json({ error: "Вставьте ссылку на одно видео с YouTube (youtube.com/watch?v=… или youtu.be/…)." }, { status: 400 });
   }
   const { jobs, videos, recipes } = await collections();
   const url = watchUrl(videoId);

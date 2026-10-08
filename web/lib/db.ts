@@ -14,7 +14,7 @@ function dbNameFrom(uri: string): string {
 
 export class MissingDatabaseError extends Error {
   constructor() {
-    super("MONGODB_URI is not set. Add your MongoDB Atlas connection string to the .env file in the repo root.");
+    super("MONGODB_URI не задан. Добавьте строку подключения к MongoDB Atlas в файл .env в корне проекта.");
   }
 }
 

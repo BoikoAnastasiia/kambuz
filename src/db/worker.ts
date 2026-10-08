@@ -10,29 +10,32 @@ export interface WorkerDeps {
   now?: () => string;
 }
 
-/** One line for the site's progress list, or null for events too fine-grained to show. */
+/**
+ * One line for the site's progress list (the site is in Russian), or null for events too
+ * fine-grained to show. Recipes are named by the scout's working name, not by recipe id.
+ */
 export function describeEvent(e: IngestEvent): string | null {
   switch (e.type) {
     case "video:title":
-      return `Video: ${e.title}`;
+      return `Видео: ${e.title}`;
     case "stage:start":
-      if (e.stage === "source") return "Downloading captions";
-      if (e.stage === "scout") return "Finding the dishes in the video";
-      if (e.stage === "extract") return `Writing up: ${e.workingName ?? `dish ${(e.segmentIndex ?? 0) + 1}`}`;
+      if (e.stage === "source") return "Скачиваем субтитры";
+      if (e.stage === "scout") return "Ищем блюда в видео";
+      if (e.stage === "extract") return `Записываем рецепт: ${e.workingName ?? `блюдо ${(e.segmentIndex ?? 0) + 1}`}`;
       return null;
     case "segment:error":
-      return `A dish failed: ${e.error}`;
+      return `Одно блюдо не получилось: ${friendlyError(e.error)}`;
     case "placement":
-      if (e.action === "written" || e.action === "replaced" || e.action === "kept-both") return `Saved ${e.recipeId}`;
-      if (e.action === "kept-existing") return `Kept the existing, more complete ${e.recipeId}`;
-      if (e.action === "too-thin") return `Skipped ${e.recipeId}: too little was said to make a recipe`;
-      if (e.action === "invalid") return `Skipped ${e.recipeId}: failed validation`;
+      if (e.action === "written" || e.action === "replaced" || e.action === "kept-both") return "Рецепт сохранён";
+      if (e.action === "kept-existing") return "Такое блюдо уже есть, и та версия полнее — оставили её";
+      if (e.action === "too-thin") return "Одно блюдо пропущено: о нём сказано слишком мало для рецепта";
+      if (e.action === "invalid") return "Одно блюдо пропущено: рецепт не прошёл проверку";
       return null;
     case "video:done":
-      if (e.status === "skipped-no-captions") return "This video has no Russian captions";
-      if (e.status === "not-recipe") return "This doesn't look like a cooking video";
-      if (e.status === "error") return "The video failed";
-      return `Finished: ${e.recipes} recipe${e.recipes === 1 ? "" : "s"}`;
+      if (e.status === "skipped-no-captions") return "У этого видео нет русских субтитров";
+      if (e.status === "not-recipe") return "Это не похоже на кулинарное видео";
+      if (e.status === "error") return "Не удалось разобрать видео";
+      return `Готово, рецептов: ${e.recipes}`;
     default:
       return null;
   }
@@ -40,14 +43,14 @@ export function describeEvent(e: IngestEvent): string | null {
 
 /**
  * The site shows a job's error to whoever pasted the link, so the known yt-dlp failures
- * become a sentence; anything else is passed on, cut to a readable length.
+ * become a sentence in Russian; anything else is passed on, cut to a readable length.
  */
 export function friendlyError(raw: string): string {
   if (/HTTP Error 429|Too Many Requests|confirm you.re not a bot/i.test(raw)) {
-    return "YouTube is temporarily blocking downloads from this computer after too many requests. Try again in an hour or two.";
+    return "YouTube временно блокирует загрузки с этого компьютера из-за слишком частых запросов. Попробуйте через час-другой.";
   }
-  if (/Video unavailable|Private video|This video is not available/i.test(raw)) return "This video is unavailable — it may be private, deleted or blocked in this region.";
-  if (/yt-dlp not found/i.test(raw)) return "yt-dlp isn't installed on the computer running the worker (brew install yt-dlp).";
+  if (/Video unavailable|Private video|This video is not available/i.test(raw)) return "Видео недоступно — возможно, оно скрыто, удалено или заблокировано в этом регионе.";
+  if (/yt-dlp not found/i.test(raw)) return "На компьютере с воркером не установлен yt-dlp (brew install yt-dlp).";
   const oneLine = raw.replace(/\s+/g, " ").trim();
   return oneLine.length > 300 ? `${oneLine.slice(0, 300)}…` : oneLine;
 }

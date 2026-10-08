@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { collections } from "@/lib/db";
-import { capitalize, clock, duration, methodLabel } from "@/lib/format";
+import { capitalize, clock, duration, mealLabel, methodLabel, unitLabel } from "@/lib/format";
 import { watchUrl } from "@/lib/youtube";
 import type { Ingredient } from "@/lib/types";
 import { VideoEmbed } from "@/components/VideoEmbed";
@@ -15,29 +15,34 @@ const PIPELINE_NOTE = /словар|vocab/i;
 
 function amount(i: Ingredient): string | null {
   if (i.quantity === null) return null;
-  return [i.quantity, i.unit].filter((x) => x !== null && x !== "").join(" ");
+  return [String(i.quantity).replace(".", ","), unitLabel(i.unit)].filter((x) => x !== null && x !== "").join(" ");
 }
 
 async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await params;
   const { recipes, vocab } = await collections();
-  const [recipe, cuisines] = await Promise.all([recipes.findOne({ _id: id }), vocab.findOne({ _id: "cuisines" })]);
+  const [recipe, cuisines, courses] = await Promise.all([
+    recipes.findOne({ _id: id }),
+    vocab.findOne({ _id: "cuisines" }),
+    vocab.findOne({ _id: "courses" }),
+  ]);
   if (!recipe) notFound();
 
-  const cuisine = cuisines?.items.find((c) => c.id === recipe.cuisine)?.nameEn;
-  const tags = [cuisine && cuisine !== "Other" ? cuisine : null, recipe.course, methodLabel(recipe.method)].filter(Boolean) as string[];
+  const cuisine = recipe.cuisine === "other" ? null : cuisines?.items.find((c) => c.id === recipe.cuisine)?.nameRu;
+  const course = courses?.items.find((c) => c.id === recipe.course)?.nameRu ?? recipe.course;
+  const tags = [cuisine ? `${cuisine} кухня` : null, course, methodLabel(recipe.method)].filter(Boolean) as string[];
   const stats = [
-    { label: "Active time", value: duration(recipe.activeMinutes) },
-    { label: "Total time", value: duration(recipe.totalMinutes) },
-    { label: "Servings", value: recipe.servings ? String(recipe.servings) : null },
-    { label: "Meals", value: recipe.mealTypes.map(capitalize).join(", ") },
+    { label: "Активное время", value: duration(recipe.activeMinutes) },
+    { label: "Всего", value: duration(recipe.totalMinutes) },
+    { label: "Порций", value: recipe.servings ? String(recipe.servings) : null },
+    { label: "Когда есть", value: recipe.mealTypes.map(mealLabel).join(", ") },
   ].filter((s) => s.value);
   const start = recipe.source.segmentStart;
 
   return (
     <article className={styles.recipe}>
-      <Link href="/" className={styles.back}>← What to cook</Link>
+      <Link href="/" className={styles.back}>← Что приготовить</Link>
 
       <header className={styles.head}>
         <div className={styles.tags}>
@@ -46,7 +51,6 @@ async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
           ))}
         </div>
         <h1 className={styles.title}>{recipe.nameRu}</h1>
-        <p className={styles.titleEn}>{recipe.nameEn}</p>
         <dl className={styles.stats}>
           {stats.map((s) => (
             <div key={s.label}>
@@ -61,12 +65,12 @@ async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
 
       <div className={styles.columns}>
         <section className={styles.ingredients}>
-          <h2 className={styles.h2}>Ingredients</h2>
+          <h2 className={styles.h2}>Ингредиенты</h2>
           <ul>
             {recipe.ingredients.map((i, n) => (
               <li key={`${i.rawName}-${n}`}>
                 <span className={styles.ingName}>{capitalize(i.baseName ?? i.rawName)}</span>
-                {amount(i) ? <span className={styles.ingAmount}>{amount(i)}</span> : <span className={styles.ingUnknown}>amount not said</span>}
+                {amount(i) ? <span className={styles.ingAmount}>{amount(i)}</span> : <span className={styles.ingUnknown}>количество не названо</span>}
                 {i.note && !PIPELINE_NOTE.test(i.note) && <span className={styles.ingNote}>{i.note}</span>}
               </li>
             ))}
@@ -74,7 +78,7 @@ async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
         </section>
 
         <section className={styles.steps}>
-          <h2 className={styles.h2}>Directions</h2>
+          <h2 className={styles.h2}>Приготовление</h2>
           <ol>
             {recipe.steps.map((s) => (
               <li key={s.order}>
@@ -92,7 +96,7 @@ async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
       </div>
 
       <footer className={styles.source}>
-        From <a href={watchUrl(recipe.source.videoId, start)} target="_blank" rel="noreferrer">{recipe.source.videoTitle}</a>
+        Из видео <a href={watchUrl(recipe.source.videoId, start)} target="_blank" rel="noreferrer">{recipe.source.videoTitle}</a>
         {recipe.source.channel ? ` · ${recipe.source.channel}` : ""}
       </footer>
     </article>
@@ -101,7 +105,7 @@ async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
 
 export default function RecipePage({ params }: PageProps<"/recipe/[id]">) {
   return (
-    <Suspense fallback={<p className="empty">Fetching the recipe…</p>}>
+    <Suspense fallback={<p className="empty">Открываем рецепт…</p>}>
       <RecipeView params={params} />
     </Suspense>
   );

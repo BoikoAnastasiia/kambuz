@@ -78,7 +78,7 @@ export async function suggest(f: Filters, exclude?: string): Promise<Suggestion>
 export interface PickerOptions {
   /** Cuisines that have at least one recipe, most recipes first; "other" is left to Random. */
   cuisines: VocabItem[];
-  /** Ingredients used by at least one recipe, alphabetical by English name. */
+  /** Ingredients used by at least one recipe, alphabetical by Russian name. */
   ingredients: VocabItem[];
 }
 
@@ -99,6 +99,6 @@ export async function pickerOptions(): Promise<PickerOptions> {
     ingredients: (ingredientIds as (string | null)[])
       .filter((id): id is string => !!id && ingredientById.has(id))
       .map((id) => ingredientById.get(id)!)
-      .sort((a, b) => a.nameEn.localeCompare(b.nameEn)),
+      .sort((a, b) => a.nameRu.localeCompare(b.nameRu, "ru")),
   };
 }

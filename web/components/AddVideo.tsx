@@ -21,8 +21,8 @@ export function AddVideo() {
     e.preventDefault();
     setState({ kind: "sending" });
     const res = await fetch("/api/jobs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url }) });
-    const body = await res.json().catch(() => ({ error: "The server didn't answer." }));
-    if (!res.ok) return setState({ kind: "invalid", message: body.error ?? "Something went wrong" });
+    const body = await res.json().catch(() => ({ error: "Сервер не ответил." }));
+    if (!res.ok) return setState({ kind: "invalid", message: body.error ?? "Что-то пошло не так" });
     if (body.status === "exists") return setState({ kind: "exists", title: body.title, recipes: body.recipes });
     setState({ kind: "job", jobId: body.jobId, status: "queued", progress: [], recipes: [], error: null, since: Date.now() });
   }
@@ -55,10 +55,10 @@ export function AddVideo() {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           disabled={busy}
-          aria-label="YouTube link"
+          aria-label="Ссылка на YouTube"
         />
         <button className="btn" disabled={busy || !url.trim()}>
-          {busy ? "Cooking…" : "Parse it"}
+          {busy ? "Готовим…" : "Разобрать"}
         </button>
       </form>
 
@@ -66,8 +66,8 @@ export function AddVideo() {
 
       {state.kind === "exists" && (
         <div className={styles.panel}>
-          <p className={styles.panelTitle}>Already in the galley</p>
-          <p className={styles.muted}>“{state.title}” was parsed before{state.recipes.length ? ":" : ", but no recipes came out of it."}</p>
+          <p className={styles.panelTitle}>Уже есть на камбузе</p>
+          <p className={styles.muted}>«{state.title}» уже разобрано{state.recipes.length ? ":" : ", но рецептов из него не получилось."}</p>
           <RecipeList recipes={state.recipes} />
         </div>
       )}
@@ -75,14 +75,14 @@ export function AddVideo() {
       {state.kind === "job" && (
         <div className={styles.panel}>
           <p className={styles.panelTitle}>
-            {state.status === "queued" && "Waiting in line"}
-            {state.status === "running" && "Working on it"}
-            {state.status === "done" && (state.recipes.length ? "Done!" : "Done — but no recipes")}
-            {state.status === "error" && "That didn't work"}
+            {state.status === "queued" && "Ждёт своей очереди"}
+            {state.status === "running" && "Разбираем видео"}
+            {state.status === "done" && (state.recipes.length ? "Готово!" : "Готово — но рецептов нет")}
+            {state.status === "error" && "Не получилось"}
           </p>
           {state.status === "queued" && Date.now() - state.since > 8000 && (
             <p className={styles.muted}>
-              Nothing has picked it up yet. Is the worker running? Start it with <code>npm run kambuz -- worker</code> in the repo root.
+              Видео пока никто не взял в работу. Запущен ли воркер? Запустите <code>npm run kambuz -- worker</code> в корне проекта.
             </p>
           )}
           <ol className={styles.progress}>
@@ -102,7 +102,7 @@ export function AddVideo() {
                 setState({ kind: "idle" });
               }}
             >
-              Add another
+              Добавить ещё
             </button>
           )}
         </div>

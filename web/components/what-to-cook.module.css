@@ -191,12 +191,7 @@
   font-size: clamp(1.9rem, 5vw, 3rem);
   font-weight: 800;
   color: var(--ink);
-}
-
-.dishEn {
-  margin: -4px 0 8px;
-  color: var(--ink-soft);
-  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .ingredients {

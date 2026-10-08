@@ -154,7 +154,7 @@ describe("worker", () => {
     });
     const done = await c.jobs.findOne({ _id: job._id });
     expect(done).toMatchObject({ status: "done", finishedAt: "2026-10-08T10:05:00Z", recipes: ["beef-pie--v1"], error: null, costUsd: 0.02 });
-    expect(done?.progress).toEqual(["Video: Пирог", "Saved beef-pie--v1"]);
+    expect(done?.progress).toEqual(["Видео: Пирог", "Рецепт сохранён"]);
     expect(await c.videos.findOne({ _id: "v1" })).toMatchObject({ status: "done", recipes: 1 });
   });
 
@@ -162,12 +162,12 @@ describe("worker", () => {
     await queue("bad", "2026-10-08T10:00:00Z");
     const thrown = (await claimNextJob(c, () => "t"))!;
     await runJob(thrown, { c, runIngest: async () => { throw new Error("yt-dlp not found"); } });
-    expect(await c.jobs.findOne({ _id: thrown._id })).toMatchObject({ status: "error", error: expect.stringContaining("yt-dlp isn't installed") });
+    expect(await c.jobs.findOne({ _id: thrown._id })).toMatchObject({ status: "error", error: expect.stringContaining("не установлен yt-dlp") });
 
     await queue("blocked", "2026-10-08T10:00:01Z");
     const blocked = (await claimNextJob(c, () => "t"))!;
     await runJob(blocked, { c, runIngest: async () => report({ videos: [{ videoId: "v2", title: "v2", status: "error", recipes: 0, error: "Sign in to confirm you're not a bot" }] }) });
-    expect(await c.jobs.findOne({ _id: blocked._id })).toMatchObject({ status: "error", error: expect.stringContaining("YouTube is temporarily blocking") });
+    expect(await c.jobs.findOne({ _id: blocked._id })).toMatchObject({ status: "error", error: expect.stringContaining("YouTube временно блокирует") });
   });
 
   it("puts jobs left running by a stopped worker back in the queue", async () => {
@@ -178,16 +178,16 @@ describe("worker", () => {
   });
 
   it("turns raw yt-dlp failures into a sentence and shortens anything else", () => {
-    expect(friendlyError("ERROR: Unable to download video subtitles for 'ru': HTTP Error 429: Too Many Requests")).toMatch(/^YouTube is temporarily blocking/);
-    expect(friendlyError("ERROR: [youtube] x: Private video. Sign in if you've been granted access")).toMatch(/unavailable/);
+    expect(friendlyError("ERROR: Unable to download video subtitles for 'ru': HTTP Error 429: Too Many Requests")).toMatch(/^YouTube временно блокирует/);
+    expect(friendlyError("ERROR: [youtube] x: Private video. Sign in if you've been granted access")).toMatch(/недоступно/);
     expect(friendlyError("x".repeat(400))).toHaveLength(301);
   });
 
   it("describes only the events worth showing on the site", () => {
-    expect(describeEvent({ type: "stage:start", videoId: "v", stage: "extract", segmentIndex: 0, workingName: "Пирог" })).toBe("Writing up: Пирог");
+    expect(describeEvent({ type: "stage:start", videoId: "v", stage: "extract", segmentIndex: 0, workingName: "Пирог" })).toBe("Записываем рецепт: Пирог");
     expect(describeEvent({ type: "stage:start", videoId: "v", stage: "verify", segmentIndex: 0 })).toBeNull();
-    expect(describeEvent({ type: "video:done", videoId: "v", status: "done", recipes: 1 })).toBe("Finished: 1 recipe");
-    expect(describeEvent({ type: "video:done", videoId: "v", status: "skipped-no-captions", recipes: 0 })).toBe("This video has no Russian captions");
+    expect(describeEvent({ type: "video:done", videoId: "v", status: "done", recipes: 1 })).toBe("Готово, рецептов: 1");
+    expect(describeEvent({ type: "video:done", videoId: "v", status: "skipped-no-captions", recipes: 0 })).toBe("У этого видео нет русских субтитров");
   });
 });
 

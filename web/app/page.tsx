@@ -20,10 +20,10 @@ export default function Home() {
   return (
     <>
       <h1 className={styles.title}>
-        What to cook<span className={styles.q}>?</span>
+        What to cook?
       </h1>
-      <p className={styles.lede}>Pick a meal and a cuisine — we&rsquo;ll pick the dish.</p>
-      <Suspense fallback={<p className="empty">Looking in the galley…</p>}>
+      <p className={styles.lede}>Выберите приём пищи и кухню — блюдо подберём мы.</p>
+      <Suspense fallback={<p className="empty">Заглядываем на камбуз…</p>}>
         <Picker />
       </Suspense>
     </>

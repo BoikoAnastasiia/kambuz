@@ -4,9 +4,9 @@ import styles from "./add.module.css";
 export default function AddPage() {
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Add a video</h1>
+      <h1 className={styles.title}>Добавить видео</h1>
       <p className={styles.lede}>
-        Paste a YouTube cooking video. Every dish in it becomes a recipe — it takes a couple of minutes and about 3 cents.
+        Вставьте ссылку на кулинарное видео с YouTube. Каждое блюдо из него станет рецептом — это займёт пару минут и около 3 центов.
       </p>
       <AddVideo />
     </div>

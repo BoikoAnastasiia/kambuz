@@ -24,6 +24,13 @@ file's variables in the environment before Next starts; don't load it from
 - `/recipe/[id]` — ingredients, steps with timestamps, the video embedded at the dish
 - `/add` — paste a YouTube link. `POST /api/jobs {url}`, then `GET /api/jobs/[id]`
 
+## Language
+
+The interface is in Russian, like the recipes; only the WHAT TO COOK? title is in
+English. Labels come from the Russian names in the vocab (cuisines, courses) and from
+`lib/format.ts` (meals, methods, units, Russian plurals). The worker's progress
+messages on the add page are written in Russian in `src/db/worker.ts`.
+
 ## Design
 
 Light only. Tokens live in `app/globals.css`: red `#D3122C` frame, cream `#FFF4DE`

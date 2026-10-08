@@ -9,21 +9,21 @@ const body = Manrope({ variable: "--font-body", subsets: ["latin", "cyrillic"], 
 
 export const metadata: Metadata = {
   title: "Kambuz — what to cook?",
-  description: "Can't decide what to cook? Pick a meal and a cuisine and get a recipe from the galley.",
+  description: "Не знаете, что приготовить? Выберите приём пищи и кухню — мы подберём блюдо.",
 };
 
 export const viewport: Viewport = { themeColor: "#D3122C" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="ru" className={`${display.variable} ${body.variable}`}>
       <body>
         <div className="frame">
           <header className="topbar">
             <Link href="/" className="brand">
               <span className="brand-mark" aria-hidden>⚓</span> kambuz
             </Link>
-            <Link href="/add" className="topbar-link">+ Add a video</Link>
+            <Link href="/add" className="topbar-link">+ Добавить видео</Link>
           </header>
           <main className="sheet">{children}</main>
         </div>

@@ -25,7 +25,7 @@ export function VideoEmbed({ videoId, start, title }: { videoId: string; start: 
     );
   }
   return (
-    <button className={styles.frame} onClick={() => setPlaying(true)} aria-label={`Play “${title}” from the start of this dish`}>
+    <button className={styles.frame} onClick={() => setPlaying(true)} aria-label={`Смотреть «${title}» с начала этого блюда`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={thumb}
