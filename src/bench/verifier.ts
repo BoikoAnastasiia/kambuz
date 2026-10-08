@@ -1,4 +1,4 @@
-import { flagsFromVerification, normalizeName } from "../agents/verifier.js";
+import { findIngredientEntry, flagsFromVerification } from "../agents/verifier.js";
 import type { DraftRecipe, RecipeFlag, Verification } from "../schemas/recipe.js";
 import { segmentKey } from "./inputs.js";
 import type { CaseUsage } from "./usage.js";
@@ -31,7 +31,7 @@ export type TargetStatus = "rejected" | "missing" | "supported";
 export function targetStatus(target: FlagTarget, v: Verification): TargetStatus {
   const entry =
     target.kind === "ingredient"
-      ? v.ingredients.find((e) => normalizeName(e.rawName) === normalizeName(target.ref))
+      ? findIngredientEntry(v.ingredients, target.ref)
       : v.steps.find((e) => String(e.order) === target.ref);
   if (!entry) return "missing";
   return entry.supported ? "supported" : "rejected";

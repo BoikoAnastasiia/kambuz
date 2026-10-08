@@ -166,8 +166,9 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
           const settled = await Promise.allSettled(
             scout.segments.map(async (segment, i) => {
               const timedTranscript = renderTranscript(sliceCues(source.cues, segment.start, segment.end));
-              const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => llmLimit(() => runExtractor(segment, vocab, llm, promptsDir, timedTranscript)), segment.workingName);
-              const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => llmLimit(() => runVerifier(segment, draft, llm, promptsDir)), segment.workingName);
+              const context = { language: source.language, description: source.description };
+              const draft = await stage(videoId, `extract-${i}`, DraftRecipeSchema, shouldForce("extract"), () => llmLimit(() => runExtractor(segment, vocab, llm, promptsDir, timedTranscript, context)), segment.workingName);
+              const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => llmLimit(() => runVerifier(segment, draft, llm, promptsDir, context)), segment.workingName);
               const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => llmLimit(() => runCategorizer(draft, vocab, llm, promptsDir)), segment.workingName);
               for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;
               return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });

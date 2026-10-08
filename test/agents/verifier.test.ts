@@ -118,3 +118,14 @@ describe("runVerifier", () => {
     expect((await runVerifier(segment, draft, low as any, config.paths.prompts)).confidence).toBe(0);
   });
 });
+
+describe("findIngredientEntry", () => {
+  it("matches an entry the verifier echoed with the amount appended, preferring an exact match", async () => {
+    const { findIngredientEntry } = await import("../../src/agents/verifier.js");
+    const entries = [{ rawName: "говяжий фарш 500 g" }, { rawName: "соль" }, { rawName: "соль морская" }];
+    expect(findIngredientEntry(entries, "Говяжий фарш")?.rawName).toBe("говяжий фарш 500 g");
+    expect(findIngredientEntry(entries, "соль")?.rawName).toBe("соль");
+    expect(findIngredientEntry(entries, "фарш")).toBeUndefined();
+    expect(findIngredientEntry([{ rawName: "чипотле в адобо 230 g" }], "Чипотле в адобо (jar of chipotle in adobo)")?.rawName).toBe("чипотле в адобо 230 g");
+  });
+});

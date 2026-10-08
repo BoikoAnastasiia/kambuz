@@ -2,19 +2,30 @@ import type { LlmClient } from "../llm/client.js";
 import { loadPrompt } from "../prompts/load.js";
 import { ScoutWireResultSchema, type ScoutResult } from "../schemas/scout.js";
 import type { VideoSource } from "../schemas/source.js";
-import { renderTranscript, sliceCues } from "../fetcher/vtt.js";
+import { formatTimestamp, renderTranscript, sliceCues } from "../fetcher/vtt.js";
 
 export const MIN_SEGMENT_SECONDS = 20;
 
+const TRANSCRIPT_KIND: Record<VideoSource["captionKind"], string> = {
+  spoken: "spoken auto-captions",
+  author: "subtitles uploaded by the author",
+  chapters: "the video's chapter titles (the video has no speech captions)",
+  none: "empty — the video has no captions or chapters, only the description",
+};
+
 export function buildScoutUser(source: VideoSource): string {
-  return [
+  const lines = [
     `Title: ${source.title}`,
     `Tags: ${source.tags.join(", ") || "(none)"}`,
     `Duration: ${source.durationSec} seconds`,
-    "",
-    "Transcript:",
-    renderTranscript(source.cues),
-  ].join("\n");
+    `Language: ${source.language}`,
+  ];
+  if (source.chapters.length && source.captionKind !== "chapters") {
+    lines.push("", "Chapters:", ...source.chapters.map((c) => `[${formatTimestamp(c.start)}] ${c.title}`));
+  }
+  if (source.description.trim()) lines.push("", "Description (written by the author):", source.description.trim());
+  lines.push("", `Transcript (${TRANSCRIPT_KIND[source.captionKind]}):`, renderTranscript(source.cues));
+  return lines.join("\n");
 }
 
 export async function runScout(source: VideoSource, llm: LlmClient, promptsDir: string): Promise<ScoutResult> {

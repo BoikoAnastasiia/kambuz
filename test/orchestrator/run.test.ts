@@ -12,7 +12,7 @@ import type { VideoSource } from "../../src/schemas/source.js";
 import type { FetchResult } from "../../src/fetcher/ytdlp.js";
 
 const source: VideoSource = {
-  videoId: "v1", url: "u", title: "Лазанья", tags: [], channel: "C", channelId: "UC", durationSec: 300, uploadDate: null, language: "ru",
+  videoId: "v1", url: "u", title: "Лазанья", tags: [], channel: "C", channelId: "UC", durationSec: 300, uploadDate: null, language: "ru", captionKind: "spoken", description: "", chapters: [],
   cues: [{ start: 0, end: 5, text: "лазанья" }, { start: 100, end: 105, text: "нарежем лук" }],
 };
 

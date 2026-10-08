@@ -6,12 +6,22 @@ import type { Vocab } from "../vocab/load.js";
 import { ingredientPromptList } from "../vocab/validate.js";
 import { formatTimestamp } from "../fetcher/vtt.js";
 
+/** What the extractor and verifier see of the whole video besides the dish's own slice. */
+export interface SourceContext {
+  language: string;
+  description: string;
+}
+
 /**
  * `timedTranscript` is the rendered `[mm:ss] line` slice of the segment's cues. Step
  * timestamps are read off those markers, so the extractor never has to guess a second.
  */
-export function buildExtractorUser(segment: ScoutSegment, vocab: Vocab, timedTranscript: string): string {
+export function buildExtractorUser(segment: ScoutSegment, vocab: Vocab, timedTranscript: string, source?: SourceContext): string {
+  const context = source
+    ? [`Video language: ${source.language}`, ...(source.description.trim() ? ["", "Description (written by the author):", source.description.trim()] : []), ""]
+    : [];
   return [
+    ...context,
     `Dish (working name): ${segment.workingName}`,
     `Segment range: ${formatTimestamp(segment.start)}–${formatTimestamp(segment.end)} (${segment.start}s–${segment.end}s)`,
     "",
@@ -32,9 +42,10 @@ export async function runExtractor(
   llm: LlmClient,
   promptsDir: string,
   timedTranscript: string,
+  source?: SourceContext,
 ): Promise<DraftRecipe> {
   const system = await loadPrompt("extractor", promptsDir);
-  const raw = await llm.callStructured({ agent: "extractor", system, user: buildExtractorUser(segment, vocab, timedTranscript), schema: DraftRecipeSchema });
+  const raw = await llm.callStructured({ agent: "extractor", system, user: buildExtractorUser(segment, vocab, timedTranscript, source), schema: DraftRecipeSchema });
   const known = new Set(vocab.ingredients.map((i) => i.id));
   const unmapped = new Set(raw.unmappedIngredients);
   const ingredients = raw.ingredients.map((ing) => {

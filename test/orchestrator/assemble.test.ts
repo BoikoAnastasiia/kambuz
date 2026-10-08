@@ -4,7 +4,7 @@ import { assembleRecipe } from "../../src/orchestrator/assemble.js";
 describe("assembleRecipe", () => {
   it("builds id from dishKey and videoId, attaches flags and completeness", () => {
     const r = assembleRecipe({
-      source: { videoId: "v1", url: "u", title: "T", tags: [], channel: "C", channelId: "UC", durationSec: 100, uploadDate: null, language: "ru", cues: [] },
+      source: { videoId: "v1", url: "u", title: "T", tags: [], channel: "C", channelId: "UC", durationSec: 100, uploadDate: null, language: "ru", captionKind: "spoken", description: "", chapters: [], cues: [] },
       segment: { workingName: "борщ", start: 10, end: 90, rawText: "x".repeat(2000), cleanText: "" },
       draft: {
         nameRu: "Борщ", nameEn: "Borscht", servings: null, unmappedIngredients: [],

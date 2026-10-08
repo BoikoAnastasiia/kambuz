@@ -8,6 +8,13 @@ Kambuz (камбуз) is the galley on a ship. The first source channel is a shi
 who films his recipes in Russian, without descriptions or chapters, so the only
 input is the auto-generated captions. One video often holds five to eight dishes.
 
+Other videos work too, in any language; the recipes always come out in Russian.
+For each video the fetcher reads the info json and keeps the best timed text it has:
+the auto-captions of the original speech (`<lang>-orig`), else subtitles the author
+uploaded, else (a silent video) its chapter titles. The author's description goes
+to every agent as a second source, so ingredients and amounts written there count
+as stated, and a video with nothing but a description still yields a recipe.
+
 ## How it works
 
 Six stages run per video. Every LLM stage is a pure function with a typed

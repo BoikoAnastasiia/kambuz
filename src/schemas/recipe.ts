@@ -93,7 +93,7 @@ export const RecipeSchema = z.object({
   source: z.object({
     videoId: z.string(), url: z.string(), videoTitle: z.string(),
     channel: z.string(), channelId: z.string(),
-    segmentStart: z.number(), segmentEnd: z.number(), language: z.literal("ru"),
+    segmentStart: z.number(), segmentEnd: z.number(), language: z.string(),
   }),
   extractedAt: z.string(),
   models: z.record(z.string(), z.string()),

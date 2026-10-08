@@ -30,7 +30,7 @@ export function assembleRecipe(input: {
     completeness: completeness({ ingredients: draft.ingredients, flags, steps: draft.steps }),
     source: {
       videoId: source.videoId, url: source.url, videoTitle: source.title, channel: source.channel, channelId: source.channelId,
-      segmentStart: segment.start, segmentEnd: segment.end, language: "ru",
+      segmentStart: segment.start, segmentEnd: segment.end, language: source.language,
     },
     extractedAt: (input.now ?? new Date()).toISOString(),
     models: input.models,

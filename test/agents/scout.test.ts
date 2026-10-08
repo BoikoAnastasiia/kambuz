@@ -4,7 +4,7 @@ import type { VideoSource } from "../../src/schemas/source.js";
 import { config } from "../../src/config.js";
 
 const source: VideoSource = {
-  videoId: "v1", url: "u", title: "Судовой рецепт | Лазанья", tags: ["лазанья"], channel: "C", channelId: "UC", durationSec: 120, uploadDate: null, language: "ru",
+  videoId: "v1", url: "u", title: "Судовой рецепт | Лазанья", tags: ["лазанья"], channel: "C", channelId: "UC", durationSec: 120, uploadDate: null, language: "ru", captionKind: "spoken", description: "", chapters: [],
   cues: [
     { start: 0, end: 5, text: "Всем привет сегодня лазанья" },
     { start: 30, end: 35, text: "нарежем кубиком лук" },
