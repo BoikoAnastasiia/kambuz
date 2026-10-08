@@ -117,7 +117,7 @@ without touching the catalog:
     npm run kambuz -- bench categorizer --models claude-sonnet-5,claude-sonnet-5:low,claude-haiku-4-5
     npm run kambuz -- bench verifier --models claude-sonnet-5,claude-sonnet-5:low --repeat 2 --yes --open
 
-Each variant is `model[:effort]` (`low`, `medium`, `high`). Without `--yes` the
+Each variant is `model[:effort]` (`low`, `medium`, `high`, `xhigh`, `max`). Without `--yes` the
 command only prints the plan ("N calls across M variants on K segments") and
 calls nothing; with it, it writes `reports/bench-<agent>-<timestamp>.json` and
 `.html` and prints a table per variant with scores, tokens, cost and latency.
@@ -191,13 +191,13 @@ right".
 
 `.env` (copied from `.env.example`) holds `ANTHROPIC_API_KEY` and, optionally:
 
-- `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-sonnet-5`, except the
-  categorizer, which defaults to `claude-haiku-4-5`).
+- `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-haiku-5-5`).
 - `KAMBUZ_MODEL_SCOUT`, `..._EXTRACTOR`, `..._VERIFIER`, `..._CATEGORIZER`,
   `..._JUDGE` — override one agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
-- `KAMBUZ_EFFORT_<AGENT>=low|medium|high` — thinking effort for one agent,
-  e.g. `KAMBUZ_EFFORT_VERIFIER=low`. Unset (or any other value) sends no
-  effort field, which is what every run sent before this setting existed.
+- `KAMBUZ_EFFORT_<AGENT>=low|medium|high|xhigh|max` — thinking effort for one agent,
+  e.g. `KAMBUZ_EFFORT_VERIFIER=low`. The scout defaults to `high`; every other
+  agent sends no effort field and runs at the model's own default (`medium` on
+  Haiku 5.5). Any other value is ignored.
 - `KAMBUZ_CONCURRENCY=<n>` — simultaneous LLM calls across the whole run
   (default 4).
 

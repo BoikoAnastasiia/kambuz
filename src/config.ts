@@ -7,21 +7,20 @@ export type AgentName = (typeof AGENT_NAMES)[number];
 
 export { ROOT };
 
-export const EFFORTS = ["low", "medium", "high"] as const;
+export const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
 export type Effort = (typeof EFFORTS)[number];
 
 export function isEffort(value: string): value is Effort {
   return (EFFORTS as readonly string[]).includes(value);
 }
 
-// The categorizer only picks labels from short vocab lists, so it runs on the cheaper model.
-export const DEFAULT_MODELS: Record<AgentName, string> = {
-  scout: "claude-sonnet-5",
-  extractor: "claude-sonnet-5",
-  verifier: "claude-sonnet-5",
-  categorizer: "claude-haiku-4-5",
-  judge: "claude-sonnet-5",
-};
+// Haiku 5.5 matched Sonnet 5 on the six cached videos at about 1/30th of the cost.
+export const DEFAULT_MODEL = "claude-haiku-5-5";
+
+// Agents missing here send no effort, so they run at the model's default (medium on Haiku 5.5).
+// The scout at medium sometimes collapses a multi-dish video into one dish; at high it found
+// every dish in repeated runs, while xhigh overthought and ran out of max_tokens.
+export const DEFAULT_EFFORT: Partial<Record<AgentName, Effort>> = { scout: "high" };
 
 export const DEFAULT_CONCURRENCY = 4;
 export const DEFAULT_MIN_COMPLETENESS = 0.3;
@@ -47,9 +46,9 @@ function minCompletenessFrom(raw: string | undefined): number {
   return raw !== undefined && raw.trim() !== "" && Number.isFinite(n) && n >= 0 && n <= 1 ? n : DEFAULT_MIN_COMPLETENESS;
 }
 
-/** KAMBUZ_EFFORT_<AGENT>=low|medium|high; anything else is ignored rather than sent to the API. */
+/** KAMBUZ_EFFORT_<AGENT>=low|medium|high|xhigh|max; anything else is ignored rather than sent to the API. */
 function effortFrom(env: NodeJS.ProcessEnv): Partial<Record<AgentName, Effort>> {
-  const effort: Partial<Record<AgentName, Effort>> = {};
+  const effort: Partial<Record<AgentName, Effort>> = { ...DEFAULT_EFFORT };
   for (const n of AGENT_NAMES) {
     const raw = env[`KAMBUZ_EFFORT_${n.toUpperCase()}`]?.trim().toLowerCase();
     if (raw && isEffort(raw)) effort[n] = raw;
@@ -59,7 +58,7 @@ function effortFrom(env: NodeJS.ProcessEnv): Partial<Record<AgentName, Effort>> 
 
 export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const models = Object.fromEntries(
-    AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? env.KAMBUZ_MODEL ?? DEFAULT_MODELS[n]]),
+    AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? env.KAMBUZ_MODEL ?? DEFAULT_MODEL]),
   ) as Record<AgentName, string>;
   return {
     models,

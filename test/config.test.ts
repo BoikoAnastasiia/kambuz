@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import { buildConfig, AGENT_NAMES } from "../src/config.js";
 
 describe("config", () => {
-  it("defaults the categorizer to claude-haiku-4-5 and every other agent to claude-sonnet-5", () => {
+  it("defaults every agent to claude-haiku-5-5", () => {
     for (const name of AGENT_NAMES) {
-      expect(buildConfig({}).models[name]).toBe(name === "categorizer" ? "claude-haiku-4-5" : "claude-sonnet-5");
+      expect(buildConfig({}).models[name]).toBe("claude-haiku-5-5");
     }
   });
-  it("lets KAMBUZ_MODEL override every agent's default, the categorizer's included", () => {
+  it("lets KAMBUZ_MODEL override every agent's default", () => {
     expect(new Set(Object.values(buildConfig({ KAMBUZ_MODEL: "claude-opus-5" }).models))).toEqual(new Set(["claude-opus-5"]));
   });
   it("falls back to concurrency 4 for an empty, non-numeric or out-of-range KAMBUZ_CONCURRENCY", () => {
@@ -46,11 +46,14 @@ describe("config", () => {
 });
 
 describe("config effort", () => {
-  it("is empty by default", () => {
-    expect(buildConfig({}).effort).toEqual({});
+  it("runs the scout at high by default and leaves every other agent on the model's default", () => {
+    expect(buildConfig({}).effort).toEqual({ scout: "high" });
   });
-  it("reads KAMBUZ_EFFORT_<AGENT> for valid levels and ignores invalid ones", () => {
-    const c = buildConfig({ KAMBUZ_EFFORT_VERIFIER: "low", KAMBUZ_EFFORT_JUDGE: "HIGH ", KAMBUZ_EFFORT_SCOUT: "turbo", KAMBUZ_EFFORT_EXTRACTOR: "" });
-    expect(c.effort).toEqual({ verifier: "low", judge: "high" });
+  it("reads KAMBUZ_EFFORT_<AGENT> for valid levels and ignores invalid ones, keeping the default", () => {
+    const c = buildConfig({ KAMBUZ_EFFORT_VERIFIER: "low", KAMBUZ_EFFORT_JUDGE: "MAX ", KAMBUZ_EFFORT_SCOUT: "turbo", KAMBUZ_EFFORT_EXTRACTOR: "" });
+    expect(c.effort).toEqual({ scout: "high", verifier: "low", judge: "max" });
+  });
+  it("lets KAMBUZ_EFFORT_SCOUT override the scout's default", () => {
+    expect(buildConfig({ KAMBUZ_EFFORT_SCOUT: "medium" }).effort.scout).toBe("medium");
   });
 });

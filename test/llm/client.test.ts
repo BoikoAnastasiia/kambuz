@@ -19,7 +19,7 @@ describe("callStructured", () => {
     const out = await llm.callStructured({ agent: "scout", system: "s", user: "u", schema: Out });
     expect(out).toEqual({ answer: "ok" });
     expect(ledger.byAgent().scout.calls).toBe(1);
-    expect(parse.mock.calls[0][0]).toMatchObject({ model: "claude-sonnet-5", system: "s" });
+    expect(parse.mock.calls[0][0]).toMatchObject({ model: "claude-haiku-5-5", system: "s" });
   });
   it("retries once when parsed_output is null, then throws", async () => {
     const { client, parse } = fakeAnthropic([
@@ -119,7 +119,7 @@ describe("callStructured model and effort", () => {
     await createLlmClient(config, new UsageLedger(), b.client).callStructured({ agent: "verifier", system: "s", user: "u", schema: Out, effort: "high" });
     expect((b.parse.mock.calls[0][0] as any).output_config.effort).toBe("high");
     const c = ok();
-    await createLlmClient(config, new UsageLedger(), c.client).callStructured({ agent: "scout", system: "s", user: "u", schema: Out });
+    await createLlmClient(config, new UsageLedger(), c.client).callStructured({ agent: "extractor", system: "s", user: "u", schema: Out });
     expect((c.parse.mock.calls[0][0] as any).output_config.effort).toBeUndefined();
   });
 

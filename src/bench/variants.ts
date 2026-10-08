@@ -30,7 +30,7 @@ export function parseVariants(raw: string): ParsedVariants {
 }
 
 /** Models that think with adaptive thinking at this effort when the request names none. */
-export const DEFAULT_EFFORT: Record<string, Effort> = { "claude-sonnet-5": "high", "claude-opus-5": "high" };
+export const DEFAULT_EFFORT: Record<string, Effort> = { "claude-sonnet-5": "high", "claude-opus-5": "high", "claude-haiku-5-5": "medium" };
 
 /** How a variant is shown: an effort-less variant on a thinking model says what it will actually run at. */
 export function variantLabel(v: Variant): string {

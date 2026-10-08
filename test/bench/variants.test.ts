@@ -16,7 +16,7 @@ describe("parseVariants", () => {
   it("rejects an unknown effort, naming the allowed ones", () => {
     const r = parseVariants("claude-sonnet-5:turbo");
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toMatch(/low, medium, high/);
+    if (!r.ok) expect(r.error).toMatch(/low, medium, high, xhigh, max/);
   });
 
   it("rejects empty input, empty models, extra colons and duplicates", () => {
