@@ -8,6 +8,8 @@ export interface UsageTokens {
 interface ModelPrice {
   input: number; // USD per 1,000,000 input tokens
   output: number; // USD per 1,000,000 output tokens
+  /** Rates for the whole call once its prompt (input + cache reads + cache writes) exceeds `aboveTokens`. */
+  longPrompt?: { aboveTokens: number; input: number; output: number };
 }
 
 // USD per 1,000,000 tokens. Source: Anthropic docs bundled with Claude Code, 2026.
@@ -15,6 +17,7 @@ export const PRICES: Record<string, ModelPrice> = {
   "claude-sonnet-5": { input: 2.0, output: 10.0 },
   "claude-opus-5": { input: 5.0, output: 25.0 },
   "claude-haiku-4-5": { input: 1.0, output: 5.0 },
+  "claude-haiku-5-5": { input: 0.1, output: 0.5, longPrompt: { aboveTokens: 100_000, input: 0.5, output: 2.5 } },
   "claude-fable-5-1": { input: 10.0, output: 50.0 },
 };
 
@@ -35,8 +38,10 @@ function priceFor(model: string): ModelPrice | null {
 
 /** Dollar cost of one call's usage, or null when the model has no known price. */
 export function costUsd(model: string, usage: UsageTokens): number | null {
-  const price = priceFor(model);
-  if (!price) return null;
+  const base = priceFor(model);
+  if (!base) return null;
+  const promptTokens = usage.input_tokens + (usage.cache_read_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0);
+  const price = base.longPrompt && promptTokens > base.longPrompt.aboveTokens ? base.longPrompt : base;
   const perInputToken = price.input / 1_000_000;
   const input = usage.input_tokens * perInputToken;
   const output = (usage.output_tokens * price.output) / 1_000_000;
