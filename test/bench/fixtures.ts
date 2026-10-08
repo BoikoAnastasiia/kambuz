@@ -40,9 +40,9 @@ export const lasagnaDraft: DraftRecipe = {
   servings: null,
   unmappedIngredients: [],
   ingredients: [
-    { ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
-    { ingredient: "beef-mince", rawName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
-    { ingredient: null, rawName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
+    { ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
+    { ingredient: "beef-mince", rawName: "фарш", baseName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
+    { ingredient: null, rawName: "соль", baseName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
   ],
   steps: [
     { order: 1, text: "Нарезать лук.", timestamp: 30 },
@@ -56,7 +56,7 @@ export const soupDraft: DraftRecipe = {
   nameEn: "Soup",
   servings: null,
   unmappedIngredients: [],
-  ingredients: [{ ingredient: null, rawName: "картошка", quantity: null, unit: null, provenance: "unknown", note: null }],
+  ingredients: [{ ingredient: null, rawName: "картошка", baseName: "картошка", quantity: null, unit: null, provenance: "unknown", note: null }],
   steps: [{ order: 1, text: "Сварить суп.", timestamp: 5 }],
 };
 

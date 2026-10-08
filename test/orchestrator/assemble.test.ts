@@ -8,7 +8,7 @@ describe("assembleRecipe", () => {
       segment: { workingName: "борщ", start: 10, end: 90, rawText: "x".repeat(2000), cleanText: "" },
       draft: {
         nameRu: "Борщ", nameEn: "Borscht", servings: null, unmappedIngredients: [],
-        ingredients: [{ ingredient: "beet", rawName: "свёкла", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+        ingredients: [{ ingredient: "beet", rawName: "свёкла", baseName: "свёкла", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
         steps: [{ order: 1, text: "Сварить.", timestamp: 20 }],
       },
       verification: { ingredients: [{ rawName: "свёкла", quote: null, supported: false }], steps: [], confidence: 0.5 },

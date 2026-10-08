@@ -18,6 +18,7 @@
     {
       "ingredient": "cabbage",
       "rawName": "капуста белокочанная",
+      "baseName": "белокочанная капуста",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "carrot",
       "rawName": "морковка",
+      "baseName": "морковь",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "beet",
       "rawName": "свежая свекла",
+      "baseName": "свёкла",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

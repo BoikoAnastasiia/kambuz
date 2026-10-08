@@ -8,7 +8,7 @@ const lasagna: BenchSegment = { videoId: "v1", segmentIndex: 0, segment: lasagna
 const soup: BenchSegment = { videoId: "v1", segmentIndex: 1, segment: soupSegment, draft: soupDraft, course: "soup" };
 
 function donor(videoId: string, course: string, rawName: string, quantity: number | null, unit: string | null): BenchSegment {
-  const draft: DraftRecipe = { ...soupDraft, ingredients: [{ ingredient: `id-${rawName}`, rawName, quantity, unit, provenance: "stated", note: null }] };
+  const draft: DraftRecipe = { ...soupDraft, ingredients: [{ ingredient: `id-${rawName}`, rawName, baseName: rawName, quantity, unit, provenance: "stated", note: null }] };
   return { videoId, segmentIndex: 0, segment: soupSegment, draft, course };
 }
 
@@ -97,11 +97,11 @@ describe("generateMutations", () => {
     const pasta = donor("p", "main", "пармезан", 50, "g");
     const other = donor("o", "dessert", "шоколад", null, null);
     const same = find(generateMutations(lasagna, { vocab, segments: [lasagna, pasta, other] }), "extra-ingredient")!;
-    expect(same.draft.ingredients.at(-1)).toEqual({ ingredient: "id-пармезан", rawName: "пармезан", quantity: 50, unit: "g", provenance: "stated", note: null });
+    expect(same.draft.ingredients.at(-1)).toEqual({ ingredient: "id-пармезан", rawName: "пармезан", baseName: "пармезан", quantity: 50, unit: "g", provenance: "stated", note: null });
     expect(same.target).toEqual({ kind: "ingredient", ref: "пармезан" });
 
     const fallback = find(generateMutations(lasagna, { vocab, segments: [lasagna, other] }), "extra-ingredient")!;
-    expect(fallback.draft.ingredients.at(-1)).toMatchObject({ rawName: "шоколад", quantity: 200, unit: "g" });
+    expect(fallback.draft.ingredients.at(-1)).toMatchObject({ rawName: "шоколад", baseName: "шоколад", quantity: 200, unit: "g" });
 
     const fromVocab = find(generateMutations(lasagna, { vocab, segments: [lasagna] }), "extra-ingredient")!;
     const added = fromVocab.draft.ingredients.at(-1)!;
@@ -113,19 +113,19 @@ describe("generateMutations", () => {
     const unknowns: DraftRecipe = {
       ...lasagnaDraft,
       ingredients: [
-        { ingredient: null, rawName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
-        { ingredient: null, rawName: "перец", quantity: null, unit: null, provenance: "unknown", note: null },
-        { ingredient: "beef-mince", rawName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
+        { ingredient: null, rawName: "соль", baseName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
+        { ingredient: null, rawName: "перец", baseName: "перец", quantity: null, unit: null, provenance: "unknown", note: null },
+        { ingredient: "beef-mince", rawName: "фарш", baseName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
       ],
     };
     const m = find(generateMutations({ ...lasagna, draft: unknowns }, { vocab, segments: [lasagna, donor("p", "pasta", "пармезан", 50, "g")] }), "extra-ingredient")!;
-    expect(m.draft.ingredients.at(-1)).toEqual({ ingredient: "id-пармезан", rawName: "пармезан", quantity: null, unit: null, provenance: "unknown", note: null });
+    expect(m.draft.ingredients.at(-1)).toEqual({ ingredient: "id-пармезан", rawName: "пармезан", baseName: "пармезан", quantity: null, unit: null, provenance: "unknown", note: null });
   });
 
   it("extra-ingredient in a stated/inferred draft gets a sensible amount for the donor's unit when the donor had none", () => {
     const pcOnly = donor("p", "pasta", "яйцо", null, "pc");
     const m = find(generateMutations(lasagna, { vocab, segments: [lasagna, pcOnly] }), "extra-ingredient")!;
-    expect(m.draft.ingredients.at(-1)).toMatchObject({ rawName: "яйцо", quantity: 2, unit: "pc", provenance: "stated" });
+    expect(m.draft.ingredients.at(-1)).toMatchObject({ rawName: "яйцо", baseName: "яйцо", quantity: 2, unit: "pc", provenance: "stated" });
   });
 
   it("extra-ingredient never plants an ingredient named in a colloquial form", () => {
@@ -161,7 +161,7 @@ describe("generateMutations", () => {
     expect(m.draft.ingredients[1]).toEqual({ ...lasagnaDraft.ingredients[1], unit: "kg" });
     const milk = { ...lasagna, draft: { ...lasagnaDraft, ingredients: [{ ...lasagnaDraft.ingredients[1], rawName: "молоко", unit: "ml" }] } };
     expect(find(generateMutations(milk, ctx), "unit-swap")!.draft.ingredients[0].unit).toBe("l");
-    const spoon = { ...lasagna, draft: { ...lasagnaDraft, ingredients: [{ ...lasagnaDraft.ingredients[1], rawName: "соль", quantity: 1, unit: "tsp" }] } };
+    const spoon = { ...lasagna, draft: { ...lasagnaDraft, ingredients: [{ ...lasagnaDraft.ingredients[1], rawName: "соль", baseName: "соль", quantity: 1, unit: "tsp" }] } };
     expect(find(generateMutations(spoon, ctx), "unit-swap")!.draft.ingredients[0].unit).toBe("tbsp");
     const pcOnly = { ...lasagna, draft: { ...lasagnaDraft, ingredients: [lasagnaDraft.ingredients[0]] } };
     expect(find(generateMutations(pcOnly, ctx), "unit-swap")).toBeUndefined();

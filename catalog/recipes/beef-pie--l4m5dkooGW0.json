@@ -18,6 +18,7 @@
     {
       "ingredient": "beef",
       "rawName": "говядина",
+      "baseName": "говядина",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": null,
       "rawName": "кефир",
+      "baseName": "кефир",
       "quantity": 750,
       "unit": "g",
       "provenance": "stated",
@@ -34,6 +36,7 @@
     {
       "ingredient": "egg",
       "rawName": "яйца",
+      "baseName": "яйцо",
       "quantity": 6,
       "unit": "pc",
       "provenance": "stated",
@@ -42,6 +45,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль",
+      "baseName": "соль",
       "quantity": 1,
       "unit": "tsp",
       "provenance": "stated",
@@ -50,6 +54,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "перец",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -58,6 +63,7 @@
     {
       "ingredient": "baking-powder",
       "rawName": "разрыхлитель",
+      "baseName": "разрыхлитель",
       "quantity": 2,
       "unit": "tsp",
       "provenance": "stated",
@@ -66,6 +72,7 @@
     {
       "ingredient": "flour",
       "rawName": "мука",
+      "baseName": "мука",
       "quantity": 500,
       "unit": "g",
       "provenance": "stated",
@@ -74,6 +81,7 @@
     {
       "ingredient": null,
       "rawName": "кунжут",
+      "baseName": "кунжут",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -82,6 +90,7 @@
     {
       "ingredient": null,
       "rawName": "арахис",
+      "baseName": "арахис",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

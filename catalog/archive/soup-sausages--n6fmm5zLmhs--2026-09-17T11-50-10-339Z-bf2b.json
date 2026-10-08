@@ -18,6 +18,7 @@
     {
       "ingredient": "water",
       "rawName": "вода",
+      "baseName": "вода",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -26,6 +27,7 @@
     {
       "ingredient": "potato",
       "rawName": "картошка",
+      "baseName": "картофель",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -34,6 +36,7 @@
     {
       "ingredient": "carrot",
       "rawName": "морковка",
+      "baseName": "морковь",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -42,6 +45,7 @@
     {
       "ingredient": "onion",
       "rawName": "лук",
+      "baseName": "лук",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -50,6 +54,7 @@
     {
       "ingredient": "sausage",
       "rawName": "колбаски",
+      "baseName": "колбаса",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -58,6 +63,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -66,6 +72,7 @@
     {
       "ingredient": "cream",
       "rawName": "сливки 20%",
+      "baseName": "сливки",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -74,6 +81,7 @@
     {
       "ingredient": "garlic",
       "rawName": "чесночок",
+      "baseName": "чеснок",
       "quantity": null,
       "unit": null,
       "provenance": "stated",
@@ -82,6 +90,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "перец",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "stated",

@@ -42,11 +42,11 @@ export async function runExtractor(
     // or "inferred" about it, whatever the model said, so a null quantity always wins.
     const provenance = ing.quantity === null ? "unknown" : ing.provenance;
     if (ing.ingredient !== null && !known.has(ing.ingredient)) {
-      unmapped.add(ing.rawName);
+      unmapped.add(ing.baseName);
       return { ...ing, ingredient: null, provenance };
     }
     if (ing.ingredient === null) {
-      unmapped.add(ing.rawName);
+      unmapped.add(ing.baseName);
     }
     return { ...ing, provenance };
   });

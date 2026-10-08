@@ -18,8 +18,8 @@ function baseRecipe(overrides: Partial<Recipe> = {}): Recipe {
     activeMinutes: 20,
     totalMinutes: 60,
     ingredients: [
-      { ingredient: "beet", rawName: "свёкла", quantity: 2, unit: "pc", provenance: "stated", note: null },
-      { ingredient: null, rawName: "загадочный ингредиент", quantity: null, unit: null, provenance: "unknown", note: null },
+      { ingredient: "beet", rawName: "свёкла", baseName: "свёкла", quantity: 2, unit: "pc", provenance: "stated", note: null },
+      { ingredient: null, rawName: "загадочный ингредиент", baseName: "загадочный ингредиент", quantity: null, unit: null, provenance: "unknown", note: null },
     ],
     steps: [
       { order: 1, text: "Sauté the beets", timestamp: 3725 },

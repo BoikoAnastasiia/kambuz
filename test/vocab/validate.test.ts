@@ -10,7 +10,7 @@ const vocab: Vocab = {
   methods: [{ id: "bake", nameRu: "Запекание", nameEn: "Bake" }],
   ingredients: [{ id: "onion", nameRu: "Лук", nameEn: "Onion", aliases: ["лук репчатый"] }],
 };
-const ing = (ingredient: string | null) => ({ ingredient, rawName: "x", quantity: null, unit: null, provenance: "unknown" as const, note: null });
+const ing = (ingredient: string | null) => ({ ingredient, rawName: "x", baseName: "x", quantity: null, unit: null, provenance: "unknown" as const, note: null });
 
 describe("validateRecipe", () => {
   it("returns no errors for known ids", () => {

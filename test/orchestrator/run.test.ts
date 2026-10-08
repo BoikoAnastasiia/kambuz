@@ -22,9 +22,9 @@ const source: VideoSource = {
 // now scores below the threshold and would be reported as too-thin instead of written.
 function richIngredients() {
   return [
-    { ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred" as const, note: null },
-    { ingredient: "garlic", rawName: "чеснок", quantity: 2, unit: "pc", provenance: "inferred" as const, note: null },
-    { ingredient: "carrot", rawName: "морковь", quantity: 1, unit: "pc", provenance: "inferred" as const, note: null },
+    { ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred" as const, note: null },
+    { ingredient: "garlic", rawName: "чеснок", baseName: "чеснок", quantity: 2, unit: "pc", provenance: "inferred" as const, note: null },
+    { ingredient: "carrot", rawName: "морковь", baseName: "морковь", quantity: 1, unit: "pc", provenance: "inferred" as const, note: null },
   ];
 }
 function richSteps(base: number) {
@@ -190,7 +190,7 @@ describe("ingest", () => {
       switch (agent) {
         case "scout": return { isRecipeVideo: true, segments: [{ workingName: "лазанья", start: 0, end: 300, rawText: "", cleanText: "Нарежем лук." }] };
         case "extractor": return { nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
-          ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+          ingredients: [{ ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
           steps: [{ order: 1, text: "Нарезать лук.", timestamp: 100 }] };
         case "verifier": return { ingredients: [{ rawName: "лук", quote: "нарежем лук", supported: true }], steps: [{ order: 1, quote: "нарежем лук", supported: true }], confidence: 0.9 };
         case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "!!!" };
@@ -215,7 +215,7 @@ describe("ingest", () => {
       switch (agent) {
         case "scout": return { isRecipeVideo: true, segments: [{ workingName: "тефтели с сыром", start: 0, end: 300, rawText: "", cleanText: "Лепим тефтели." }] };
         case "extractor": return { nameRu: "Тефтели с сыром", nameEn: "Meatballs with cheese", servings: null, unmappedIngredients: [],
-          ingredients: [{ ingredient: "cheese-hard", rawName: "сыр", quantity: null, unit: null, provenance: "stated", note: null }],
+          ingredients: [{ ingredient: "cheese-hard", rawName: "сыр", baseName: "сыр", quantity: null, unit: null, provenance: "stated", note: null }],
           steps: [1, 2, 3, 4, 5].map((n) => ({ order: n, text: `Шаг ${n}.`, timestamp: n * 10 })) };
         case "verifier": return {
           ingredients: [{ rawName: "сыр", quote: null, supported: true }],
@@ -450,7 +450,7 @@ describe("ingest", () => {
             const isSoup = (user as string).includes("Dish (working name): суп");
             return isSoup
               ? { nameRu: "Загадочный суп", nameEn: "Mystery soup", servings: null, unmappedIngredients: [],
-                  ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+                  ingredients: [{ ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
                   steps: [{ order: 1, text: "Сварить.", timestamp: 150 }] }
               // Needs enough ingredients/steps to clear the completeness threshold: this is the
               // sibling the test expects to still be written despite the soup failing validation.
@@ -513,7 +513,7 @@ describe("ingest", () => {
             segments: [0, 1, 2].map((i) => ({ workingName: `dish${i}`, start: i * 100, end: i * 100 + 100, rawText: "", cleanText: `Нарежем лук ${i}.` })),
           };
           case "extractor": return { nameRu: `Блюдо ${user.length}`, nameEn: "Dish", servings: null, unmappedIngredients: [],
-            ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+            ingredients: [{ ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
             steps: [{ order: 1, text: "Нарезать лук.", timestamp: 0 }] };
           case "verifier": return { ingredients: [{ rawName: "лук", quote: "нарежем лук", supported: true }], steps: [{ order: 1, quote: "нарежем лук", supported: true }], confidence: 0.9 };
           case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: `dish-${user.length}` };
@@ -756,7 +756,7 @@ describe("ingest", () => {
       switch (agent) {
         case "extractor": return {
           nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
-          ingredients: [{ ingredient: "onion", rawName: "лук", quantity: null, unit: null, provenance: "stated", note: null }],
+          ingredients: [{ ingredient: "onion", rawName: "лук", baseName: "лук", quantity: null, unit: null, provenance: "stated", note: null }],
           steps: [{ order: 1, text: "Нарезать лук.", timestamp: 100 }],
         };
         case "verifier": return {

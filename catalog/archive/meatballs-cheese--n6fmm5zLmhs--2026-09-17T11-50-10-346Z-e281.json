@@ -18,6 +18,7 @@
     {
       "ingredient": "cheese-hard",
       "rawName": "сыр",
+      "baseName": "сыр",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

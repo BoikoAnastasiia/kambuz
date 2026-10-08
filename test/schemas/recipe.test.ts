@@ -13,7 +13,7 @@ describe("DraftRecipeSchema", () => {
       nameRu: "Лазанья с соусом болоньезе",
       nameEn: "Lasagna with bolognese",
       servings: null,
-      ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+      ingredients: [{ ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
       steps: [{ order: 1, text: "Нарезать лук кубиком.", timestamp: 61 }],
       unmappedIngredients: [],
     });
@@ -23,7 +23,7 @@ describe("DraftRecipeSchema", () => {
     expect(() =>
       DraftRecipeSchema.parse({
         nameRu: "x", nameEn: "x", servings: null, unmappedIngredients: [], steps: [],
-        ingredients: [{ ingredient: null, rawName: "лук", quantity: null, unit: null, provenance: "guessed", note: null }],
+        ingredients: [{ ingredient: null, rawName: "лук", baseName: "лук", quantity: null, unit: null, provenance: "guessed", note: null }],
       }),
     ).toThrow();
   });

@@ -18,6 +18,7 @@
     {
       "ingredient": "rice",
       "rawName": "рис",
+      "baseName": "рис",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "fish-white",
       "rawName": "треска",
+      "baseName": "треска",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "onion",
       "rawName": "лук красный",
+      "baseName": "красный лук",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": null,
       "rawName": "имбирь",
+      "baseName": "имбирь",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": "garlic",
       "rawName": "чеснок (зубчики)",
+      "baseName": "чеснок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -58,6 +63,7 @@
     {
       "ingredient": null,
       "rawName": "чесночное масло",
+      "baseName": "чесночное масло",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -66,6 +72,7 @@
     {
       "ingredient": "bell-pepper",
       "rawName": "сладкий перец",
+      "baseName": "сладкий перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -74,6 +81,7 @@
     {
       "ingredient": null,
       "rawName": "карри",
+      "baseName": "карри",
       "quantity": 1,
       "unit": "tsp",
       "provenance": "stated",
@@ -82,6 +90,7 @@
     {
       "ingredient": "paprika",
       "rawName": "паприка",
+      "baseName": "паприка",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -90,6 +99,7 @@
     {
       "ingredient": null,
       "rawName": "розмарин (ошибочно назван тимьян)",
+      "baseName": "розмарин",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -98,6 +108,7 @@
     {
       "ingredient": "butter",
       "rawName": "сливочное масло",
+      "baseName": "сливочное масло",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -106,6 +117,7 @@
     {
       "ingredient": "parsley",
       "rawName": "петрушка",
+      "baseName": "петрушка",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -114,6 +126,7 @@
     {
       "ingredient": "cabbage",
       "rawName": "капуста белокочанная",
+      "baseName": "белокочанная капуста",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -122,6 +135,7 @@
     {
       "ingredient": "flour",
       "rawName": "мука",
+      "baseName": "мука",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -130,6 +144,7 @@
     {
       "ingredient": "sunflower-oil",
       "rawName": "масло",
+      "baseName": "масло",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -138,6 +153,7 @@
     {
       "ingredient": "lemon",
       "rawName": "лимон",
+      "baseName": "лимон",
       "quantity": 1,
       "unit": "pc",
       "provenance": "inferred",
@@ -146,6 +162,7 @@
     {
       "ingredient": "lemon",
       "rawName": "лимонная цедра",
+      "baseName": "лимонная цедра",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -154,6 +171,7 @@
     {
       "ingredient": "cilantro",
       "rawName": "кинза",
+      "baseName": "кинза",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -162,6 +180,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль (подсолили)",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

@@ -18,6 +18,7 @@
     {
       "ingredient": "pork",
       "rawName": "свинина",
+      "baseName": "свинина",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "potato",
       "rawName": "картофанчик",
+      "baseName": "картофель",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "перец",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": "sugar",
       "rawName": "сахар",
+      "baseName": "сахар",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -58,6 +63,7 @@
     {
       "ingredient": "garlic",
       "rawName": "чесночок",
+      "baseName": "чеснок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -66,6 +72,7 @@
     {
       "ingredient": "water",
       "rawName": "водица",
+      "baseName": "вода",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

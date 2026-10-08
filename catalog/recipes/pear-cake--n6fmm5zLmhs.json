@@ -17,6 +17,7 @@
     {
       "ingredient": "sugar",
       "rawName": "сахар",
+      "baseName": "сахар",
       "quantity": 300,
       "unit": "g",
       "provenance": "stated",
@@ -25,6 +26,7 @@
     {
       "ingredient": "butter",
       "rawName": "сливочное масло",
+      "baseName": "сливочное масло",
       "quantity": 250,
       "unit": "g",
       "provenance": "stated",
@@ -33,6 +35,7 @@
     {
       "ingredient": "egg",
       "rawName": "яйца",
+      "baseName": "яйцо",
       "quantity": 4,
       "unit": "pc",
       "provenance": "stated",
@@ -41,6 +44,7 @@
     {
       "ingredient": "milk",
       "rawName": "молоко",
+      "baseName": "молоко",
       "quantity": 250,
       "unit": "ml",
       "provenance": "stated",
@@ -49,6 +53,7 @@
     {
       "ingredient": "flour",
       "rawName": "мука",
+      "baseName": "мука",
       "quantity": 500,
       "unit": "g",
       "provenance": "stated",
@@ -57,6 +62,7 @@
     {
       "ingredient": null,
       "rawName": "разрыхлитель",
+      "baseName": "разрыхлитель",
       "quantity": 2,
       "unit": "tsp",
       "provenance": "stated",
@@ -65,6 +71,7 @@
     {
       "ingredient": null,
       "rawName": "корица",
+      "baseName": "корица",
       "quantity": 2,
       "unit": "tsp",
       "provenance": "stated",
@@ -73,6 +80,7 @@
     {
       "ingredient": null,
       "rawName": "груши",
+      "baseName": "груша",
       "quantity": 4,
       "unit": "pc",
       "provenance": "stated",
@@ -81,6 +89,7 @@
     {
       "ingredient": null,
       "rawName": "сахарная пудра",
+      "baseName": "сахарная пудра",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

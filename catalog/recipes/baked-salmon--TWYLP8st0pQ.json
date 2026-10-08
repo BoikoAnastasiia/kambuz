@@ -18,6 +18,7 @@
     {
       "ingredient": "salmon",
       "rawName": "рыбка",
+      "baseName": "рыба",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "перчик",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "garlic",
       "rawName": "чеснок (для чесночного масла)",
+      "baseName": "чеснок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": null,
       "rawName": "чесночное масло",
+      "baseName": "чесночное масло",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

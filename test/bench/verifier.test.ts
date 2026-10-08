@@ -6,13 +6,13 @@ import type { MutationKind, FlagTarget } from "../../src/bench/mutations.js";
 const D: DraftRecipe = {
   nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
   ingredients: [
-    { ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
-    { ingredient: "beef-mince", rawName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
-    { ingredient: null, rawName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
+    { ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
+    { ingredient: "beef-mince", rawName: "фарш", baseName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
+    { ingredient: null, rawName: "соль", baseName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
   ],
   steps: [{ order: 1, text: "Нарезать лук.", timestamp: 1 }, { order: 2, text: "Обжарить 500 г фарша.", timestamp: 2 }],
 };
-const withCinnamon: DraftRecipe = { ...D, ingredients: [...D.ingredients, { ingredient: "cinnamon", rawName: "Корица", quantity: 200, unit: "g", provenance: "stated", note: null }] };
+const withCinnamon: DraftRecipe = { ...D, ingredients: [...D.ingredients, { ingredient: "cinnamon", rawName: "Корица", baseName: "Корица", quantity: 200, unit: "g", provenance: "stated", note: null }] };
 const withStep3: DraftRecipe = { ...D, steps: [...D.steps, { order: 3, text: "Посыпать укропом.", timestamp: 3 }] };
 
 /** Everything supported unless named: false = rejected, null = entry omitted. */

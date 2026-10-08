@@ -18,6 +18,7 @@
     {
       "ingredient": null,
       "rawName": "перловка",
+      "baseName": "перловка",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "garlic",
       "rawName": "чеснок",
+      "baseName": "чеснок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "potato",
       "rawName": "картошка",
+      "baseName": "картофель",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "water",
       "rawName": "вода",
+      "baseName": "вода",
       "quantity": null,
       "unit": null,
       "provenance": "inferred",

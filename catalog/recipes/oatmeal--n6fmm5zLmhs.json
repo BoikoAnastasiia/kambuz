@@ -17,6 +17,7 @@
     {
       "ingredient": "water",
       "rawName": "вода",
+      "baseName": "вода",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -25,6 +26,7 @@
     {
       "ingredient": "salt",
       "rawName": "подсолить",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -33,6 +35,7 @@
     {
       "ingredient": null,
       "rawName": "овсянка",
+      "baseName": "овсянка",
       "quantity": 1.5,
       "unit": null,
       "provenance": "stated",

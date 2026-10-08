@@ -12,7 +12,7 @@ import type { Recipe } from "../../src/schemas/recipe.js";
 const base: Recipe = {
   id: "base--v0", nameRu: "Base", nameEn: "Base", dishKey: "base", cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, richness: "medium",
   servings: null, activeMinutes: null, totalMinutes: null,
-  ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+  ingredients: [{ ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
   steps: [], flags: [], completeness: 0.5,
   source: { videoId: "v0", url: "", videoTitle: "", channel: "", channelId: "", segmentStart: 0, segmentEnd: 0, language: "ru" },
   extractedAt: "2026-01-01T00:00:00.000Z", models: {},
@@ -105,7 +105,7 @@ describe("runEval", () => {
     const { deps, caseDir } = await setup();
     const recipeV3: Recipe = {
       ...base, id: "borscht--v3", nameRu: "Борщ", cuisine: "ukrainian", mealTypes: ["lunch"],
-      ingredients: [{ ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
+      ingredients: [{ ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null }],
       source: { ...base.source, videoId: "v3", segmentStart: 0 },
     };
     await deps.catalog.write(recipeV3);

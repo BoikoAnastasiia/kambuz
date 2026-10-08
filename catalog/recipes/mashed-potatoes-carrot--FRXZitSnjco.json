@@ -18,6 +18,7 @@
     {
       "ingredient": "potato",
       "rawName": "картошка",
+      "baseName": "картофель",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "carrot",
       "rawName": "морковка",
+      "baseName": "морковь",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "salt",
       "rawName": "посолили",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "поперчили",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": null,
       "rawName": "цветная капуста",
+      "baseName": "цветная капуста",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

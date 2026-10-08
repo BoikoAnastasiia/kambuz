@@ -18,6 +18,7 @@
     {
       "ingredient": "fish-white",
       "rawName": "треска",
+      "baseName": "треска",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "salt",
       "rawName": "посолить",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "поперчить",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": null,
       "rawName": "соус песто",
+      "baseName": "песто",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": "tomato",
       "rawName": "помидорки",
+      "baseName": "помидор",
       "quantity": 2,
       "unit": "pc",
       "provenance": "stated",
@@ -58,6 +63,7 @@
     {
       "ingredient": "mozzarella",
       "rawName": "моцарелла",
+      "baseName": "моцарелла",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

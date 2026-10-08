@@ -8,7 +8,7 @@ function recipe(over: Partial<Recipe> & { ingredientIds?: string[] }): Recipe {
   return {
     id: "x", nameRu: "X", nameEn: "X", dishKey: "x", cuisine: "other", mealTypes: ["dinner"], course: "main", method: "stew", richness: "medium",
     servings: null, activeMinutes: null, totalMinutes: null, flags: [], completeness: 0.5, extractedAt: "", models: {},
-    ingredients: ingredientIds.map((id) => ({ ingredient: id, rawName: id, quantity: 1, unit: "pc", provenance: "stated" as const, note: null })),
+    ingredients: ingredientIds.map((id) => ({ ingredient: id, rawName: id, baseName: id, quantity: 1, unit: "pc", provenance: "stated" as const, note: null })),
     steps: [],
     source: { videoId: "v", url: "", videoTitle: "", channel: "", channelId: "", segmentStart: 0, segmentEnd: 0, language: "ru" },
     ...rest,
@@ -36,7 +36,7 @@ describe("findCandidates", () => {
 });
 
 describe("completeness", () => {
-  const ing = (p: "stated" | "inferred" | "unknown") => ({ ingredient: null, rawName: "r", quantity: null, unit: null, provenance: p, note: null });
+  const ing = (p: "stated" | "inferred" | "unknown") => ({ ingredient: null, rawName: "r", baseName: "r", quantity: null, unit: null, provenance: p, note: null });
 
   it("rewards cookability (having enough ingredients AND steps) far more than stated quantities", () => {
     // 9 ingredients (all unknown provenance) + 11 steps + no flags: cookability maxes out,

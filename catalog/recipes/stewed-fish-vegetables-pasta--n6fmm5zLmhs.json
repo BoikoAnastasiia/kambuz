@@ -18,6 +18,7 @@
     {
       "ingredient": "fish-white",
       "rawName": "рыбка (ред снаппер филированный)",
+      "baseName": "рыбное филе",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "bell-pepper",
       "rawName": "сладкий перец",
+      "baseName": "сладкий перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "zucchini",
       "rawName": "кабачки",
+      "baseName": "кабачок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "tomato",
       "rawName": "томаты",
+      "baseName": "помидор",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": "sunflower-oil",
       "rawName": "маслице",
+      "baseName": "масло",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -58,6 +63,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -66,6 +72,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "перец",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -74,6 +81,7 @@
     {
       "ingredient": "garlic",
       "rawName": "чесночок",
+      "baseName": "чеснок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -82,6 +90,7 @@
     {
       "ingredient": "spaghetti",
       "rawName": "макароны",
+      "baseName": "макароны",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

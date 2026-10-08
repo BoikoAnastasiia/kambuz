@@ -32,8 +32,8 @@ describe("runExtractor", () => {
     const llm = { callStructured: vi.fn(async (_opts: any) => ({
       nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
       ingredients: [
-        { ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
-        { ingredient: "minced-unicorn", rawName: "фарш", quantity: null, unit: null, provenance: "unknown", note: null },
+        { ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
+        { ingredient: "minced-unicorn", rawName: "фарш", baseName: "фарш", quantity: null, unit: null, provenance: "unknown", note: null },
       ],
       steps: [
         { order: 1, text: "Добавить фарш.", timestamp: 90 },
@@ -51,7 +51,7 @@ describe("runExtractor", () => {
     const llm = { callStructured: vi.fn(async (_opts: any) => ({
       nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
       ingredients: [
-        { ingredient: "onion", rawName: "лук", quantity: null, unit: null, provenance: "stated", note: null },
+        { ingredient: "onion", rawName: "лук", baseName: "лук", quantity: null, unit: null, provenance: "stated", note: null },
       ],
       steps: [],
     })) };
@@ -59,15 +59,15 @@ describe("runExtractor", () => {
     expect(r.ingredients[0].provenance).toBe("unknown");
   });
 
-  it("includes the rawName of a model-nulled ingredient in unmappedIngredients even when the model omitted it", async () => {
+  it("includes the baseName of a model-nulled ingredient in unmappedIngredients even when the model omitted it", async () => {
     const llm = { callStructured: vi.fn(async (_opts: any) => ({
       nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
       ingredients: [
-        { ingredient: null, rawName: "неизвестный ингредиент", quantity: null, unit: null, provenance: "unknown", note: null },
+        { ingredient: null, rawName: "кукурузка", baseName: "кукуруза", quantity: null, unit: null, provenance: "unknown", note: null },
       ],
       steps: [],
     })) };
     const r = await runExtractor(segment, vocab, llm as any, config.paths.prompts, timed);
-    expect(r.unmappedIngredients).toEqual(["неизвестный ингредиент"]);
+    expect(r.unmappedIngredients).toEqual(["кукуруза"]);
   });
 });

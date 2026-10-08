@@ -6,6 +6,7 @@ export type Provenance = z.infer<typeof ProvenanceSchema>;
 export const DraftIngredientSchema = z.object({
   ingredient: z.string().nullable().describe("Canonical id from the vocabulary, or null if it cannot be mapped"),
   rawName: z.string().describe("What the chef called it"),
+  baseName: z.string().describe("The ingredient's plain Russian name: lowercase, nominative, singular, no diminutives"),
   quantity: z.number().nullable(),
   unit: z.string().nullable().describe("g, ml, pc, tbsp, tsp, clove, or null"),
   provenance: ProvenanceSchema,

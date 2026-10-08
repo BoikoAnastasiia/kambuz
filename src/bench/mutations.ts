@@ -221,7 +221,7 @@ function extraIngredient(seed: string, input: BenchSegment, ctx: MutationContext
   // a "200 g" line would give it away.
   const unknownCount = draft.ingredients.filter((i) => i.provenance === "unknown").length;
   const mostlyUnknown = unknownCount > draft.ingredients.length - unknownCount;
-  const shaped = (base: { ingredient: string | null; rawName: string }, quantity: number | null, unit: string | null): DraftIngredient => {
+  const shaped = (base: { ingredient: string | null; rawName: string; baseName: string }, quantity: number | null, unit: string | null): DraftIngredient => {
     if (mostlyUnknown) return { ...base, quantity: null, unit: null, provenance: "unknown", note: null };
     if (quantity !== null && quantity > 0 && unit !== null) return { ...base, quantity, unit, provenance: "stated", note: null };
     const u = unit !== null && unit in DEFAULT_AMOUNT ? unit : "g";
@@ -237,7 +237,7 @@ function extraIngredient(seed: string, input: BenchSegment, ctx: MutationContext
         // Unmapped rawNames include verbs and fragments ("подсолить"), which would not read as an ingredient.
         if (i.ingredient === null || seen.has(nameKey(i.rawName)) || !absent(i.rawName, i.ingredient)) continue;
         seen.add(nameKey(i.rawName));
-        out.push(shaped({ ingredient: i.ingredient, rawName: i.rawName }, i.quantity, i.unit));
+        out.push(shaped({ ingredient: i.ingredient, rawName: i.rawName, baseName: i.baseName }, i.quantity, i.unit));
       }
     }
     return out;
@@ -247,7 +247,7 @@ function extraIngredient(seed: string, input: BenchSegment, ctx: MutationContext
     fromDrafts(others),
     ctx.vocab.ingredients
       .filter((v) => absent(v.nameRu, v.id))
-      .map((v) => shaped({ ingredient: v.id, rawName: v.nameRu }, null, null)),
+      .map((v) => shaped({ ingredient: v.id, rawName: v.nameRu, baseName: v.nameRu.toLowerCase() }, null, null)),
   ];
   const tier = tiers.find((t) => t.length > 0);
   if (!tier) return null;

@@ -18,6 +18,7 @@
     {
       "ingredient": "chicken",
       "rawName": "курочку",
+      "baseName": "курица",
       "quantity": 1,
       "unit": "pc",
       "provenance": "inferred",
@@ -26,6 +27,7 @@
     {
       "ingredient": "potato",
       "rawName": "картошечку",
+      "baseName": "картофель",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "carrot",
       "rawName": "морковка",
+      "baseName": "морковь",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "beans",
       "rawName": "фасолька",
+      "baseName": "фасоль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

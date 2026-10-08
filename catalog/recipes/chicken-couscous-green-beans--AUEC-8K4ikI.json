@@ -18,6 +18,7 @@
     {
       "ingredient": "onion",
       "rawName": "лучок",
+      "baseName": "лук",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "chicken-breast",
       "rawName": "курица (филе)",
+      "baseName": "куриное филе",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "beans",
       "rawName": "стручковая фасоль (замороженная)",
+      "baseName": "стручковая фасоль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "garlic",
       "rawName": "чесночком",
+      "baseName": "чеснок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -58,6 +63,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "перец",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

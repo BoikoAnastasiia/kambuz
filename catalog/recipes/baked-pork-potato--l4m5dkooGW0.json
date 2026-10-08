@@ -18,6 +18,7 @@
     {
       "ingredient": "pork",
       "rawName": "свининка, вырезка свиная",
+      "baseName": "свиная вырезка",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "potato",
       "rawName": "картошечка",
+      "baseName": "картофель",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

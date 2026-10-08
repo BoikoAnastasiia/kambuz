@@ -7,9 +7,9 @@ import { config } from "../../src/config.js";
 const draft: DraftRecipe = {
   nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
   ingredients: [
-    { ingredient: "onion", rawName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
-    { ingredient: "beef-mince", rawName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
-    { ingredient: "salt", rawName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
+    { ingredient: "onion", rawName: "лук", baseName: "лук", quantity: 1, unit: "pc", provenance: "inferred", note: null },
+    { ingredient: "beef-mince", rawName: "фарш", baseName: "фарш", quantity: 500, unit: "g", provenance: "stated", note: null },
+    { ingredient: "salt", rawName: "соль", baseName: "соль", quantity: null, unit: null, provenance: "unknown", note: null },
   ],
   steps: [{ order: 1, text: "Нарезать лук.", timestamp: 30 }, { order: 2, text: "Обжарить фарш.", timestamp: 60 }],
 };

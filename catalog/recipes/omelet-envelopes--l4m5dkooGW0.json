@@ -17,6 +17,7 @@
     {
       "ingredient": "egg",
       "rawName": "яйца, омлет",
+      "baseName": "яйцо",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -25,6 +26,7 @@
     {
       "ingredient": "sausage",
       "rawName": "сосиски",
+      "baseName": "сосиска",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -33,6 +35,7 @@
     {
       "ingredient": "oats",
       "rawName": "овсяночка",
+      "baseName": "овсянка",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",

@@ -18,6 +18,7 @@
     {
       "ingredient": null,
       "rawName": "ветчина",
+      "baseName": "ветчина",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -26,6 +27,7 @@
     {
       "ingredient": "zucchini",
       "rawName": "кабачок",
+      "baseName": "кабачок",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -34,6 +36,7 @@
     {
       "ingredient": "onion",
       "rawName": "лук",
+      "baseName": "лук",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -42,6 +45,7 @@
     {
       "ingredient": "bread",
       "rawName": "хлеб",
+      "baseName": "хлеб",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -50,6 +54,7 @@
     {
       "ingredient": "salt",
       "rawName": "соль",
+      "baseName": "соль",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -58,6 +63,7 @@
     {
       "ingredient": "black-pepper",
       "rawName": "перец",
+      "baseName": "перец",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -66,6 +72,7 @@
     {
       "ingredient": "egg",
       "rawName": "яйца",
+      "baseName": "яйцо",
       "quantity": 2,
       "unit": "pc",
       "provenance": "stated",
@@ -74,6 +81,7 @@
     {
       "ingredient": "flour",
       "rawName": "мука",
+      "baseName": "мука",
       "quantity": 1,
       "unit": "tbsp",
       "provenance": "stated",
@@ -82,6 +90,7 @@
     {
       "ingredient": "tomato-paste",
       "rawName": "томатный соус",
+      "baseName": "томатный соус",
       "quantity": 4,
       "unit": "tbsp",
       "provenance": "stated",
@@ -90,6 +99,7 @@
     {
       "ingredient": "oats",
       "rawName": "овсянка",
+      "baseName": "овсянка",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
@@ -98,6 +108,7 @@
     {
       "ingredient": "jamon",
       "rawName": "испанский хамон",
+      "baseName": "хамон",
       "quantity": null,
       "unit": null,
       "provenance": "unknown",
