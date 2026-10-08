@@ -10,7 +10,11 @@ import { createLlmClient } from "./llm/client.js";
 import { UsageLedger, formatCost } from "./llm/usage.js";
 import { loadVocab } from "./vocab/load.js";
 import { StageCache } from "./orchestrator/cache.js";
-import { Catalog } from "./orchestrator/catalog.js";
+import { Catalog, MirroredCatalog, type CatalogStore } from "./orchestrator/catalog.js";
+import { connectDb } from "./db/mongo.js";
+import { MongoCatalog } from "./db/mongoCatalog.js";
+import { importCatalog, recordVideos, syncVocab } from "./db/sync.js";
+import { requeueAbandoned, workLoop } from "./db/worker.js";
 import { ingest, type IngestOptions } from "./orchestrator/run.js";
 import { renderReport, totalCostUsd } from "./orchestrator/report.js";
 import { renderReportHtml } from "./orchestrator/report-html.js";
@@ -25,6 +29,8 @@ export const USAGE =
   "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
   "       kambuz bench <categorizer|verifier> --models <model[:effort],...> [--repeat N] [--yes] [--open]\n" +
   "       kambuz bench rescore <bench-report.json> [--open]\n" +
+  "       kambuz db-import   copy the JSON catalog and vocab into MongoDB (needs MONGODB_URI)\n" +
+  "       kambuz worker      run the site's queued add-video jobs until stopped (needs MONGODB_URI)\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
   "  --force               re-run every agent stage (does not re-fetch captions)\n" +
@@ -47,6 +53,9 @@ function openInBrowser(filePath: string): Promise<void> {
   });
 }
 
+export const MISSING_MONGODB_URI =
+  "MONGODB_URI is not set. Add your MongoDB Atlas connection string to .env, e.g. MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/kambuz";
+
 export const MISSING_API_KEY =
   "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.";
 
@@ -63,6 +72,7 @@ export type ParsedArgs =
   | { ok: true; command: "eval"; force: boolean; ingest: boolean; onlyStage?: Stage }
   | { ok: true; command: "bench"; agent: BenchAgent; variants: Variant[]; repeat: number; yes: boolean; open: boolean }
   | { ok: true; command: "bench-rescore"; file: string; open: boolean }
+  | { ok: true; command: "db-import" | "worker" }
   | { ok: false; error: string };
 
 function isStage(value: string): value is Stage {
@@ -152,7 +162,12 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     return { ok: true, command: "bench", agent: agent as BenchAgent, variants: variants.variants, repeat: Number(repeatRaw), yes: values.yes ?? false, open: values.open ?? false };
   }
 
-  return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval | kambuz bench <agent>" };
+  if (command === "db-import" || command === "worker") {
+    if (positionals.length > 1) return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(1).join(" ")}` };
+    return { ok: true, command };
+  }
+
+  return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval | kambuz bench <agent> | kambuz db-import | kambuz worker" };
 }
 
 async function main(): Promise<void> {
@@ -168,6 +183,25 @@ async function main(): Promise<void> {
     // Reads the saved JSON only: no key, no client, no call.
     const { html } = await rescoreCommand(parsed.file, (line) => console.log(line));
     if (parsed.open) await openInBrowser(html);
+    return;
+  }
+
+  if (parsed.command === "db-import") {
+    // Reads files and writes MongoDB: no API key, no model call.
+    const uri = process.env.MONGODB_URI?.trim();
+    if (!uri) {
+      console.error(MISSING_MONGODB_URI);
+      process.exit(1);
+      return;
+    }
+    const { client, c } = await connectDb(uri);
+    try {
+      await syncVocab(c, config.paths.vocab);
+      const n = await importCatalog(c, config.paths.catalog);
+      console.log(`imported ${n.recipes} recipes, ${n.archived} archived versions; ${n.videos} new videos recorded; vocab synced`);
+    } finally {
+      await client.close();
+    }
     return;
   }
 
@@ -207,13 +241,25 @@ async function main(): Promise<void> {
     return;
   }
 
+  const mongoUri = process.env.MONGODB_URI?.trim();
+  if (parsed.command === "worker" && !mongoUri) {
+    console.error(MISSING_MONGODB_URI);
+    process.exit(1);
+    return;
+  }
+  // With a database configured, every recipe the pipeline writes to the JSON catalog is
+  // copied to MongoDB too, which is what the site reads.
+  const mongo = mongoUri && (parsed.command === "ingest" || parsed.command === "worker") ? await connectDb(mongoUri) : null;
+  const jsonCatalog = new Catalog(config.paths.catalog);
+  const catalog: CatalogStore = mongo ? new MirroredCatalog(jsonCatalog, new MongoCatalog(mongo.c)) : jsonCatalog;
+
   const ledger = new UsageLedger();
   const deps = {
     config,
     llm: createLlmClient(config, ledger),
     vocab: await loadVocab(config.paths.vocab),
     cache: new StageCache(config.paths.cache),
-    catalog: new Catalog(config.paths.catalog),
+    catalog,
     usageText: () => ledger.toString(),
     usageRows: () => ledger.rows(),
   };
@@ -228,6 +274,10 @@ async function main(): Promise<void> {
       // video:done event from ingest() itself, so the tree is fully drawn (and
       // torn down) before the report prints below.
       const [report] = await Promise.all([ingest(parsed.url, ingestDeps, opts), renderer?.finish() ?? Promise.resolve()]);
+      if (mongo) {
+        await recordVideos(mongo.c, report);
+        await mongo.client.close();
+      }
       await mkdir(config.paths.reports, { recursive: true });
       const stamp = report.startedAt.replace(/[:.]/g, "-");
       const mdFile = path.join(config.paths.reports, `${stamp}.md`);
@@ -253,6 +303,39 @@ async function main(): Promise<void> {
       console.log(`cost ${formatCost(runCost)} · ${runCalls} calls · spent so far ${formatCost(spendSoFar.totalUsd)}${spendSuffix(spendSoFar)}`);
 
       if (parsed.open) await openInBrowser(htmlFile);
+      return;
+    }
+    case "worker": {
+      const { c, client } = mongo!;
+      await syncVocab(c, config.paths.vocab);
+      const requeued = await requeueAbandoned(c);
+      if (requeued) console.log(`worker: put ${requeued} interrupted job(s) back in the queue`);
+      const stop = new AbortController();
+      const onSignal = () => {
+        console.log("worker: stopping after the current job (Ctrl+C again to quit now)");
+        stop.abort();
+        process.once("SIGINT", () => process.exit(130));
+      };
+      process.once("SIGINT", onSignal);
+      process.once("SIGTERM", onSignal);
+      console.log("worker: waiting for jobs (Ctrl+C to stop)");
+      const spendFile = path.join(config.paths.reports, "spend.jsonl");
+      await workLoop(
+        {
+          c,
+          // Each job gets its own ledger, so a job's cost is its own and not a running total.
+          runIngest: async (url, onEvent) => {
+            const jobLedger = new UsageLedger();
+            const report = await ingest(url, { ...deps, llm: createLlmClient(config, jobLedger), usageText: () => jobLedger.toString(), usageRows: () => jobLedger.rows(), onEvent }, {});
+            await mkdir(config.paths.reports, { recursive: true });
+            await appendSpend(spendFile, spendEntry(report.finishedAt || report.startedAt, url, report.usageRows));
+            console.log(`worker: ${url} → ${report.written.length} recipe(s), ${formatCost(totalCostUsd(report.usageRows))}`);
+            return report;
+          },
+        },
+        { pollMs: 3000, signal: stop.signal, onJob: (job) => console.log(`worker: starting ${job.url}`) },
+      );
+      await client.close();
       return;
     }
     case "eval": {

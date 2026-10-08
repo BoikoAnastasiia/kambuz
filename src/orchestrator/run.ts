@@ -5,7 +5,7 @@ import type { UsageRow } from "../llm/usage.js";
 import type { Vocab } from "../vocab/load.js";
 import { validateRecipe } from "../vocab/validate.js";
 import { StageCache } from "./cache.js";
-import { Catalog } from "./catalog.js";
+import type { CatalogStore } from "./catalog.js";
 import { assembleRecipe } from "./assemble.js";
 import { emptyReport, type RunReport, type VideoStatus } from "./report.js";
 import type { IngestEvent, StageName } from "./events.js";
@@ -27,7 +27,7 @@ export interface IngestDeps {
   llm: LlmClient;
   vocab: Vocab;
   cache: StageCache;
-  catalog: Catalog;
+  catalog: CatalogStore;
   fetch?: (videoId: string, workDir: string) => Promise<FetchResult>;
   expand?: (url: string) => Promise<string[]>;
   usageText?: () => string;
