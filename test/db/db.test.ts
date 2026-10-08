@@ -7,7 +7,7 @@ import { ObjectId, type MongoClient } from "mongodb";
 import { connectDb, dbNameFrom, type Collections, type JobDoc } from "../../src/db/mongo.js";
 import { MongoCatalog } from "../../src/db/mongoCatalog.js";
 import { importCatalog, recordVideos, syncVocab } from "../../src/db/sync.js";
-import { claimNextJob, describeEvent, requeueAbandoned, runJob } from "../../src/db/worker.js";
+import { claimNextJob, describeEvent, friendlyError, requeueAbandoned, runJob } from "../../src/db/worker.js";
 import { MirroredCatalog, type CatalogStore } from "../../src/orchestrator/catalog.js";
 import type { Recipe } from "../../src/schemas/recipe.js";
 import type { RunReport } from "../../src/orchestrator/report.js";
@@ -162,12 +162,12 @@ describe("worker", () => {
     await queue("bad", "2026-10-08T10:00:00Z");
     const thrown = (await claimNextJob(c, () => "t"))!;
     await runJob(thrown, { c, runIngest: async () => { throw new Error("yt-dlp not found"); } });
-    expect(await c.jobs.findOne({ _id: thrown._id })).toMatchObject({ status: "error", error: "yt-dlp not found" });
+    expect(await c.jobs.findOne({ _id: thrown._id })).toMatchObject({ status: "error", error: expect.stringContaining("yt-dlp isn't installed") });
 
     await queue("blocked", "2026-10-08T10:00:01Z");
     const blocked = (await claimNextJob(c, () => "t"))!;
     await runJob(blocked, { c, runIngest: async () => report({ videos: [{ videoId: "v2", title: "v2", status: "error", recipes: 0, error: "Sign in to confirm you're not a bot" }] }) });
-    expect(await c.jobs.findOne({ _id: blocked._id })).toMatchObject({ status: "error", error: "Sign in to confirm you're not a bot" });
+    expect(await c.jobs.findOne({ _id: blocked._id })).toMatchObject({ status: "error", error: expect.stringContaining("YouTube is temporarily blocking") });
   });
 
   it("puts jobs left running by a stopped worker back in the queue", async () => {
@@ -175,6 +175,12 @@ describe("worker", () => {
     await claimNextJob(c, () => "t");
     expect(await requeueAbandoned(c)).toBe(1);
     expect((await c.jobs.findOne({ url: "x" }))?.status).toBe("queued");
+  });
+
+  it("turns raw yt-dlp failures into a sentence and shortens anything else", () => {
+    expect(friendlyError("ERROR: Unable to download video subtitles for 'ru': HTTP Error 429: Too Many Requests")).toMatch(/^YouTube is temporarily blocking/);
+    expect(friendlyError("ERROR: [youtube] x: Private video. Sign in if you've been granted access")).toMatch(/unavailable/);
+    expect(friendlyError("x".repeat(400))).toHaveLength(301);
   });
 
   it("describes only the events worth showing on the site", () => {

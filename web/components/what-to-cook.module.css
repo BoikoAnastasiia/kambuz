@@ -1,0 +1,345 @@
+.wrap {
+  display: grid;
+  gap: 28px;
+}
+
+.filters {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+/* Four meals in one even row on a phone instead of three and a straggler. */
+@media (max-width: 480px) {
+  .meals {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+    gap: 6px;
+  }
+  .meals > button {
+    padding: 8px 2px;
+    font-size: 0.86rem;
+  }
+}
+
+/* Cuisines can outgrow a phone screen: scroll sideways there instead of wrapping into a wall. */
+@media (max-width: 640px) {
+  .scroll {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    width: 100%;
+    padding: 2px 2px 8px;
+    scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.advanced {
+  width: min(640px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.advancedToggle {
+  background: none;
+  border: 0;
+  color: var(--red);
+  font-weight: 800;
+  padding: 6px 8px;
+}
+
+.picker {
+  width: 100%;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.selected,
+.suggestions,
+.ingredients,
+.otherList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.selected,
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.selectedChip {
+  border: 0;
+  background: var(--mustard);
+  color: var(--ink);
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.search {
+  font: inherit;
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #fff;
+}
+
+.suggestion {
+  border: 1.5px solid var(--line);
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.suggestion:hover {
+  background: var(--mustard-soft);
+  border-color: var(--mustard);
+}
+
+.ru {
+  color: var(--ink-soft);
+  font-weight: 500;
+  font-size: 0.85em;
+}
+
+/* The suggestion. */
+.loading {
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--paper);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 2px solid var(--ink);
+}
+
+@media (min-width: 820px) {
+  .card {
+    grid-template-columns: 1.15fr 1fr;
+  }
+}
+
+.cardBody {
+  padding: clamp(20px, 4vw, 36px);
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tagRed,
+.tagMustard,
+.tagHerb {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+.tagRed {
+  background: var(--red-soft);
+  color: var(--red-deep);
+}
+
+.tagMustard {
+  background: var(--mustard-soft);
+  color: #7a5200;
+}
+
+.tagHerb {
+  background: var(--herb-soft);
+  color: #0f6a37;
+}
+
+.dish {
+  font-size: clamp(1.9rem, 5vw, 3rem);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.dishEn {
+  margin: -4px 0 8px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.ingredients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-bottom: 14px;
+}
+
+.ingredients li {
+  background: var(--cream);
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.ingredients .more {
+  background: var(--mustard);
+  border-color: var(--mustard);
+  font-weight: 800;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  background: var(--red);
+  order: -1;
+  border-bottom: 2px solid var(--ink);
+}
+
+/* Side by side on wide screens: the thumbnail fills the card's height instead. */
+@media (min-width: 820px) {
+  .thumb {
+    order: 0;
+    aspect-ratio: auto;
+    min-height: 260px;
+    border-bottom: 0;
+    border-left: 2px solid var(--ink);
+  }
+}
+
+.thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  padding-left: 4px;
+}
+
+.reroll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.others {
+  margin-top: 30px;
+}
+
+.othersTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+
+.otherList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.other {
+  display: grid;
+  gap: 2px;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-decoration: none;
+  color: var(--ink);
+  height: 100%;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.other:hover {
+  border-color: var(--red);
+  transform: translateY(-2px);
+}
+
+.otherName {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.otherMeta {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.none {
+  text-align: center;
+  background: var(--paper);
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-lg);
+  padding: 36px 20px;
+}
+
+.noneTitle {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: var(--red);
+  margin: 0 0 6px;
+}

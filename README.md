@@ -187,6 +187,31 @@ hand before the categorizer bench's method rate is worth reading; until then
 it's measuring "did the model also guess null", not "did it get the method
 right".
 
+## Website and database
+
+The "What to cook?" site in `web/` reads recipes from MongoDB (a free Atlas M0
+cluster is plenty). Put the connection string in `.env`:
+
+    MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/kambuz
+
+Then, once, copy the JSON catalog in:
+
+    npm run kambuz -- db-import     # recipes, archived versions, vocab; safe to re-run
+
+From then on, `ingest` writes every catalog change to both `catalog/` and MongoDB
+and records each video in a `videos` collection. To add videos from the site, keep
+the worker running next to it:
+
+    npm run kambuz -- worker        # runs queued add-video jobs one at a time
+    cd web && npm run dev           # http://localhost:3000
+
+The site never runs the pipeline itself: **Add a video** writes a job to the `jobs`
+collection and the worker picks it up, so the pipeline (and yt-dlp, which YouTube
+blocks on most hosting) stays on this machine even when the site is deployed. A
+video already in the database is not queued again. Stopping the worker with Ctrl+C
+lets the current job finish; a job cut off harder is put back in the queue on the
+next start.
+
 ## Configuration
 
 `.env` (copied from `.env.example`) holds `ANTHROPIC_API_KEY` and, optionally:
@@ -200,6 +225,7 @@ right".
   Haiku 5.5). Any other value is ignored.
 - `KAMBUZ_CONCURRENCY=<n>` — simultaneous LLM calls across the whole run
   (default 4).
+- `MONGODB_URI` — enables the database (see above); the site reads it too.
 
 ## Test
 
@@ -207,8 +233,9 @@ right".
     npm run typecheck
 
 The tests never call the API. Agents are tested with a fake LLM client,
-the fetcher with fixture caption files, and the cache and catalog on a
-temporary directory.
+the fetcher with fixture caption files, the cache and catalog on a
+temporary directory, and the database layer on an in-memory MongoDB
+(downloaded on the first run).
 
 ## Layout
 
@@ -221,8 +248,10 @@ temporary directory.
       schemas/       Zod schemas for every stage
       vocab/         loader and validator for vocab/*.json
       migrate/       one-time category → course/method migration logic
+      db/            MongoDB catalog, import, and the add-video job worker
     vocab/           cuisines, courses, methods, ingredients (human-edited)
     scripts/         migrate-catalog.ts (npm run migrate-catalog)
+    web/             the Next.js site (see web/README.md)
     docs/specs/      design document
     docs/plans/      implementation plan
 

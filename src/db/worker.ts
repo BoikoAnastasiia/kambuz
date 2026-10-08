@@ -38,6 +38,20 @@ export function describeEvent(e: IngestEvent): string | null {
   }
 }
 
+/**
+ * The site shows a job's error to whoever pasted the link, so the known yt-dlp failures
+ * become a sentence; anything else is passed on, cut to a readable length.
+ */
+export function friendlyError(raw: string): string {
+  if (/HTTP Error 429|Too Many Requests|confirm you.re not a bot/i.test(raw)) {
+    return "YouTube is temporarily blocking downloads from this computer after too many requests. Try again in an hour or two.";
+  }
+  if (/Video unavailable|Private video|This video is not available/i.test(raw)) return "This video is unavailable — it may be private, deleted or blocked in this region.";
+  if (/yt-dlp not found/i.test(raw)) return "yt-dlp isn't installed on the computer running the worker (brew install yt-dlp).";
+  const oneLine = raw.replace(/\s+/g, " ").trim();
+  return oneLine.length > 300 ? `${oneLine.slice(0, 300)}…` : oneLine;
+}
+
 /** Atomically takes the oldest queued job, so two workers never run the same one. */
 export async function claimNextJob(c: Collections, now: () => string): Promise<JobDoc | null> {
   return c.jobs.findOneAndUpdate(
@@ -68,14 +82,14 @@ export async function runJob(job: JobDoc, deps: WorkerDeps): Promise<void> {
           status: failed ? "error" : "done",
           finishedAt: now(),
           recipes: report.written,
-          error: failed ? report.videos.map((v) => v.error ?? "failed").join("; ") : null,
+          error: failed ? [...new Set(report.videos.map((v) => friendlyError(v.error ?? "failed")))].join("; ") : null,
           costUsd: totalCostUsd(report.usageRows),
         },
       },
     );
   } catch (e) {
     await writes.catch(() => undefined);
-    await c.jobs.updateOne({ _id: job._id }, { $set: { status: "error", finishedAt: now(), error: (e as Error).message } });
+    await c.jobs.updateOne({ _id: job._id }, { $set: { status: "error", finishedAt: now(), error: friendlyError((e as Error).message) } });
   }
 }
 

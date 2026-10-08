@@ -1,0 +1,207 @@
+/* Light only by design: a cream sheet on a red frame, after the Cabot Creamery recipe pages,
+   with brighter mustard / herb / tangerine accents so it never reads pale. */
+:root {
+  --red: #d3122c;
+  --red-deep: #a80c22;
+  --red-soft: #ffe1e0;
+  --cream: #fff4de;
+  --paper: #fffbf3;
+  --line: #f1dcc0;
+  --ink: #2b1712;
+  --ink-soft: #6e5348;
+  --mustard: #ffbe2e;
+  --mustard-soft: #fff0c4;
+  --herb: #1f9d55;
+  --herb-soft: #dcf5e5;
+  --tangerine: #ff6b2c;
+
+  --radius-sm: 10px;
+  --radius: 18px;
+  --radius-lg: 28px;
+  --shadow: 0 1px 0 rgba(43, 23, 18, 0.06), 0 12px 32px -12px rgba(120, 30, 20, 0.28);
+  --gutter: clamp(16px, 4vw, 40px);
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--red);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--red);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), Georgia, serif;
+  line-height: 1.08;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--mustard);
+  outline-offset: 2px;
+}
+
+/* The red frame around a cream sheet. */
+.frame {
+  min-height: 100dvh;
+  padding: 0 var(--gutter) var(--gutter);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 4px;
+  color: var(--cream);
+}
+
+.brand {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: var(--cream);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+
+.brand-mark {
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+.topbar-link {
+  color: var(--ink);
+  background: var(--mustard);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 9px 16px;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 var(--red-deep);
+}
+
+.topbar-link:hover {
+  background: #ffcd55;
+}
+
+.sheet {
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 5vw, 56px) clamp(16px, 5vw, 64px);
+  box-shadow: 0 24px 60px -24px rgba(60, 0, 10, 0.55);
+}
+
+/* Small bold caps labels, like "PREP TIME" on the Cabot pages. */
+.label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Pill buttons for meal and cuisine. */
+.chip {
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  white-space: nowrap;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+
+@media (max-width: 420px) {
+  .chip {
+    padding: 8px 13px;
+    font-size: 0.92rem;
+  }
+}
+
+.chip:hover {
+  background: var(--mustard-soft);
+}
+
+.chip:active {
+  transform: translateY(1px);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--red-deep);
+}
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 24px;
+  font-weight: 800;
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--red-deep);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  background: #e2162f;
+}
+
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--red-deep);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background: var(--mustard-soft);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.empty {
+  color: var(--ink-soft);
+  text-align: center;
+  padding: 32px 8px;
+}
