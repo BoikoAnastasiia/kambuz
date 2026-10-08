@@ -42,7 +42,7 @@ async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <article className={styles.recipe}>
-      <Link href="/" className={styles.back}>← Что приготовить</Link>
+      <Link href="/" className={styles.back}>← Назад</Link>
 
       <header className={styles.head}>
         <div className={styles.tags}>

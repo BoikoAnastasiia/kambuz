@@ -9,10 +9,10 @@ import { watchUrl } from "@/lib/youtube";
 import styles from "./what-to-cook.module.css";
 
 const MEALS = [
-  { id: "breakfast", label: "Завтрак" },
-  { id: "lunch", label: "Обед" },
-  { id: "dinner", label: "Ужин" },
-  { id: "dessert", label: "Десерт" },
+  { id: "breakfast", label: "Завтрак", icon: "🍳" },
+  { id: "lunch", label: "Обед", icon: "🍲" },
+  { id: "dinner", label: "Ужин", icon: "🍝" },
+  { id: "dessert", label: "Десерт", icon: "🍰" },
 ] as const;
 
 type Meal = (typeof MEALS)[number]["id"];
@@ -62,22 +62,28 @@ export function WhatToCook({ options, initial }: { options: PickerOptions; initi
   return (
     <div className={styles.wrap}>
       <section className={styles.filters} aria-label="Фильтры">
-        <div className={`${styles.row} ${styles.meals}`} role="group" aria-label="Приём пищи">
+        {/* The meal is the main choice, exactly one of four: a segmented control. */}
+        <div className={styles.segmented} role="radiogroup" aria-label="Приём пищи">
           {MEALS.map((m) => (
-            <button key={m.id} className="chip" aria-pressed={meal === m.id} onClick={() => setMeal(m.id)}>
+            <button key={m.id} role="radio" aria-checked={meal === m.id} className={styles.segment} onClick={() => setMeal(m.id)}>
+              <span className={styles.segmentIcon} aria-hidden>{m.icon}</span>
               {m.label}
             </button>
           ))}
         </div>
-        <div className={`${styles.row} ${styles.scroll}`} role="group" aria-label="Кухня">
-          <button className="chip" aria-pressed={cuisine === "random"} onClick={() => setCuisine("random")}>
-            🎲 Любая
-          </button>
-          {options.cuisines.map((c) => (
-            <button key={c.id} className="chip" aria-pressed={cuisine === c.id} onClick={() => setCuisine(c.id)}>
-              {c.nameRu}
+        {/* Cuisine refines it: smaller, quieter chips under a label, selected in ink rather than red. */}
+        <div className={styles.cuisineGroup}>
+          <span className="label" id="cuisine-label">Кухня</span>
+          <div className={`${styles.row} ${styles.scroll}`} role="radiogroup" aria-labelledby="cuisine-label">
+            <button role="radio" aria-checked={cuisine === "random"} className={styles.small} onClick={() => setCuisine("random")}>
+              🎲 Любая
             </button>
-          ))}
+            {options.cuisines.map((c) => (
+              <button key={c.id} role="radio" aria-checked={cuisine === c.id} className={styles.small} onClick={() => setCuisine(c.id)}>
+                {c.nameRu}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className={styles.advanced}>

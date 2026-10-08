@@ -22,7 +22,7 @@ export default function Home() {
       <h1 className={styles.title}>
         What to cook?
       </h1>
-      <p className={styles.lede}>Выберите приём пищи и кухню — блюдо подберём мы.</p>
+      <p className={styles.lede}>Не думай — мы уже придумали)</p>
       <Suspense fallback={<p className="empty">Заглядываем на камбуз…</p>}>
         <Picker />
       </Suspense>

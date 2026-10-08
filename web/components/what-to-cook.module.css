@@ -17,22 +17,105 @@
   max-width: 100%;
 }
 
-/* Four meals in one even row on a phone instead of three and a straggler. */
+/* Meal: one connected track, the chosen segment filled red. */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: min(560px, 100%);
+  padding: 5px;
+  gap: 4px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+.segment {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 12px 8px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segment:hover {
+  background: var(--mustard-soft);
+}
+
+.segment[aria-checked="true"] {
+  background: var(--red);
+  color: #fff;
+}
+
+.segmentIcon {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+/* On a phone the emoji sits above the word so four segments still fit. */
 @media (max-width: 480px) {
-  .meals {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    width: 100%;
-    gap: 6px;
+  .segmented {
+    border-radius: 22px;
   }
-  .meals > button {
+  .segment {
+    flex-direction: column;
+    gap: 2px;
     padding: 8px 2px;
-    font-size: 0.86rem;
+    font-size: 0.82rem;
+    border-radius: 17px;
   }
+  .segmentIcon {
+    font-size: 1.35rem;
+  }
+}
+
+/* Cuisine: a small label over quieter chips. */
+.cuisineGroup {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin-top: 10px;
+}
+
+.small {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.small:hover {
+  border-color: var(--ink);
+}
+
+.small[aria-checked="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--cream);
 }
 
 /* Cuisines can outgrow a phone screen: scroll sideways there instead of wrapping into a wall. */
 @media (max-width: 640px) {
+  .cuisineGroup {
+    width: 100%;
+    justify-items: stretch;
+  }
+  .cuisineGroup > :global(.label) {
+    text-align: center;
+  }
   .scroll {
     flex-wrap: nowrap;
     justify-content: flex-start;
