@@ -14,6 +14,9 @@ runs the pipeline and writes the recipes back. See the repo root README.
     npm run dev          # http://localhost:3000
 
 `MONGODB_URI` is read from the repo-root `.env`, the same one the pipeline uses.
+`npm run dev|build|start` go through `scripts/next-with-env.mjs`, which puts that
+file's variables in the environment before Next starts; don't load it from
+`next.config.ts`, which made the dev server rebuild and the page reload in a loop.
 
 ## Pages
 
