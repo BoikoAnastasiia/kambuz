@@ -14,6 +14,15 @@ export function isEffort(value: string): value is Effort {
   return (EFFORTS as readonly string[]).includes(value);
 }
 
+// The categorizer only picks labels from short vocab lists, so it runs on the cheaper model.
+export const DEFAULT_MODELS: Record<AgentName, string> = {
+  scout: "claude-sonnet-5",
+  extractor: "claude-sonnet-5",
+  verifier: "claude-sonnet-5",
+  categorizer: "claude-haiku-4-5",
+  judge: "claude-sonnet-5",
+};
+
 export const DEFAULT_CONCURRENCY = 4;
 export const DEFAULT_MIN_COMPLETENESS = 0.3;
 
@@ -50,7 +59,7 @@ function effortFrom(env: NodeJS.ProcessEnv): Partial<Record<AgentName, Effort>> 
 
 export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const models = Object.fromEntries(
-    AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? env.KAMBUZ_MODEL ?? "claude-sonnet-5"]),
+    AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? env.KAMBUZ_MODEL ?? DEFAULT_MODELS[n]]),
   ) as Record<AgentName, string>;
   return {
     models,

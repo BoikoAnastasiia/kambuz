@@ -191,7 +191,8 @@ right".
 
 `.env` (copied from `.env.example`) holds `ANTHROPIC_API_KEY` and, optionally:
 
-- `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-sonnet-5`).
+- `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-sonnet-5`, except the
+  categorizer, which defaults to `claude-haiku-4-5`).
 - `KAMBUZ_MODEL_SCOUT`, `..._EXTRACTOR`, `..._VERIFIER`, `..._CATEGORIZER`,
   `..._JUDGE` — override one agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
 - `KAMBUZ_EFFORT_<AGENT>=low|medium|high` — thinking effort for one agent,

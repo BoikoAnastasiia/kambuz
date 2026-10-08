@@ -1,11 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { config, buildConfig, AGENT_NAMES } from "../src/config.js";
+import { buildConfig, AGENT_NAMES } from "../src/config.js";
 
 describe("config", () => {
-  it("has a model for every agent, defaulting to claude-sonnet-5", () => {
+  it("defaults the categorizer to claude-haiku-4-5 and every other agent to claude-sonnet-5", () => {
     for (const name of AGENT_NAMES) {
-      expect(config.models[name]).toBe("claude-sonnet-5");
+      expect(buildConfig({}).models[name]).toBe(name === "categorizer" ? "claude-haiku-4-5" : "claude-sonnet-5");
     }
+  });
+  it("lets KAMBUZ_MODEL override every agent's default, the categorizer's included", () => {
+    expect(new Set(Object.values(buildConfig({ KAMBUZ_MODEL: "claude-opus-5" }).models))).toEqual(new Set(["claude-opus-5"]));
   });
   it("falls back to concurrency 4 for an empty, non-numeric or out-of-range KAMBUZ_CONCURRENCY", () => {
     expect(buildConfig({ KAMBUZ_CONCURRENCY: "" }).concurrency).toBe(4);
