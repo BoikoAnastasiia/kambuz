@@ -1,7 +1,8 @@
 # Kambuz
 
 Multi-agent pipeline that turns YouTube cooking videos into grounded, structured recipes.
-Give it a video or playlist URL; it writes one JSON per dish into `catalog/recipes/`.
+Give it a video or playlist URL; it writes one recipe per dish into MongoDB, where the
+"What to cook?" site in `web/` reads them.
 
 Kambuz (камбуз) is the galley on a ship. The first source channel is a ship's cook
 who films his recipes in Russian, without descriptions or chapters, so the only
@@ -38,7 +39,7 @@ completeness comparison only run across different segments.
 
     brew install yt-dlp        # or: pipx install yt-dlp
     npm install
-    cp .env.example .env       # add ANTHROPIC_API_KEY
+    cp .env.example .env       # add ANTHROPIC_API_KEY and MONGODB_URI (see below)
 
 Node 22 or newer.
 
@@ -106,7 +107,7 @@ Each case names a video and what the pipeline should find in it (dish count,
 names, cuisines, meal types, and optionally specific ingredients with their
 provenance). The command prints a table and exits non-zero if any check fails,
 so a prompt or vocabulary change can be regression-tested. Without `--ingest`
-it never calls the API — it only reads what is already in `catalog/`.
+it never calls the API — it only reads what is already in the database.
 
 ## Bench
 
@@ -152,55 +153,32 @@ usage could not be recorded.
 A variant the API rejects (for example an effort on a model without it) is
 recorded as errors in the report; the rest of the bench still runs.
 
-## Migrating category → course/method
+**The categorizer bench's method labels are incomplete.** When `category` was
+split into `course` and `method`, only the old bake/stew/grill categories named a
+method, so 12 of the 23 rows in `eval/bench/categorizer.json` still have
+`method: null`. Re-watch those segments and fill in a real method before the
+method rate is worth reading; until then it measures "did the model also guess
+null", not "did it get the method right".
 
-The old `category` field mixed two axes — what a dish is in a meal and how it
-was cooked — and has been split into `course` and `method` (`method` may be
-`null`). A one-time script rewrites everything that used to hold `category`:
+## Database and website
 
-    npm run migrate-catalog
-
-It rewrites `catalog/recipes/*.json`, `catalog/archive/*.json`,
-`catalog/index.json` and `eval/bench/categorizer.json`, printing a table of
-what changed. Pass `--dry-run` to see that table (and any warnings) without
-writing anything:
-
-    npm run migrate-catalog -- --dry-run
-
-It is idempotent — running it again after the first pass finds nothing left
-to change. Every file is written atomically (temp file + rename), and a
-problem with one file (unreadable JSON, a write failure, an unmapped legacy
-value) is reported per file rather than aborting the run or leaving a
-half-written file behind. It never calls the API and never touches `.cache/`:
-a cached `categorize-<i>.json` still has the old `category` field, so it will
-fail the new schema and be treated as a cache miss on the next `ingest` —
-just that one stage re-runs for the affected segment, nothing is lost.
-
-**The bench labels need a follow-up by hand.** The old `category` value only
-ever named a cooking method for `bake`/`stew`/`grill`; every other old
-category (soup, salad, dessert, bread, sauce, side, breakfast-dish, pasta,
-dumplings) maps to `method: null`. In `eval/bench/categorizer.json` that
-comes out to 12 of its 23 rows with no method — the migration table prints
-the exact count under "bench truth: N/M row(s) have method: null" so you can
-see it after running. Re-watch those segments and fill in a real method by
-hand before the categorizer bench's method rate is worth reading; until then
-it's measuring "did the model also guess null", not "did it get the method
-right".
-
-## Website and database
-
-The "What to cook?" site in `web/` reads recipes from MongoDB (a free Atlas M0
-cluster is plenty). Put the connection string in `.env`:
+The catalog lives in MongoDB (a free Atlas M0 cluster is plenty), and `ingest`,
+`eval` and `worker` need its connection string in `.env`:
 
     MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/kambuz
 
-Then, once, copy the JSON catalog in:
+Collections: `recipes` (live ones, plus each replaced version with
+`archived: true`), `videos` (every video the pipeline has seen and what came of
+it), `jobs` (add-video requests from the site) and `vocab` (copied from
+`vocab/*.json` whenever the worker starts).
 
-    npm run kambuz -- db-import     # recipes, archived versions, vocab; safe to re-run
+The catalog used to be JSON files in `catalog/`; that folder is in git history.
+To load such a folder back into the database:
 
-From then on, `ingest` writes every catalog change to both `catalog/` and MongoDB
-and records each video in a `videos` collection. To add videos from the site, keep
-the worker running next to it:
+    npm run kambuz -- db-import     # catalog/recipes, catalog/archive and vocab; safe to re-run
+
+The "What to cook?" site in `web/` reads the same database. To add videos from
+the site, keep the worker running next to it:
 
     npm run kambuz -- worker        # runs queued add-video jobs one at a time
     cd web && npm run dev           # http://localhost:3000
@@ -225,7 +203,7 @@ next start.
   Haiku 5.5). Any other value is ignored.
 - `KAMBUZ_CONCURRENCY=<n>` — simultaneous LLM calls across the whole run
   (default 4).
-- `MONGODB_URI` — enables the database (see above); the site reads it too.
+- `MONGODB_URI` — the database (see above); required, and the site reads it too.
 
 ## Test
 
@@ -233,9 +211,9 @@ next start.
     npm run typecheck
 
 The tests never call the API. Agents are tested with a fake LLM client,
-the fetcher with fixture caption files, the cache and catalog on a
-temporary directory, and the database layer on an in-memory MongoDB
-(downloaded on the first run).
+the fetcher with fixture caption files, the cache and pipeline on a
+temporary directory (with a JSON-file catalog), and the database layer on an
+in-memory MongoDB (downloaded on the first run).
 
 ## Layout
 
@@ -247,10 +225,8 @@ temporary directory, and the database layer on an in-memory MongoDB
       orchestrator/  stage cache, catalog, pipeline
       schemas/       Zod schemas for every stage
       vocab/         loader and validator for vocab/*.json
-      migrate/       one-time category → course/method migration logic
       db/            MongoDB catalog, import, and the add-video job worker
     vocab/           cuisines, courses, methods, ingredients (human-edited)
-    scripts/         migrate-catalog.ts (npm run migrate-catalog)
     web/             the Next.js site (see web/README.md)
     docs/specs/      design document
     docs/plans/      implementation plan

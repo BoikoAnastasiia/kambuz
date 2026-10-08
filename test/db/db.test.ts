@@ -8,7 +8,6 @@ import { connectDb, dbNameFrom, type Collections, type JobDoc } from "../../src/
 import { MongoCatalog } from "../../src/db/mongoCatalog.js";
 import { importCatalog, recordVideos, syncVocab } from "../../src/db/sync.js";
 import { claimNextJob, describeEvent, friendlyError, requeueAbandoned, runJob } from "../../src/db/worker.js";
-import { MirroredCatalog, type CatalogStore } from "../../src/orchestrator/catalog.js";
 import type { Recipe } from "../../src/schemas/recipe.js";
 import type { RunReport } from "../../src/orchestrator/report.js";
 
@@ -75,25 +74,6 @@ describe("MongoCatalog", () => {
     expect(archived).toHaveLength(1);
     expect(archived[0]._id).toMatch(/^beef-pie--v1--/);
     expect(archived[0].completeness).toBe(0.5);
-  });
-});
-
-describe("MirroredCatalog", () => {
-  it("reads from the primary and copies every change to the mirror", async () => {
-    const calls: string[] = [];
-    const primary: CatalogStore = {
-      load: async () => [recipe("from-primary--v")],
-      write: async (r) => void calls.push(`write ${r.id}`),
-      rename: async (r, n) => void calls.push(`rename ${r.id} ${n}`),
-      archive: async (r) => void calls.push(`archive ${r.id}`),
-    };
-    const mirror = new MongoCatalog(c);
-    const cat = new MirroredCatalog(primary, mirror);
-    await cat.write(recipe("a--v"));
-    await cat.archive(recipe("a--v"));
-    expect(calls).toEqual(["write a--v", "archive a--v"]);
-    expect((await cat.load()).map((r) => r.id)).toEqual(["from-primary--v"]);
-    expect(await c.recipes.countDocuments({ archived: true })).toBe(1);
   });
 });
 

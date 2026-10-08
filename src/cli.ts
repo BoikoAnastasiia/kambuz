@@ -10,7 +10,6 @@ import { createLlmClient } from "./llm/client.js";
 import { UsageLedger, formatCost } from "./llm/usage.js";
 import { loadVocab } from "./vocab/load.js";
 import { StageCache } from "./orchestrator/cache.js";
-import { Catalog, MirroredCatalog, type CatalogStore } from "./orchestrator/catalog.js";
 import { connectDb } from "./db/mongo.js";
 import { MongoCatalog } from "./db/mongoCatalog.js";
 import { importCatalog, recordVideos, syncVocab } from "./db/sync.js";
@@ -29,7 +28,7 @@ export const USAGE =
   "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
   "       kambuz bench <categorizer|verifier> --models <model[:effort],...> [--repeat N] [--yes] [--open]\n" +
   "       kambuz bench rescore <bench-report.json> [--open]\n" +
-  "       kambuz db-import   copy the JSON catalog and vocab into MongoDB (needs MONGODB_URI)\n" +
+  "       kambuz db-import   copy a JSON catalog folder (catalog/recipes, catalog/archive) and vocab into MongoDB\n" +
   "       kambuz worker      run the site's queued add-video jobs until stopped (needs MONGODB_URI)\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
@@ -241,17 +240,15 @@ async function main(): Promise<void> {
     return;
   }
 
+  // The catalog lives in MongoDB, the same database the site reads.
   const mongoUri = process.env.MONGODB_URI?.trim();
-  if (parsed.command === "worker" && !mongoUri) {
+  if (!mongoUri) {
     console.error(MISSING_MONGODB_URI);
     process.exit(1);
     return;
   }
-  // With a database configured, every recipe the pipeline writes to the JSON catalog is
-  // copied to MongoDB too, which is what the site reads.
-  const mongo = mongoUri && (parsed.command === "ingest" || parsed.command === "worker") ? await connectDb(mongoUri) : null;
-  const jsonCatalog = new Catalog(config.paths.catalog);
-  const catalog: CatalogStore = mongo ? new MirroredCatalog(jsonCatalog, new MongoCatalog(mongo.c)) : jsonCatalog;
+  const mongo = await connectDb(mongoUri);
+  const catalog = new MongoCatalog(mongo.c);
 
   const ledger = new UsageLedger();
   const deps = {
@@ -274,10 +271,7 @@ async function main(): Promise<void> {
       // video:done event from ingest() itself, so the tree is fully drawn (and
       // torn down) before the report prints below.
       const [report] = await Promise.all([ingest(parsed.url, ingestDeps, opts), renderer?.finish() ?? Promise.resolve()]);
-      if (mongo) {
-        await recordVideos(mongo.c, report);
-        await mongo.client.close();
-      }
+      await recordVideos(mongo.c, report);
       await mkdir(config.paths.reports, { recursive: true });
       const stamp = report.startedAt.replace(/[:.]/g, "-");
       const mdFile = path.join(config.paths.reports, `${stamp}.md`);
@@ -303,10 +297,11 @@ async function main(): Promise<void> {
       console.log(`cost ${formatCost(runCost)} · ${runCalls} calls · spent so far ${formatCost(spendSoFar.totalUsd)}${spendSuffix(spendSoFar)}`);
 
       if (parsed.open) await openInBrowser(htmlFile);
+      await mongo.client.close();
       return;
     }
     case "worker": {
-      const { c, client } = mongo!;
+      const { c, client } = mongo;
       await syncVocab(c, config.paths.vocab);
       const requeued = await requeueAbandoned(c);
       if (requeued) console.log(`worker: put ${requeued} interrupted job(s) back in the queue`);
@@ -340,6 +335,7 @@ async function main(): Promise<void> {
     }
     case "eval": {
       const rows = await runEval(deps, path.join(config.paths.eval, "cases"), { force: parsed.force, ingest: parsed.ingest, onlyStage: parsed.onlyStage });
+      await mongo.client.close();
       console.log(renderEval(rows));
       process.exit(rows.some((r) => !r.pass) ? 1 : 0);
       return;

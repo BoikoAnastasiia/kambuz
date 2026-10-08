@@ -11,26 +11,7 @@ export interface CatalogStore {
   archive(recipe: Recipe): Promise<void>;
 }
 
-/** Keeps every recipe in the primary store and copies each change to the mirror; reads come from the primary. */
-export class MirroredCatalog implements CatalogStore {
-  constructor(private primary: CatalogStore, private mirror: CatalogStore) {}
-  load(): Promise<Recipe[]> {
-    return this.primary.load();
-  }
-  async write(recipe: Recipe): Promise<void> {
-    await this.primary.write(recipe);
-    await this.mirror.write(recipe);
-  }
-  async rename(recipe: Recipe, nameRu: string): Promise<void> {
-    await this.primary.rename(recipe, nameRu);
-    await this.mirror.rename(recipe, nameRu);
-  }
-  async archive(recipe: Recipe): Promise<void> {
-    await this.primary.archive(recipe);
-    await this.mirror.archive(recipe);
-  }
-}
-
+/** The catalog as JSON files on disk: catalog/recipes, catalog/archive and an index. Used by tests. */
 export class Catalog implements CatalogStore {
   constructor(private root: string) {}
 
