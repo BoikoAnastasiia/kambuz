@@ -110,6 +110,20 @@ button {
   background: #ffcd55;
 }
 
+.topbar-login {
+  color: var(--cream);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 2px solid rgba(255, 244, 222, 0.55);
+  border-radius: 999px;
+}
+
+.topbar-login:hover {
+  border-color: var(--cream);
+}
+
 .sheet {
   background: var(--cream);
   border-radius: var(--radius-lg);
