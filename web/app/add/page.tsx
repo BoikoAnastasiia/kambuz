@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { AddVideo } from "@/components/AddVideo";
 import { currentRole, signIn, signOut } from "@/auth";
+import { adminEmails } from "@/lib/roles";
 import styles from "./add.module.css";
 
 async function Gate() {
@@ -29,6 +30,8 @@ async function Gate() {
   return (
     <>
       <p className={styles.note}>Добавлять видео может только администратор сайта, а у этого аккаунта таких прав нет.</p>
+      {/* Says only whether the list is empty, never what is in it: tells "not configured" from "not you". */}
+      {adminEmails().size === 0 && <p className={styles.account}>На сервере не задан список администраторов (ADMIN_EMAILS).</p>}
       <SignedInAs email={email} />
     </>
   );
