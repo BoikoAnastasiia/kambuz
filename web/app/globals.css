@@ -120,6 +120,10 @@ button {
   border-radius: 999px;
 }
 
+.topbar-placeholder {
+  visibility: hidden;
+}
+
 .topbar-login:hover {
   border-color: var(--cream);
 }

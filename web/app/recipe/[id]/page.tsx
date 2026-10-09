@@ -7,6 +7,7 @@ import { capitalize, clock, duration, mealLabel, methodLabel, unitLabel } from "
 import { watchUrl } from "@/lib/youtube";
 import type { Ingredient } from "@/lib/types";
 import { VideoEmbed } from "@/components/VideoEmbed";
+import { RecipeSkeleton } from "@/components/Skeletons";
 import styles from "./recipe.module.css";
 
 // The extractor's notes mix what the chef said («немного говядины») with remarks about its
@@ -105,7 +106,7 @@ async function RecipeView({ params }: { params: Promise<{ id: string }> }) {
 
 export default function RecipePage({ params }: PageProps<"/recipe/[id]">) {
   return (
-    <Suspense fallback={<p className="empty">Открываем рецепт…</p>}>
+    <Suspense fallback={<RecipeSkeleton />}>
       <RecipeView params={params} />
     </Suspense>
   );

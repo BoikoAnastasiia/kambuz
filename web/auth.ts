@@ -1,4 +1,5 @@
 import NextAuth, { type DefaultSession } from "next-auth";
+import { connection } from "next/server";
 import Google from "next-auth/providers/google";
 import { roleFor, type Role } from "@/lib/roles";
 
@@ -30,6 +31,9 @@ export const { GET, POST } = handlers;
 
 /** The signed-in user's role; "user" for a visitor who isn't signed in. */
 export async function currentRole(): Promise<{ role: Role; email: string | null }> {
+  // A session belongs to a request: without this, prerendering the header reaches Auth.js's
+  // crypto.getRandomValues() and Next.js reports a blocking-prerender error.
+  await connection();
   const session = await auth();
   return { role: session?.user.role ?? "user", email: session?.user.email ?? null };
 }

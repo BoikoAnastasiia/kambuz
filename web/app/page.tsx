@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { MissingDatabaseError } from "@/lib/db";
 import { pickerOptions, suggest } from "@/lib/suggest";
 import { WhatToCook } from "@/components/WhatToCook";
+import { PickerSkeleton } from "@/components/Skeletons";
 import styles from "./home.module.css";
 
 async function Picker() {
@@ -23,7 +24,7 @@ export default function Home() {
         What to cook?
       </h1>
       <p className={styles.lede}>Не думай — мы уже придумали)</p>
-      <Suspense fallback={<p className="empty">Заглядываем на камбуз…</p>}>
+      <Suspense fallback={<PickerSkeleton />}>
         <Picker />
       </Suspense>
     </>

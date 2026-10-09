@@ -25,7 +25,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="brand">
               <span className="brand-mark" aria-hidden>⚓</span> kambuz
             </Link>
-            <Suspense fallback={null}>
+            {/* Holds the button's place while the session is read, so the header doesn't shift. */}
+            <Suspense fallback={<span className="topbar-login topbar-placeholder" aria-hidden>Войти</span>}>
               <AdminLink />
             </Suspense>
           </header>
