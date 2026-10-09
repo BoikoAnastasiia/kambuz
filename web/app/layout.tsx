@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Bitter, Manrope } from "next/font/google";
+import { Suspense } from "react";
+import { AdminLink } from "@/components/AdminLink";
 import "./globals.css";
 
 // Both carry Cyrillic: recipe names and ingredients are in Russian.
@@ -23,7 +25,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="brand">
               <span className="brand-mark" aria-hidden>⚓</span> kambuz
             </Link>
-            <Link href="/add" className="topbar-link">+ Добавить видео</Link>
+            <Suspense fallback={null}>
+              <AdminLink />
+            </Suspense>
           </header>
           <main className="sheet">{children}</main>
         </div>

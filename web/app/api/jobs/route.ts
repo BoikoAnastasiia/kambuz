@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { currentRole } from "@/auth";
 import { collections } from "@/lib/db";
 import { videoIdFrom, watchUrl } from "@/lib/youtube";
 
@@ -8,6 +9,10 @@ import { videoIdFrom, watchUrl } from "@/lib/youtube";
  * that is still in the queue joins the existing job.
  */
 export async function POST(request: Request) {
+  // Every video costs API money, so only an admin can queue one.
+  if ((await currentRole()).role !== "admin") {
+    return Response.json({ error: "Добавлять видео может только администратор." }, { status: 403 });
+  }
   const body = (await request.json().catch(() => null)) as { url?: unknown } | null;
   const videoId = typeof body?.url === "string" ? videoIdFrom(body.url) : null;
   if (!videoId) {

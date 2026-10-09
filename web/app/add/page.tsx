@@ -1,5 +1,52 @@
+import { Suspense } from "react";
 import { AddVideo } from "@/components/AddVideo";
+import { currentRole, signIn, signOut } from "@/auth";
 import styles from "./add.module.css";
+
+async function Gate() {
+  const { role, email } = await currentRole();
+  if (role === "admin") {
+    return (
+      <>
+        <AddVideo />
+        <SignedInAs email={email} />
+      </>
+    );
+  }
+  if (!email) {
+    return (
+      <form
+        action={async () => {
+          "use server";
+          await signIn("google", { redirectTo: "/add" });
+        }}
+      >
+        <p className={styles.note}>Добавлять видео может только администратор сайта.</p>
+        <button className="btn">Войти через Google</button>
+      </form>
+    );
+  }
+  return (
+    <>
+      <p className={styles.note}>Добавлять видео может только администратор сайта, а у этого аккаунта таких прав нет.</p>
+      <SignedInAs email={email} />
+    </>
+  );
+}
+
+function SignedInAs({ email }: { email: string | null }) {
+  return (
+    <form
+      className={styles.account}
+      action={async () => {
+        "use server";
+        await signOut({ redirectTo: "/" });
+      }}
+    >
+      Вы вошли как {email} · <button className={styles.linkButton}>Выйти</button>
+    </form>
+  );
+}
 
 export default function AddPage() {
   return (
@@ -8,7 +55,9 @@ export default function AddPage() {
       <p className={styles.lede}>
         Вставьте ссылку на кулинарное видео с YouTube. Каждое блюдо из него станет рецептом — это займёт пару минут и около 3 центов.
       </p>
-      <AddVideo />
+      <Suspense fallback={<p className="empty">Проверяем доступ…</p>}>
+        <Gate />
+      </Suspense>
     </div>
   );
 }

@@ -17,3 +17,24 @@
   color: var(--ink-soft);
   font-weight: 600;
 }
+
+.note {
+  margin: 0 0 14px;
+  font-weight: 600;
+}
+
+.account {
+  margin-top: 18px;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.linkButton {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--red);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
