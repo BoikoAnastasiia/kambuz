@@ -38,11 +38,23 @@ export interface VocabDoc {
   items: { id: string; nameRu: string; nameEn: string }[];
 }
 
+/** A running worker's heartbeat, so the site can tell whether anything will pick up a job. */
+export interface WorkerDoc {
+  _id: string; // the machine's hostname
+  startedAt: string;
+  lastSeen: string;
+  /** URL of the job being processed, or null when idle. */
+  currentJob: string | null;
+  /** Set when the worker shuts down cleanly, so the site needn't wait for the heartbeat to age. */
+  stoppedAt: string | null;
+}
+
 export interface Collections {
   recipes: Collection<RecipeDoc>;
   videos: Collection<VideoDoc>;
   jobs: Collection<JobDoc>;
   vocab: Collection<VocabDoc>;
+  workers: Collection<WorkerDoc>;
 }
 
 export function collections(db: Db): Collections {
@@ -51,6 +63,7 @@ export function collections(db: Db): Collections {
     videos: db.collection<VideoDoc>("videos"),
     jobs: db.collection<JobDoc>("jobs"),
     vocab: db.collection<VocabDoc>("vocab"),
+    workers: db.collection<WorkerDoc>("workers"),
   };
 }
 

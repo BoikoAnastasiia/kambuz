@@ -68,6 +68,33 @@ export interface VideoDoc {
   processedAt: string;
 }
 
+export interface WorkerDoc {
+  _id: string;
+  startedAt: string;
+  lastSeen: string;
+  currentJob: string | null;
+  stoppedAt: string | null;
+}
+
+/** What GET /api/admin/status returns to the admin panel. */
+export interface AdminStatus {
+  worker: { online: boolean; host: string | null; lastSeen: string | null; currentJob: string | null };
+  queued: number;
+  jobs: {
+    id: string;
+    url: string;
+    videoId: string | null;
+    status: JobStatus;
+    createdAt: string;
+    finishedAt: string | null;
+    lastProgress: string | null;
+    error: string | null;
+    costUsd: number | null;
+    recipes: { id: string; nameRu: string }[];
+  }[];
+  totals: { recipes: number; videos: number; spentUsd: number };
+}
+
 /** What the suggestion card and the "also fits" list need from a recipe. */
 export interface RecipeCard {
   id: string;

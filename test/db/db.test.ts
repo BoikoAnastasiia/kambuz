@@ -7,7 +7,7 @@ import { ObjectId, type MongoClient } from "mongodb";
 import { connectDb, dbNameFrom, type Collections, type JobDoc } from "../../src/db/mongo.js";
 import { MongoCatalog } from "../../src/db/mongoCatalog.js";
 import { importCatalog, recordVideos, syncVocab } from "../../src/db/sync.js";
-import { claimNextJob, describeEvent, friendlyError, requeueAbandoned, runJob } from "../../src/db/worker.js";
+import { claimNextJob, describeEvent, friendlyError, requeueAbandoned, runJob, workLoop } from "../../src/db/worker.js";
 import type { Recipe } from "../../src/schemas/recipe.js";
 import type { RunReport } from "../../src/orchestrator/report.js";
 
@@ -44,7 +44,7 @@ afterAll(async () => {
   await server?.stop();
 });
 beforeEach(async () => {
-  await Promise.all([c.recipes.deleteMany({}), c.videos.deleteMany({}), c.jobs.deleteMany({}), c.vocab.deleteMany({})]);
+  await Promise.all([c.recipes.deleteMany({}), c.videos.deleteMany({}), c.jobs.deleteMany({}), c.vocab.deleteMany({}), c.workers.deleteMany({})]);
 });
 
 describe("dbNameFrom", () => {
@@ -148,6 +148,28 @@ describe("worker", () => {
     const blocked = (await claimNextJob(c, () => "t"))!;
     await runJob(blocked, { c, runIngest: async () => report({ videos: [{ videoId: "v2", title: "v2", status: "error", recipes: 0, error: "Sign in to confirm you're not a bot" }] }) });
     expect(await c.jobs.findOne({ _id: blocked._id })).toMatchObject({ status: "error", error: expect.stringContaining("YouTube временно блокирует") });
+  });
+
+  it("reports a heartbeat with the job in hand, and marks itself stopped when it exits", async () => {
+    await queue("https://youtu.be/v9", "2026-10-08T10:00:00Z");
+    const stop = new AbortController();
+    const seenDuringJob: (string | null)[] = [];
+    await workLoop(
+      {
+        c,
+        runIngest: async () => {
+          seenDuringJob.push((await c.workers.findOne({ _id: "laptop" }))?.currentJob ?? null);
+          stop.abort();
+          return report();
+        },
+      },
+      { pollMs: 10, signal: stop.signal, workerId: "laptop", heartbeatMs: 60_000 },
+    );
+    expect(seenDuringJob).toEqual(["https://youtu.be/v9"]);
+    const w = await c.workers.findOne({ _id: "laptop" });
+    expect(w).toMatchObject({ currentJob: null });
+    expect(w?.stoppedAt).toBeTruthy();
+    expect(w?.lastSeen).toBeTruthy();
   });
 
   it("puts jobs left running by a stopped worker back in the queue", async () => {

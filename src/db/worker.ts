@@ -105,19 +105,51 @@ export async function requeueAbandoned(c: Collections): Promise<number> {
   return res.modifiedCount;
 }
 
-/** Runs queued jobs one at a time until the signal aborts. */
-export async function workLoop(deps: WorkerDeps, opts: { pollMs: number; signal: AbortSignal; onJob?: (job: JobDoc) => void }): Promise<void> {
+/** How often a running worker reports in; the site treats twice this without a report as offline. */
+export const HEARTBEAT_MS = 10_000;
+
+/** Records that this worker is alive and what it is doing. */
+export async function heartbeat(c: Collections, workerId: string, state: { startedAt: string; currentJob: string | null }, now: () => string): Promise<void> {
+  await c.workers.updateOne(
+    { _id: workerId },
+    { $set: { lastSeen: now(), currentJob: state.currentJob, startedAt: state.startedAt, stoppedAt: null } },
+    { upsert: true },
+  );
+}
+
+/**
+ * Runs queued jobs one at a time until the signal aborts, reporting a heartbeat (and the job
+ * in hand) every HEARTBEAT_MS so the add page can show whether anything is picking jobs up.
+ */
+export async function workLoop(
+  deps: WorkerDeps,
+  opts: { pollMs: number; signal: AbortSignal; workerId?: string; heartbeatMs?: number; onJob?: (job: JobDoc) => void },
+): Promise<void> {
   const now = deps.now ?? (() => new Date().toISOString());
-  while (!opts.signal.aborted) {
-    const job = await claimNextJob(deps.c, now);
-    if (job) {
-      opts.onJob?.(job);
-      await runJob(job, deps);
-      continue;
+  const workerId = opts.workerId ?? "worker";
+  const state = { startedAt: now(), currentJob: null as string | null };
+  const beat = () => heartbeat(deps.c, workerId, state, now).catch(() => undefined);
+  await beat();
+  const timer = setInterval(beat, opts.heartbeatMs ?? HEARTBEAT_MS);
+  try {
+    while (!opts.signal.aborted) {
+      const job = await claimNextJob(deps.c, now);
+      if (job) {
+        opts.onJob?.(job);
+        state.currentJob = job.url;
+        await beat();
+        await runJob(job, deps);
+        state.currentJob = null;
+        await beat();
+        continue;
+      }
+      await new Promise<void>((resolve) => {
+        const t = setTimeout(resolve, opts.pollMs);
+        opts.signal.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true });
+      });
     }
-    await new Promise<void>((resolve) => {
-      const t = setTimeout(resolve, opts.pollMs);
-      opts.signal.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true });
-    });
+  } finally {
+    clearInterval(timer);
+    await deps.c.workers.updateOne({ _id: workerId }, { $set: { stoppedAt: now(), currentJob: null } }).catch(() => undefined);
   }
 }

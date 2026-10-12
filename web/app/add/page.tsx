@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AddVideo } from "@/components/AddVideo";
+import { AdminStatus } from "@/components/AdminStatus";
 import { currentRole, signIn, signOut } from "@/auth";
 import { adminEmails } from "@/lib/roles";
 import styles from "./add.module.css";
@@ -10,6 +11,7 @@ async function Gate() {
     return (
       <>
         <AddVideo />
+        <AdminStatus />
         <SignedInAs email={email} />
       </>
     );

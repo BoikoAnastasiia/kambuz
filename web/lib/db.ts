@@ -1,6 +1,6 @@
 import "server-only";
 import { MongoClient, type Db } from "mongodb";
-import type { JobDoc, RecipeDoc, VideoDoc, VocabDoc } from "./types";
+import type { JobDoc, RecipeDoc, VideoDoc, VocabDoc, WorkerDoc } from "./types";
 
 // One client per server process. In development, hot reloads re-evaluate this module,
 // so the promise lives on globalThis to avoid opening a new connection pool each time.
@@ -32,5 +32,6 @@ export async function collections() {
     vocab: d.collection<VocabDoc>("vocab"),
     jobs: d.collection<JobDoc>("jobs"),
     videos: d.collection<VideoDoc>("videos"),
+    workers: d.collection<WorkerDoc>("workers"),
   };
 }

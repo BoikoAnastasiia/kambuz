@@ -5,6 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { hostname } from "node:os";
 import { config } from "./config.js";
 import { createLlmClient } from "./llm/client.js";
 import { UsageLedger, formatCost } from "./llm/usage.js";
@@ -328,7 +329,7 @@ async function main(): Promise<void> {
             return report;
           },
         },
-        { pollMs: 3000, signal: stop.signal, onJob: (job) => console.log(`worker: starting ${job.url}`) },
+        { pollMs: 3000, signal: stop.signal, workerId: hostname(), onJob: (job) => console.log(`worker: starting ${job.url}`) },
       );
       await client.close();
       return;
