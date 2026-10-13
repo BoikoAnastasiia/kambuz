@@ -93,6 +93,7 @@ export function WhatToCook({ options, initial }: { options: PickerOptions; initi
           {advanced && (
             <IngredientPicker
               all={options.ingredients}
+              popular={options.popular}
               selected={include}
               byId={ingredientById}
               onAdd={(id) => setInclude((xs) => (xs.includes(id) ? xs : [...xs, id]))}
@@ -202,9 +203,10 @@ function fallBack(img: HTMLImageElement, videoId: string) {
 }
 
 function IngredientPicker({
-  all, selected, byId, onAdd, onRemove,
+  all, popular, selected, byId, onAdd, onRemove,
 }: {
   all: VocabItem[];
+  popular: string[];
   selected: string[];
   byId: Map<string, VocabItem>;
   onAdd: (id: string) => void;
@@ -212,9 +214,9 @@ function IngredientPicker({
 }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
-  const matches = all
-    .filter((i) => !selected.includes(i.id))
-    .filter((i) => !q || i.nameRu.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q))
+  // Before typing, the most common ingredients; once typing, every match from the full list.
+  const matches = (q ? all.filter((i) => i.nameRu.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q)) : popular.map((id) => byId.get(id)!))
+    .filter((i) => i && !selected.includes(i.id))
     .slice(0, q ? 12 : 18);
 
   return (
@@ -233,7 +235,7 @@ function IngredientPicker({
       <input
         className={styles.search}
         type="search"
-        placeholder="Найти ингредиент — картофель, курица…"
+        placeholder="Найти ингредиент — свинина, рис, сыр…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {

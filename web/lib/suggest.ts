@@ -80,25 +80,39 @@ export interface PickerOptions {
   cuisines: VocabItem[];
   /** Ingredients used by at least one recipe, alphabetical by Russian name. */
   ingredients: VocabItem[];
+  /** Ids of the ingredients in the most recipes, staples like salt left out: what the picker offers before you type. */
+  popular: string[];
 }
+
+/** In nearly every recipe, so offering them as a filter only crowds out the useful ones. */
+const STAPLES = new Set(["salt", "black-pepper", "water", "sugar", "flour", "sunflower-oil", "olive-oil", "butter", "onion", "garlic"]);
+const POPULAR_COUNT = 18;
 
 export async function pickerOptions(): Promise<PickerOptions> {
   const { recipes, vocab } = await collections();
-  const [cuisineCounts, ingredientIds, cuisineVocab, ingredientVocab] = await Promise.all([
+  const [cuisineCounts, ingredientCounts, cuisineVocab, ingredientVocab] = await Promise.all([
     recipes.aggregate<{ _id: string; n: number }>([{ $match: { archived: false } }, { $group: { _id: "$cuisine", n: { $sum: 1 } } }, { $sort: { n: -1 } }]).toArray(),
-    recipes.distinct("ingredients.ingredient", { archived: false }),
+    recipes
+      .aggregate<{ _id: string | null; n: number }>([
+        { $match: { archived: false } },
+        { $unwind: "$ingredients" },
+        // Count each ingredient once per recipe, however many lines it appears on.
+        { $group: { _id: { recipe: "$_id", ingredient: "$ingredients.ingredient" } } },
+        { $group: { _id: "$_id.ingredient", n: { $sum: 1 } } },
+        { $sort: { n: -1, _id: 1 } },
+      ])
+      .toArray(),
     vocab.findOne({ _id: "cuisines" }),
     vocab.findOne({ _id: "ingredients" }),
   ]);
   const cuisineById = new Map((cuisineVocab?.items ?? []).map((c) => [c.id, c]));
   const ingredientById = new Map((ingredientVocab?.items ?? []).map((i) => [i.id, i]));
+  const used = ingredientCounts.map((c) => c._id).filter((id): id is string => !!id && ingredientById.has(id));
   return {
     cuisines: cuisineCounts
       .filter((c) => c._id !== "other" && cuisineById.has(c._id))
       .map((c) => cuisineById.get(c._id)!),
-    ingredients: (ingredientIds as (string | null)[])
-      .filter((id): id is string => !!id && ingredientById.has(id))
-      .map((id) => ingredientById.get(id)!)
-      .sort((a, b) => a.nameRu.localeCompare(b.nameRu, "ru")),
+    ingredients: used.map((id) => ingredientById.get(id)!).sort((a, b) => a.nameRu.localeCompare(b.nameRu, "ru")),
+    popular: used.filter((id) => !STAPLES.has(id)).slice(0, POPULAR_COUNT),
   };
 }
