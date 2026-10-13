@@ -198,6 +198,13 @@
   font-size: 0.9rem;
 }
 
+.count {
+  margin-left: 2px;
+  color: var(--ink-soft);
+  font-weight: 500;
+  font-size: 0.8em;
+}
+
 .suggestion:hover {
   background: var(--mustard-soft);
   border-color: var(--mustard);
