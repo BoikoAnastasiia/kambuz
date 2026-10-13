@@ -11,7 +11,7 @@ type State =
   | { kind: "sending" }
   | { kind: "invalid"; message: string }
   | { kind: "exists"; title: string; recipes: RecipeLink[] }
-  | { kind: "job"; jobId: string; status: "queued" | "running" | "done" | "error"; progress: string[]; recipes: RecipeLink[]; error: string | null; since: number };
+  | { kind: "job"; jobId: string; url: string; status: "queued" | "running" | "done" | "error"; progress: string[]; recipes: RecipeLink[]; error: string | null; since: number };
 
 export function AddVideo() {
   const [url, setUrl] = useState("");
@@ -23,8 +23,10 @@ export function AddVideo() {
     const res = await fetch("/api/jobs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url }) });
     const body = await res.json().catch(() => ({ error: "Сервер не ответил." }));
     if (!res.ok) return setState({ kind: "invalid", message: body.error ?? "Что-то пошло не так" });
+    // The link is accepted: empty the field so it reads as done, and the next one can go in.
+    setUrl("");
     if (body.status === "exists") return setState({ kind: "exists", title: body.title, recipes: body.recipes });
-    setState({ kind: "job", jobId: body.jobId, status: "queued", progress: [], recipes: [], error: null, since: Date.now() });
+    setState({ kind: "job", jobId: body.jobId, url, status: "queued", progress: [], recipes: [], error: null, since: Date.now() });
   }
 
   const jobId = state.kind === "job" ? state.jobId : null;
@@ -42,7 +44,8 @@ export function AddVideo() {
     return () => clearInterval(t);
   }, [jobId, finished]);
 
-  const busy = state.kind === "sending" || (state.kind === "job" && !finished);
+  // Only the request itself blocks the form; the worker takes queued videos one after another.
+  const busy = state.kind === "sending";
 
   return (
     <div className={styles.wrap}>
@@ -58,7 +61,7 @@ export function AddVideo() {
           aria-label="Ссылка на YouTube"
         />
         <button className="btn" disabled={busy || !url.trim()}>
-          {busy ? "Готовим…" : "Разобрать"}
+          {busy ? "Отправляем…" : "Разобрать"}
         </button>
       </form>
 
@@ -80,6 +83,7 @@ export function AddVideo() {
             {state.status === "done" && (state.recipes.length ? "Готово!" : "Готово — но рецептов нет")}
             {state.status === "error" && "Не получилось"}
           </p>
+          <p className={styles.muted}>{state.url.replace(/^https?:\/\/(www\.)?/, "")}</p>
           {state.status === "queued" && Date.now() - state.since > 8000 && (
             <p className={styles.muted}>
               Видео пока никто не взял в работу. Запущен ли воркер? Запустите <code>npm run kambuz -- worker</code> в корне проекта.
@@ -94,17 +98,6 @@ export function AddVideo() {
           </ol>
           {state.error && <p className={styles.error}>{state.error}</p>}
           {state.status === "done" && <RecipeList recipes={state.recipes} />}
-          {finished && (
-            <button
-              className="btn btn-ghost"
-              onClick={() => {
-                setUrl("");
-                setState({ kind: "idle" });
-              }}
-            >
-              Добавить ещё
-            </button>
-          )}
         </div>
       )}
     </div>
