@@ -23,7 +23,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="frame">
           <header className="topbar">
             <Link href="/" className="brand">
-              <span className="brand-mark" aria-hidden>⚓</span> kambuz
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="brand-mark" src="/brand-mark.svg" alt="" width={36} height={36} /> kambuz
             </Link>
             {/* Holds the button's place while the session is read, so the header doesn't shift. */}
             <Suspense fallback={<span className="topbar-login topbar-placeholder" aria-hidden>Войти</span>}>

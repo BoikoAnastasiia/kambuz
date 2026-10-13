@@ -88,11 +88,14 @@ button {
   color: var(--cream);
   text-decoration: none;
   letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brand-mark {
-  display: inline-block;
-  transform: translateY(-1px);
+  width: 1.8em;
+  height: 1.8em;
 }
 
 .topbar-link {
