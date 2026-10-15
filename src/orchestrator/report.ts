@@ -25,6 +25,8 @@ export interface RunReport {
   flags: { recipeId: string; kind: string; ref: string; reason: string }[];
   validationErrors: { recipeId: string; errors: string[] }[];
   tooThin: { recipeId: string; completeness: number; ingredients: number; steps: number }[];
+  /** Recipes kept in Russian only because their English translation didn't pass. */
+  untranslated: { recipeId: string; problems: string[] }[];
   minCompleteness: number;
   usage: string;
   usageRows: UsageRow[];
@@ -33,7 +35,7 @@ export interface RunReport {
 export function emptyReport(url: string, minCompleteness = 0.3): RunReport {
   return {
     startedAt: new Date().toISOString(), finishedAt: "", url, videos: [], segmentErrors: [], written: [], archived: [], keptExisting: [], superseded: [],
-    unmapped: {}, flags: [], validationErrors: [], tooThin: [], minCompleteness, usage: "", usageRows: [],
+    unmapped: {}, flags: [], validationErrors: [], tooThin: [], untranslated: [], minCompleteness, usage: "", usageRows: [],
   };
 }
 
@@ -79,6 +81,10 @@ export function renderReport(r: RunReport): string {
     `## Too thin to keep (score below ${r.minCompleteness})`,
     "",
     ...r.tooThin.map((t) => `- ${t.recipeId}: ${t.completeness.toFixed(2)} (${t.ingredients} ingredient${t.ingredients === 1 ? "" : "s"}, ${t.steps} step${t.steps === 1 ? "" : "s"})`),
+    "",
+    "## Not translated (kept in Russian only; rerun with --only-stage translate)",
+    "",
+    ...r.untranslated.flatMap((u) => [`- ${u.recipeId}`, ...u.problems.map((p) => `  - ${p}`)]),
     "",
     "## Token usage",
     "",

@@ -10,6 +10,8 @@ import { importCatalog, recordVideos, syncVocab } from "../../src/db/sync.js";
 import { claimNextJob, describeEvent, friendlyError, requeueAbandoned, runJob, workLoop } from "../../src/db/worker.js";
 import type { Recipe } from "../../src/schemas/recipe.js";
 import type { RunReport } from "../../src/orchestrator/report.js";
+import { translateCatalog } from "../../src/db/translate.js";
+import { buildConfig } from "../../src/config.js";
 
 function recipe(id: string, over: Partial<Recipe> = {}): Recipe {
   return {
@@ -198,5 +200,46 @@ describe("recordVideos", () => {
     await recordVideos(c, report({ videos: [{ videoId: "v", title: "t", status: "error", recipes: 0, error: "boom" }] }));
     await recordVideos(c, report({ videos: [{ videoId: "v", title: "t", status: "done", recipes: 3 }] }));
     expect(await c.videos.findOne({ _id: "v" })).toMatchObject({ status: "done", recipes: 3, error: null });
+  });
+});
+
+describe("translateCatalog", () => {
+  const en = { steps: ["Bake."], ingredients: [{ name: "beef", note: null }] };
+  function llm(proofIssues: unknown[] = []) {
+    return {
+      callStructured: async ({ agent }: { agent: string }): Promise<any> => (agent === "translator" ? en : { issues: proofIssues }),
+    };
+  }
+  const deps = (l: ReturnType<typeof llm>) => ({ config: buildConfig({}), llm: l });
+
+  it("counts the recipes without English and writes nothing on a dry run", async () => {
+    const catalog = new MongoCatalog(c);
+    await catalog.write(recipe("pie--a"));
+    await catalog.write(recipe("pie--b", { en: { ...en, model: "m", proofreader: "p", translatedAt: "t" } }));
+    const lines: string[] = [];
+    const out = await translateCatalog(c, deps(llm()), { yes: false }, (l) => lines.push(l));
+    expect(out.pending).toBe(1);
+    expect(lines[0]).toMatch(/^1 recipe\(s\) have no English version; this run would translate 1 for about \$0\.0\d\./);
+    expect((await c.recipes.findOne({ _id: "pie--a" }))?.en).toBeUndefined();
+  });
+
+  it("adds the English version to recipes that have none and leaves the others alone", async () => {
+    const catalog = new MongoCatalog(c);
+    await catalog.write(recipe("pie--a"));
+    await catalog.write(recipe("pie--b", { en: { ...en, steps: ["Old."], model: "m", proofreader: "p", translatedAt: "t" } }));
+    const out = await translateCatalog(c, deps(llm()), { yes: true }, () => {});
+    expect(out.translated).toEqual(["pie--a"]);
+    expect((await c.recipes.findOne({ _id: "pie--a" }))?.en).toMatchObject({ steps: ["Bake."], model: "claude-sonnet-5-5", proofreader: "claude-opus-5-5" });
+    expect((await c.recipes.findOne({ _id: "pie--b" }))?.en?.steps).toEqual(["Old."]);
+    // MongoCatalog.load() keeps the field, so a later re-placement of the recipe doesn't drop it.
+    expect((await catalog.load()).find((r) => r.id === "pie--a")?.en?.steps).toEqual(["Bake."]);
+  });
+
+  it("reports a rejected translation and leaves the recipe in Russian only", async () => {
+    await new MongoCatalog(c).write(recipe("pie--a"));
+    const issue = { item: "step 1", kind: "meaning", russian: "Испечь.", english: "Bake.", explanation: "x" };
+    const out = await translateCatalog(c, deps(llm([issue])), { yes: true, limit: 1 }, () => {});
+    expect(out.rejected).toEqual([{ recipeId: "pie--a", problems: ['step 1 [meaning]: «Испечь.» → "Bake." — x'] }]);
+    expect((await c.recipes.findOne({ _id: "pie--a" }))?.en).toBeUndefined();
   });
 });

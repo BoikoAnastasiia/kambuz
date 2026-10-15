@@ -1,0 +1,25 @@
+{
+  "note": "Recipes for `kambuz eval-translation`, picked to cover the hard cases: long recipes, Russian dishes with no English name, foreign dishes written in Russian, oven temperatures, heavy extraction notes and clumsy Russian. Read from MongoDB at run time.",
+  "recipes": [
+    "borscht-beef--eAylJyOAgvM",
+    "solyanka-meat--keL7SPTJgKw",
+    "shpundra--XNNVDAbpC0s",
+    "pasta-carbonara-cream--3imt_yHFc6I",
+    "moussaka-eggplant--Zf83oMHLGew",
+    "chicken-cutlets--fDVAYvOIvQc",
+    "draniki--LmZNovKkw4w",
+    "pelmeni-vareniki--cMaTzrBDRkg",
+    "kharcho-chicken-bulgur--P_NE9WFyBKg",
+    "fried-rice-cod--FRXZitSnjco",
+    "japanese-cheesecake--pmTo3fHK9uE",
+    "tiramisu--Fzhby6HbX4U",
+    "focaccia--SzECOCrCSWg",
+    "khachapuri-lazy--8_yJ8k63upY",
+    "ramen-shoyu--r3_tcQiyGG8",
+    "eggs-benedict--n6fmm5zLmhs",
+    "chicken-onion-stir-fry--ScRhAnifmk4",
+    "fried-beef-onion--wJ_vNUSQMZg",
+    "zucchini-pancakes--bv5D7lalZvA",
+    "baked-apples-cottage-cheese--kJoQHfEbZ1k"
+  ]
+}

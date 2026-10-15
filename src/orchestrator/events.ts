@@ -2,7 +2,7 @@ import type { VideoStatus } from "./report.js";
 
 // The stage names an event can report on. "source" is the yt-dlp/caption
 // fetch; the rest are the LLM agent stages from STAGE_ORDER in run.ts.
-export type StageName = "source" | "scout" | "extract" | "verify" | "categorize";
+export type StageName = "source" | "scout" | "extract" | "verify" | "categorize" | "translate";
 
 export type PlacementAction = "written" | "replaced" | "kept-existing" | "kept-both" | "invalid" | "too-thin" | "superseded";
 

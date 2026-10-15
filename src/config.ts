@@ -2,7 +2,7 @@ import path from "node:path";
 // Importing env.js loads .env; it must happen before buildConfig() reads process.env.
 import { ROOT } from "./env.js";
 
-export const AGENT_NAMES = ["scout", "extractor", "verifier", "categorizer", "judge"] as const;
+export const AGENT_NAMES = ["scout", "extractor", "verifier", "categorizer", "judge", "translator", "proofreader"] as const;
 export type AgentName = (typeof AGENT_NAMES)[number];
 
 export { ROOT };
@@ -17,10 +17,19 @@ export function isEffort(value: string): value is Effort {
 // Haiku 5.5 matched Sonnet 5 on the six cached videos at about 1/30th of the cost.
 export const DEFAULT_MODEL = "claude-haiku-5-5";
 
+// The English translation is the one place Haiku wasn't good enough: on a 20-recipe eval it
+// left Russian in the output and changed meanings, while Sonnet 5.5 got 18 of 20 clean.
+// Opus 5.5 proofreads, so the translator isn't graded by its own model.
+// These ignore KAMBUZ_MODEL, which is about the extraction pipeline; set them per agent.
+export const AGENT_DEFAULT_MODELS: Partial<Record<AgentName, string>> = {
+  translator: "claude-sonnet-5-5",
+  proofreader: "claude-opus-5-5",
+};
+
 // Agents missing here send no effort, so they run at the model's default (medium on Haiku 5.5).
 // The scout at medium sometimes collapses a multi-dish video into one dish; at high it found
 // every dish in repeated runs, while xhigh overthought and ran out of max_tokens.
-export const DEFAULT_EFFORT: Partial<Record<AgentName, Effort>> = { scout: "high" };
+export const DEFAULT_EFFORT: Partial<Record<AgentName, Effort>> = { scout: "high", translator: "high", proofreader: "high" };
 
 export const DEFAULT_CONCURRENCY = 4;
 export const DEFAULT_MIN_COMPLETENESS = 0.3;
@@ -58,7 +67,7 @@ function effortFrom(env: NodeJS.ProcessEnv): Partial<Record<AgentName, Effort>> 
 
 export function buildConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const models = Object.fromEntries(
-    AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? env.KAMBUZ_MODEL ?? DEFAULT_MODEL]),
+    AGENT_NAMES.map((n) => [n, env[`KAMBUZ_MODEL_${n.toUpperCase()}`] ?? AGENT_DEFAULT_MODELS[n] ?? env.KAMBUZ_MODEL ?? DEFAULT_MODEL]),
   ) as Record<AgentName, string>;
   return {
     models,

@@ -15,6 +15,8 @@ import { connectDb } from "./db/mongo.js";
 import { MongoCatalog } from "./db/mongoCatalog.js";
 import { importCatalog, recordVideos, syncVocab } from "./db/sync.js";
 import { requeueAbandoned, workLoop } from "./db/worker.js";
+import { renderTranslateReport, translateCatalog } from "./db/translate.js";
+import { ESTIMATED_USD_PER_CASE, readTranslationEvalIds, renderTranslationEval, runTranslationEval } from "./eval/translation.js";
 import { ingest, type IngestOptions } from "./orchestrator/run.js";
 import { renderReport, totalCostUsd } from "./orchestrator/report.js";
 import { renderReportHtml } from "./orchestrator/report-html.js";
@@ -25,12 +27,14 @@ import { BENCH_AGENTS, benchCommand, rescoreCommand, type BenchAgent } from "./b
 import { parseVariants, type Variant } from "./bench/variants.js";
 
 export const USAGE =
-  "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize] [--quiet] [--open]\n" +
-  "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize]\n" +
+  "usage: kambuz ingest <video-or-playlist-url> [--force] [--only-stage scout|extract|verify|categorize|translate] [--quiet] [--open]\n" +
+  "       kambuz eval [--force] [--ingest] [--only-stage scout|extract|verify|categorize|translate]\n" +
   "       kambuz bench <categorizer|verifier> --models <model[:effort],...> [--repeat N] [--yes] [--open]\n" +
   "       kambuz bench rescore <bench-report.json> [--open]\n" +
   "       kambuz db-import   copy a JSON catalog folder (catalog/recipes, catalog/archive) and vocab into MongoDB\n" +
   "       kambuz worker      run the site's queued add-video jobs until stopped (needs MONGODB_URI)\n" +
+  "       kambuz translate [--limit N] [--yes]   add the English version to catalog recipes that have none\n" +
+  "       kambuz eval-translation [--yes] [--open]   score the translator on eval/translation.json (writes nothing)\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
   "  --force               re-run every agent stage (does not re-fetch captions)\n" +
@@ -40,7 +44,8 @@ export const USAGE =
   "                         uncached videos); without it, eval only reads the existing catalog.\n" +
   "  --models <list>       (bench) comma-separated variants, e.g. claude-sonnet-5,claude-sonnet-5:low\n" +
   "  --repeat <n>          (bench) run every case n times (default 1)\n" +
-  "  --yes                 (bench) actually make the calls; without it bench only prints the plan";
+  "  --yes                 (bench, translate, eval-translation) actually make the calls; without it only the plan is printed\n" +
+  "  --limit <n>           (translate) translate at most n recipes";
 
 /** Best-effort: opening the report is a convenience, never a reason to fail the run. */
 function openInBrowser(filePath: string): Promise<void> {
@@ -64,7 +69,7 @@ export function apiKeyError(env: NodeJS.ProcessEnv): string | null {
   return env.ANTHROPIC_API_KEY?.trim() ? null : MISSING_API_KEY;
 }
 
-const STAGES = ["scout", "extract", "verify", "categorize"] as const;
+const STAGES = ["scout", "extract", "verify", "categorize", "translate"] as const;
 type Stage = (typeof STAGES)[number];
 
 export type ParsedArgs =
@@ -73,6 +78,8 @@ export type ParsedArgs =
   | { ok: true; command: "bench"; agent: BenchAgent; variants: Variant[]; repeat: number; yes: boolean; open: boolean }
   | { ok: true; command: "bench-rescore"; file: string; open: boolean }
   | { ok: true; command: "db-import" | "worker" }
+  | { ok: true; command: "translate"; yes: boolean; limit?: number }
+  | { ok: true; command: "eval-translation"; yes: boolean; open: boolean }
   | { ok: false; error: string };
 
 function isStage(value: string): value is Stage {
@@ -81,7 +88,7 @@ function isStage(value: string): value is Stage {
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
-  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean; open?: boolean; models?: string; repeat?: string; yes?: boolean };
+  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean; open?: boolean; models?: string; repeat?: string; yes?: boolean; limit?: string };
   // npm forwards the "--" of `npm run eval -- --ingest` in some setups; left in place it
   // turns every later flag into a positional and the run dies with the usage text.
   const args = argv.filter((a) => a !== "--");
@@ -98,6 +105,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         models: { type: "string" },
         repeat: { type: "string" },
         yes: { type: "boolean", default: false },
+        limit: { type: "string" },
       },
     }));
   } catch (e) {
@@ -167,7 +175,21 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     return { ok: true, command };
   }
 
-  return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval | kambuz bench <agent> | kambuz db-import | kambuz worker" };
+  if (command === "translate") {
+    if (positionals.length > 1) return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(1).join(" ")}` };
+    const limitRaw = values.limit;
+    if (limitRaw !== undefined && (!/^\d+$/.test(limitRaw.trim()) || Number(limitRaw) < 1)) {
+      return { ok: false, error: `--limit must be a whole number of at least 1 (got "${limitRaw}")` };
+    }
+    return { ok: true, command: "translate", yes: values.yes ?? false, limit: limitRaw === undefined ? undefined : Number(limitRaw) };
+  }
+
+  if (command === "eval-translation") {
+    if (positionals.length > 1) return { ok: false, error: `unexpected extra argument(s): ${positionals.slice(1).join(" ")}` };
+    return { ok: true, command: "eval-translation", yes: values.yes ?? false, open: values.open ?? false };
+  }
+
+  return { ok: false, error: "expected: kambuz ingest <url> | kambuz eval | kambuz bench <agent> | kambuz db-import | kambuz worker | kambuz translate | kambuz eval-translation" };
 }
 
 async function main(): Promise<void> {
@@ -332,6 +354,40 @@ async function main(): Promise<void> {
         { pollMs: 3000, signal: stop.signal, workerId: hostname(), onJob: (job) => console.log(`worker: starting ${job.url}`) },
       );
       await client.close();
+      return;
+    }
+    case "translate": {
+      const result = await translateCatalog(mongo.c, deps, { yes: parsed.yes, limit: parsed.limit }, (line) => console.log(line));
+      await mongo.client.close();
+      if (!parsed.yes) return;
+      const cost = totalCostUsd(ledger.rows());
+      const rendered = renderTranslateReport(result, formatCost(cost));
+      await mkdir(config.paths.reports, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const file = path.join(config.paths.reports, `translate-${stamp}.md`);
+      await writeFile(file, `${rendered}\n## Token usage\n\n\`\`\`\n${ledger.toString()}\n\`\`\`\n`);
+      await appendSpend(path.join(config.paths.reports, "spend.jsonl"), spendEntry(new Date().toISOString(), "translate", ledger.rows()));
+      console.log(`\n${rendered}\nreport: ${file}`);
+      return;
+    }
+    case "eval-translation": {
+      const ids = await readTranslationEvalIds(path.join(config.paths.eval, "translation.json"));
+      const models = { translator: config.models.translator, proofreader: config.models.proofreader };
+      if (!parsed.yes) {
+        await mongo.client.close();
+        console.log(`would translate ${ids.length} recipes with ${models.translator} and proofread them with ${models.proofreader}, for about $${(ids.length * ESTIMATED_USD_PER_CASE).toFixed(2)}.`);
+        console.log("Add --yes to run it. KAMBUZ_MODEL_TRANSLATOR=<model> tries another translator.");
+        return;
+      }
+      const result = await runTranslationEval(mongo.c, deps, ids);
+      await mongo.client.close();
+      const rendered = renderTranslationEval(result, models, formatCost(totalCostUsd(ledger.rows())));
+      await mkdir(config.paths.reports, { recursive: true });
+      const file = path.join(config.paths.reports, `eval-translation-${new Date().toISOString().replace(/[:.]/g, "-")}.md`);
+      await writeFile(file, rendered);
+      await appendSpend(path.join(config.paths.reports, "spend.jsonl"), spendEntry(new Date().toISOString(), "eval-translation", ledger.rows()));
+      console.log(`${rendered}\nreport: ${file}`);
+      if (parsed.open) await openInBrowser(file);
       return;
     }
     case "eval": {

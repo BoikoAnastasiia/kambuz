@@ -13,12 +13,13 @@ import { fetchVideo as realFetch, expandUrl as realExpand, type FetchResult } fr
 import { renderTranscript, sliceCues } from "../fetcher/vtt.js";
 import { VideoSourceSchema, type VideoSource } from "../schemas/source.js";
 import { ScoutResultSchema } from "../schemas/scout.js";
-import { CategorizationSchema, DraftRecipeSchema, RecipeSchema, VerificationSchema, type Recipe } from "../schemas/recipe.js";
+import { CategorizationSchema, DraftRecipeSchema, RecipeSchema, TranslationSchema, VerificationSchema, type Recipe } from "../schemas/recipe.js";
 import { runScout } from "../agents/scout.js";
 import { runExtractor } from "../agents/extractor.js";
 import { runVerifier } from "../agents/verifier.js";
 import { runCategorizer } from "../agents/categorizer.js";
 import { findCandidates, runJudge, decide } from "../agents/judge.js";
+import { translateRecipe } from "../agents/translator.js";
 import path from "node:path";
 import { z } from "zod";
 
@@ -35,7 +36,7 @@ export interface IngestDeps {
   onEvent?: (e: IngestEvent) => void;
 }
 
-const STAGE_ORDER = ["scout", "extract", "verify", "categorize"] as const;
+const STAGE_ORDER = ["scout", "extract", "verify", "categorize", "translate"] as const;
 type Stage = (typeof STAGE_ORDER)[number];
 
 // Cache keys are either a bare stage name ("source", "scout") or a stage name
@@ -50,6 +51,13 @@ function parseStageKey(key: string): { stage: StageName; segmentIndex?: number }
 export interface IngestOptions {
   force?: boolean;
   onlyStage?: Stage;
+}
+
+/** Thrown inside the translate stage so a rejected translation is never cached. */
+class TranslationRejected extends Error {
+  constructor(readonly problems: string[]) {
+    super(`translation not accepted: ${problems.length} problem${problems.length === 1 ? "" : "s"}`);
+  }
 }
 
 const SkippedSchema = z.object({ videoId: z.string(), skipped: z.literal("no-captions") });
@@ -171,7 +179,21 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
               const verification = await stage(videoId, `verify-${i}`, VerificationSchema, shouldForce("verify"), () => llmLimit(() => runVerifier(segment, draft, llm, promptsDir, context)), segment.workingName);
               const categorization = await stage(videoId, `categorize-${i}`, CategorizationSchema, shouldForce("categorize"), () => llmLimit(() => runCategorizer(draft, vocab, llm, promptsDir)), segment.workingName);
               for (const name of draft.unmappedIngredients) report.unmapped[name] = (report.unmapped[name] ?? 0) + 1;
-              return assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
+              const recipe = assembleRecipe({ source, segment, draft, verification, categorization, models: config.models });
+              // A recipe too thin to keep isn't worth paying to translate. A translation that fails
+              // its checks leaves the recipe in Russian only; it never costs the recipe itself.
+              if (recipe.completeness >= config.minCompleteness) {
+                try {
+                  recipe.en = await stage(videoId, `translate-${i}`, TranslationSchema, shouldForce("translate"), async () => {
+                    const out = await llmLimit(() => translateRecipe(recipe, llm, promptsDir, config.models));
+                    if (!out.ok) throw new TranslationRejected(out.problems);
+                    return out.en;
+                  }, segment.workingName);
+                } catch (e) {
+                  report.untranslated.push({ recipeId: recipe.id, problems: e instanceof TranslationRejected ? e.problems : [e instanceof Error ? e.message : String(e)] });
+                }
+              }
+              return recipe;
             }),
           );
 

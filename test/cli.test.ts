@@ -34,6 +34,25 @@ describe("parseCliArgs", () => {
     expect(result).toEqual({ ok: true, command: "ingest", url: "https://youtu.be/xyz", force: false, onlyStage: undefined, quiet: false, open: true });
   });
 
+  it("parses translate as a dry run by default, with --yes and --limit", () => {
+    expect(parseCliArgs(["translate"])).toEqual({ ok: true, command: "translate", yes: false, limit: undefined });
+    expect(parseCliArgs(["translate", "--yes", "--limit", "5"])).toEqual({ ok: true, command: "translate", yes: true, limit: 5 });
+  });
+
+  it("rejects a translate --limit that isn't a positive whole number", () => {
+    expect(parseCliArgs(["translate", "--limit", "0"]).ok).toBe(false);
+    expect(parseCliArgs(["translate", "--limit", "lots"]).ok).toBe(false);
+  });
+
+  it("parses eval-translation as a dry run by default", () => {
+    expect(parseCliArgs(["eval-translation"])).toEqual({ ok: true, command: "eval-translation", yes: false, open: false });
+    expect(parseCliArgs(["eval-translation", "--yes", "--open"])).toEqual({ ok: true, command: "eval-translation", yes: true, open: true });
+  });
+
+  it("accepts --only-stage translate", () => {
+    expect(parseCliArgs(["ingest", "https://youtu.be/xyz", "--only-stage", "translate"])).toMatchObject({ ok: true, onlyStage: "translate" });
+  });
+
   it("parses a bare eval command (no ingestion by default)", () => {
     const result = parseCliArgs(["eval"]);
     expect(result).toEqual({ ok: true, command: "eval", force: false, ingest: false, onlyStage: undefined });

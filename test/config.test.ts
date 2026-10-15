@@ -2,13 +2,19 @@ import { describe, it, expect } from "vitest";
 import { buildConfig, AGENT_NAMES } from "../src/config.js";
 
 describe("config", () => {
-  it("defaults every agent to claude-haiku-5-5", () => {
-    for (const name of AGENT_NAMES) {
-      expect(buildConfig({}).models[name]).toBe("claude-haiku-5-5");
-    }
+  it("defaults the extraction agents to claude-haiku-5-5, the translator to Sonnet and the proofreader to Opus", () => {
+    const { models } = buildConfig({});
+    for (const name of AGENT_NAMES.filter((n) => n !== "translator" && n !== "proofreader")) expect(models[name]).toBe("claude-haiku-5-5");
+    expect(models.translator).toBe("claude-sonnet-5-5");
+    expect(models.proofreader).toBe("claude-opus-5-5");
   });
-  it("lets KAMBUZ_MODEL override every agent's default", () => {
-    expect(new Set(Object.values(buildConfig({ KAMBUZ_MODEL: "claude-opus-5" }).models))).toEqual(new Set(["claude-opus-5"]));
+  it("lets KAMBUZ_MODEL override every extraction agent but not the translation pair", () => {
+    const { models } = buildConfig({ KAMBUZ_MODEL: "claude-opus-5" });
+    expect(new Set(AGENT_NAMES.filter((n) => n !== "translator" && n !== "proofreader").map((n) => models[n]))).toEqual(new Set(["claude-opus-5"]));
+    expect(models.translator).toBe("claude-sonnet-5-5");
+  });
+  it("lets KAMBUZ_MODEL_TRANSLATOR switch the translator", () => {
+    expect(buildConfig({ KAMBUZ_MODEL_TRANSLATOR: "claude-haiku-5-5" }).models.translator).toBe("claude-haiku-5-5");
   });
   it("falls back to concurrency 4 for an empty, non-numeric or out-of-range KAMBUZ_CONCURRENCY", () => {
     expect(buildConfig({ KAMBUZ_CONCURRENCY: "" }).concurrency).toBe(4);
@@ -46,12 +52,12 @@ describe("config", () => {
 });
 
 describe("config effort", () => {
-  it("runs the scout at high by default and leaves every other agent on the model's default", () => {
-    expect(buildConfig({}).effort).toEqual({ scout: "high" });
+  it("runs the scout and the translation pair at high by default and leaves every other agent on the model's default", () => {
+    expect(buildConfig({}).effort).toEqual({ scout: "high", translator: "high", proofreader: "high" });
   });
   it("reads KAMBUZ_EFFORT_<AGENT> for valid levels and ignores invalid ones, keeping the default", () => {
     const c = buildConfig({ KAMBUZ_EFFORT_VERIFIER: "low", KAMBUZ_EFFORT_JUDGE: "MAX ", KAMBUZ_EFFORT_SCOUT: "turbo", KAMBUZ_EFFORT_EXTRACTOR: "" });
-    expect(c.effort).toEqual({ scout: "high", verifier: "low", judge: "max" });
+    expect(c.effort).toEqual({ scout: "high", translator: "high", proofreader: "high", verifier: "low", judge: "max" });
   });
   it("lets KAMBUZ_EFFORT_SCOUT override the scout's default", () => {
     expect(buildConfig({ KAMBUZ_EFFORT_SCOUT: "medium" }).effort.scout).toBe("medium");

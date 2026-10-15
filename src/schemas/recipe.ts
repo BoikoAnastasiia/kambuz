@@ -73,6 +73,27 @@ export const CategorizationWireSchema = CategorizationSchema.extend({
 export const RecipeFlagSchema = z.object({ kind: z.enum(["ingredient", "step"]), ref: z.string(), reason: z.string() });
 export type RecipeFlag = z.infer<typeof RecipeFlagSchema>;
 
+// What the translator is asked for: one English line per Russian step and ingredient, same order.
+export const TranslationWireSchema = z.object({
+  steps: z.array(z.string()),
+  ingredients: z.array(z.object({ name: z.string(), note: z.string().nullable() })),
+});
+export type TranslationWire = z.infer<typeof TranslationWireSchema>;
+
+/** The English version stored on a recipe, present only once it passed the checks and the proofreader. */
+export const TranslationSchema = TranslationWireSchema.extend({
+  model: z.string(),
+  proofreader: z.string(),
+  translatedAt: z.string(),
+});
+export type Translation = z.infer<typeof TranslationSchema>;
+
+export const ProofreadIssueKindSchema = z.enum(["meaning", "added", "dropped", "unclear", "tool_note"]);
+export const ProofreadSchema = z.object({
+  issues: z.array(z.object({ item: z.string(), kind: ProofreadIssueKindSchema, russian: z.string(), english: z.string(), explanation: z.string() })),
+});
+export type ProofreadIssue = z.infer<typeof ProofreadSchema>["issues"][number];
+
 export const RecipeSchema = z.object({
   id: z.string(),
   nameRu: z.string(),
@@ -97,5 +118,6 @@ export const RecipeSchema = z.object({
   }),
   extractedAt: z.string(),
   models: z.record(z.string(), z.string()),
+  en: TranslationSchema.optional(),
 });
 export type Recipe = z.infer<typeof RecipeSchema>;

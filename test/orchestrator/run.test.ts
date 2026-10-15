@@ -50,9 +50,21 @@ function richVerification() {
   };
 }
 
+// The translate stage runs after categorize for every recipe that's kept. These answers pass
+// checkTranslation (same counts, the step's digits, no Cyrillic) and the proofreader finds nothing.
+function translationAnswer(agent: string, user: string): any {
+  if (agent === "proofreader") return { issues: [] };
+  const input = JSON.parse(user.split("\n\nAn earlier")[0]);
+  return {
+    steps: input.steps.map((s: string, k: number) => `Step ${k + 1} ${s.replace(/[^\d]+/g, " ").trim()}`.trim()),
+    ingredients: input.ingredients.map((_: unknown, k: number) => ({ name: `ingredient ${k + 1}`, note: null })),
+  };
+}
+
 function fakeLlm() {
   return {
-    callStructured: vi.fn(async ({ agent }: any): Promise<any> => {
+    callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
       switch (agent) {
         case "scout": return { isRecipeVideo: true, segments: [{ workingName: "лазанья", start: 0, end: 300, rawText: "", cleanText: "Нарежем лук." }] };
         case "extractor": return { nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: ["хамон"],
@@ -88,7 +100,7 @@ describe("ingest", () => {
     expect(report.written).toEqual(["lasagna-bolognese--v1"]);
     expect(report.unmapped).toEqual({ "хамон": 1 });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
-    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer"]);
+    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer", "translator", "proofreader"]);
     expect((await deps.catalog.load())[0].nameRu).toBe("Лазанья с соусом болоньезе");
   });
 
@@ -112,9 +124,33 @@ describe("ingest", () => {
     deps.llm.callStructured.mockClear();
     const report = await ingest("https://youtu.be/v2", deps, {});
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
-    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer", "judge"]);
+    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer", "translator", "proofreader", "judge"]);
     expect(report.keptExisting).toEqual(["lasagna-bolognese--v1"]);
     expect(await deps.catalog.load()).toHaveLength(1);
+  });
+
+  it("keeps a recipe in Russian only, and reports it, when its translation isn't accepted", async () => {
+    const deps = await setup();
+    const base = deps.llm.callStructured;
+    deps.llm.callStructured = vi.fn(async (args: any): Promise<any> =>
+      args.agent === "proofreader" ? { issues: [{ item: "step 1", kind: "meaning", russian: "Нарезать лук.", english: "Step 1", explanation: "says nothing" }] } : base(args),
+    );
+    const report = await ingest("https://youtu.be/v1", deps, {});
+    expect(report.written).toEqual(["lasagna-bolognese--v1"]);
+    expect(report.untranslated).toEqual([{ recipeId: "lasagna-bolognese--v1", problems: ['step 1 [meaning]: «Нарезать лук.» → "Step 1" — says nothing'] }]);
+    const [stored] = await deps.catalog.load();
+    expect(stored.en).toBeUndefined();
+    // Not cached: the next run tries the translation again.
+    deps.llm.callStructured.mockClear();
+    await ingest("https://youtu.be/v1", deps, {});
+    expect(deps.llm.callStructured.mock.calls.map((c: any) => c[0].agent)).toEqual(["translator", "proofreader", "translator", "proofreader"]);
+  });
+
+  it("stores the accepted English version on the recipe", async () => {
+    const deps = await setup();
+    await ingest("https://youtu.be/v1", deps, {});
+    const [stored] = await deps.catalog.load();
+    expect(stored.en).toMatchObject({ steps: ["Step 1", "Step 2", "Step 3"], model: "claude-sonnet-5-5", proofreader: "claude-opus-5-5" });
   });
 
   it("records a skipped video when there are no captions", async () => {
@@ -128,6 +164,7 @@ describe("ingest", () => {
   function twoSegmentLlm(failOn: (user: string) => boolean) {
     return {
       callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
         switch (agent) {
           case "scout": return {
             isRecipeVideo: true,
@@ -186,7 +223,8 @@ describe("ingest", () => {
     // The categorizer's wire schema can't enforce the dishKey pattern, so a model answer
     // of "!!!" slugifies to "" — caught by RecipeSchema before the file is written.
     const deps = await setup();
-    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+    deps.llm.callStructured = vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
       switch (agent) {
         case "scout": return { isRecipeVideo: true, segments: [{ workingName: "лазанья", start: 0, end: 300, rawText: "", cleanText: "Нарежем лук." }] };
         case "extractor": return { nameRu: "Лазанья", nameEn: "Lasagna", servings: null, unmappedIngredients: [],
@@ -211,7 +249,8 @@ describe("ingest", () => {
     // provenance is forced to unknown) + 5 steps scores 0.9 * (0.2 * 0.8333) = 0.15 —
     // the owner's "Тефтели с сыром" case: too thin to be worth keeping in the catalog.
     const deps = await setup();
-    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+    deps.llm.callStructured = vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
       switch (agent) {
         case "scout": return { isRecipeVideo: true, segments: [{ workingName: "тефтели с сыром", start: 0, end: 300, rawText: "", cleanText: "Лепим тефтели." }] };
         case "extractor": return { nameRu: "Тефтели с сыром", nameEn: "Meatballs with cheese", servings: null, unmappedIngredients: [],
@@ -253,7 +292,7 @@ describe("ingest", () => {
     // scout, extract, verify, categorize all re-run (ordinal downstream force); the
     // recipe is unchanged and re-processing a segment always overwrites its own entry
     // directly, with no self-completeness comparison and no judge call.
-    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer"]);
+    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer", "translator", "proofreader"]);
     expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
@@ -263,7 +302,7 @@ describe("ingest", () => {
     deps.llm.callStructured.mockClear();
     const report = await ingest("https://youtu.be/v1", deps, { onlyStage: "extract" });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
-    expect(agents).toEqual(["extractor", "verifier", "categorizer"]);
+    expect(agents).toEqual(["extractor", "verifier", "categorizer", "translator", "proofreader"]);
     expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
@@ -273,7 +312,7 @@ describe("ingest", () => {
     deps.llm.callStructured.mockClear();
     const report = await ingest("https://youtu.be/v1", deps, { onlyStage: "categorize" });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
-    expect(agents).toEqual(["categorizer"]);
+    expect(agents).toEqual(["categorizer", "translator", "proofreader"]);
     expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
@@ -283,7 +322,7 @@ describe("ingest", () => {
     deps.llm.callStructured.mockClear();
     const report = await ingest("https://youtu.be/v1", deps, { force: true, onlyStage: "extract" });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
-    expect(agents).toEqual(["extractor", "verifier", "categorizer"]);
+    expect(agents).toEqual(["extractor", "verifier", "categorizer", "translator", "proofreader"]);
     expect(report.written).toEqual(["lasagna-bolognese--v1"]);
   });
 
@@ -293,7 +332,7 @@ describe("ingest", () => {
     deps.llm.callStructured.mockClear();
     const report = await ingest("https://youtu.be/v1", deps, { force: true });
     const agents = deps.llm.callStructured.mock.calls.map((c) => c[0].agent);
-    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer"]);
+    expect(agents).toEqual(["scout", "extractor", "verifier", "categorizer", "translator", "proofreader"]);
     expect(report.written).toEqual(["lasagna-bolognese--v1"]);
     // fetch is never re-invoked past the first run: the source stage stays cached under both flags.
     expect(deps.fetch).toHaveBeenCalledTimes(1);
@@ -305,6 +344,7 @@ describe("ingest", () => {
     const twoSegSource: VideoSource = { ...source, videoId: "v1" };
     const llm = {
       callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
         switch (agent) {
           case "scout": return {
             isRecipeVideo: true,
@@ -358,7 +398,8 @@ describe("ingest", () => {
     deps.expand = vi.fn(async () => ["v2"]);
     deps.fetch = vi.fn(async () => ({ ...source, videoId: "v2" }));
     deps.llm = {
-      callStructured: vi.fn(async ({ agent }: any): Promise<any> => {
+      callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
         switch (agent) {
           case "scout": return { isRecipeVideo: true, segments: [{ workingName: "лазанья", start: 0, end: 300, rawText: "", cleanText: "Нарежем лук." }] };
           case "extractor": return { nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
@@ -388,7 +429,8 @@ describe("ingest", () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "kambuz-run-"));
     const config = buildConfig({});
     const llm = {
-      callStructured: vi.fn(async ({ agent }: any): Promise<any> => {
+      callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
         switch (agent) {
           case "scout": return { isRecipeVideo: true, segments: [{ workingName: "лазанья", start: 0, end: 300, rawText: "", cleanText: "Нарежем лук." }] };
           case "extractor": return { nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
@@ -438,6 +480,7 @@ describe("ingest", () => {
     const vocab: Vocab = { ...fullVocab, cuisines: [{ id: "italian", nameRu: "Итальянская", nameEn: "Italian" }] };
     const llm = {
       callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
         switch (agent) {
           case "scout": return {
             isRecipeVideo: true,
@@ -503,6 +546,7 @@ describe("ingest", () => {
     let peak = 0;
     const llm = {
       callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
         inFlight++;
         peak = Math.max(peak, inFlight);
         await new Promise((r) => setTimeout(r, 5));
@@ -542,7 +586,8 @@ describe("ingest", () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "kambuz-run-"));
     const config = buildConfig({});
     const llm = {
-      callStructured: vi.fn(async ({ agent }: any): Promise<any> => {
+      callStructured: vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
         switch (agent) {
           case "scout": return { isRecipeVideo: false, segments: [] };
           default: throw new Error(agent);
@@ -589,6 +634,7 @@ describe("ingest", () => {
       "stage:cached",
       "stage:cached",
       "stage:cached",
+      "stage:cached",
       "placement",
       "video:done",
     ]);
@@ -600,8 +646,9 @@ describe("ingest", () => {
     expect(events[5]).toEqual({ type: "stage:cached", videoId: "v1", stage: "extract", segmentIndex: 0 });
     expect(events[6]).toEqual({ type: "stage:cached", videoId: "v1", stage: "verify", segmentIndex: 0 });
     expect(events[7]).toEqual({ type: "stage:cached", videoId: "v1", stage: "categorize", segmentIndex: 0 });
-    expect(events[8]).toEqual({ type: "placement", videoId: "v1", recipeId: "lasagna-bolognese--v1", action: "written" });
-    expect(events[9]).toEqual({ type: "video:done", videoId: "v1", status: "done", recipes: 1 });
+    expect(events[8]).toEqual({ type: "stage:cached", videoId: "v1", stage: "translate", segmentIndex: 0 });
+    expect(events[9]).toEqual({ type: "placement", videoId: "v1", recipeId: "lasagna-bolognese--v1", action: "written" });
+    expect(events[10]).toEqual({ type: "video:done", videoId: "v1", status: "done", recipes: 1 });
   });
 
   it("emits ordered stage:start/stage:done events per segment for a live two-segment video, ending in two placements and video:done", async () => {
@@ -632,13 +679,13 @@ describe("ingest", () => {
     expect(sourceDoneIdx).toBeGreaterThan(sourceStartIdx);
     expect(scoutStartIdx).toBeGreaterThan(sourceDoneIdx);
 
-    // Each segment runs extract -> verify -> categorize in order; the two segments
+    // Each segment runs extract -> verify -> categorize -> translate in order; the two segments
     // run concurrently with each other, so only the per-segment order is asserted.
     for (const segmentIndex of [0, 1]) {
       const seq = events
         .filter((e): e is Extract<IngestEvent, { type: "stage:start" | "stage:done" }> => (e.type === "stage:start" || e.type === "stage:done") && e.segmentIndex === segmentIndex)
         .map((e) => `${e.type}:${e.stage}`);
-      expect(seq).toEqual(["stage:start:extract", "stage:done:extract", "stage:start:verify", "stage:done:verify", "stage:start:categorize", "stage:done:categorize"]);
+      expect(seq).toEqual(["stage:start:extract", "stage:done:extract", "stage:start:verify", "stage:done:verify", "stage:start:categorize", "stage:done:categorize", "stage:start:translate", "stage:done:translate"]);
     }
 
     const placements = events.filter((e): e is Extract<IngestEvent, { type: "placement" }> => e.type === "placement");
@@ -673,7 +720,7 @@ describe("ingest", () => {
 
     // The healthy segment (index 0) is unaffected: full start/done chain, no stage:error.
     const segment0Types = events.filter((e): e is Extract<IngestEvent, { type: "stage:start" | "stage:done" | "stage:error" }> => (e.type === "stage:start" || e.type === "stage:done" || e.type === "stage:error") && e.segmentIndex === 0).map((e) => e.type);
-    expect(segment0Types).toEqual(["stage:start", "stage:done", "stage:start", "stage:done", "stage:start", "stage:done"]);
+    expect(segment0Types).toEqual(["stage:start", "stage:done", "stage:start", "stage:done", "stage:start", "stage:done", "stage:start", "stage:done"]);
   });
 
   // --- re-processing a segment supersedes its old catalog entry ---
@@ -685,7 +732,8 @@ describe("ingest", () => {
     expect(before.completeness).toBeCloseTo(0.37, 2);
 
     deps.llm.callStructured.mockClear();
-    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+    deps.llm.callStructured = vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
       switch (agent) {
         case "extractor": return {
           nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],
@@ -713,7 +761,7 @@ describe("ingest", () => {
     const report = await ingest("https://youtu.be/v1", deps, { onlyStage: "extract" });
 
     const agents = deps.llm.callStructured.mock.calls.map((c: any) => c[0].agent);
-    expect(agents).toEqual(["extractor", "verifier", "categorizer"]);
+    expect(agents).toEqual(["extractor", "verifier", "categorizer", "translator", "proofreader"]);
     expect(report.written).toEqual(["lasagna-bolognese--v1"]);
     expect(report.superseded).toEqual([]);
     const recipes = await deps.catalog.load();
@@ -727,7 +775,8 @@ describe("ingest", () => {
     await ingest("https://youtu.be/v1", deps, {});
 
     deps.llm.callStructured.mockClear();
-    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+    deps.llm.callStructured = vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
       switch (agent) {
         case "categorizer": return { cuisine: "italian", mealTypes: ["dinner"], course: "main", method: null, activeMinutes: 40, totalMinutes: 90, richness: "hearty", dishKey: "zharkoye" };
         default: throw new Error(agent);
@@ -738,7 +787,7 @@ describe("ingest", () => {
     const report = await ingest("https://youtu.be/v1", { ...deps, onEvent: (e) => events.push(e) }, { onlyStage: "categorize" });
 
     const agents = deps.llm.callStructured.mock.calls.map((c: any) => c[0].agent);
-    expect(agents).toEqual(["categorizer"]);
+    expect(agents).toEqual(["categorizer", "translator", "proofreader"]);
     expect(report.written).toEqual(["zharkoye--v1"]);
     expect(report.superseded).toEqual(["lasagna-bolognese--v1"]);
     const recipes = await deps.catalog.load();
@@ -752,7 +801,8 @@ describe("ingest", () => {
     await ingest("https://youtu.be/v1", deps, {});
 
     deps.llm.callStructured.mockClear();
-    deps.llm.callStructured = vi.fn(async ({ agent }: any): Promise<any> => {
+    deps.llm.callStructured = vi.fn(async ({ agent, user }: any): Promise<any> => {
+        if (agent === "translator" || agent === "proofreader") return translationAnswer(agent, user);
       switch (agent) {
         case "extractor": return {
           nameRu: "Лазанья с соусом болоньезе", nameEn: "Lasagna with bolognese", servings: null, unmappedIngredients: [],

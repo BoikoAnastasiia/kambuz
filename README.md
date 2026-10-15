@@ -17,7 +17,7 @@ as stated, and a video with nothing but a description still yields a recipe.
 
 ## How it works
 
-Six stages run per video. Every LLM stage is a pure function with a typed
+Seven stages run per video. Every LLM stage is a pure function with a typed
 (Zod) structured output, and the orchestrator in plain TypeScript does all the I/O.
 
 | Stage | What it does | LLM |
@@ -28,6 +28,7 @@ Six stages run per video. Every LLM stage is a pure function with a typed
 | verifier | checks every ingredient and step against the raw transcript and quotes the evidence | yes |
 | categorizer | cuisine, meal type, course, cooking method, timing, and a `dishKey` slug used for duplicate detection | yes |
 | judge | finds candidate duplicates in the catalog, scores completeness, decides same dish or variant | yes |
+| translator + proofreader | Sonnet 5.5 writes the English version of the steps and ingredients; code checks and an Opus 5.5 proofread decide whether it is stored | yes |
 
 Nothing is invented. Every ingredient and step must be supported by what the
 chef said. Quantities carry a provenance tag: `stated` (he said "1.5 litres"),
@@ -115,6 +116,25 @@ names, cuisines, meal types, and optionally specific ingredients with their
 provenance). The command prints a table and exits non-zero if any check fails,
 so a prompt or vocabulary change can be regression-tested. Without `--ingest`
 it never calls the API — it only reads what is already in the database.
+
+### Translation
+
+Every kept recipe gets an English version (`en` on the recipe document) written
+by the translator (Sonnet 5.5) and checked twice: by code (same number of steps
+and ingredients, every number kept, temperatures in °C, no Cyrillic left) and by
+the proofreader (Opus 5.5, against the Russian only). Problems are handed back
+to the translator once; a translation that still has problems is not stored,
+the recipe stays Russian-only, and the run report lists it under "Not
+translated". A translation failure never costs the recipe itself.
+
+    npm run kambuz -- translate                 # how many recipes have no English, and the cost
+    npm run kambuz -- translate --yes [--limit N]
+    npm run kambuz -- eval-translation [--yes]  # score the translator on eval/translation.json
+
+Haiku 5.5 was not good enough here: on the 20 recipes in `eval/translation.json`
+it left Russian in the output and changed meanings, where Sonnet 5.5 got 18 of
+20 with no issues. To try another model, run the eval with
+`KAMBUZ_MODEL_TRANSLATOR=<model>`; it never writes to the catalog.
 
 ## Bench
 
@@ -204,6 +224,9 @@ next start.
 - `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-haiku-5-5`).
 - `KAMBUZ_MODEL_SCOUT`, `..._EXTRACTOR`, `..._VERIFIER`, `..._CATEGORIZER`,
   `..._JUDGE` — override one agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
+- `KAMBUZ_MODEL_TRANSLATOR` (default `claude-sonnet-5-5`) and
+  `KAMBUZ_MODEL_PROOFREADER` (default `claude-opus-5-5`) — the translation pair;
+  `KAMBUZ_MODEL` does not change them. Both run at `high` effort.
 - `KAMBUZ_EFFORT_<AGENT>=low|medium|high|xhigh|max` — thinking effort for one agent,
   e.g. `KAMBUZ_EFFORT_VERIFIER=low`. The scout defaults to `high`; every other
   agent sends no effort field and runs at the model's own default (`medium` on

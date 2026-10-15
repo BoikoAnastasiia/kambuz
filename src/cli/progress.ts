@@ -9,6 +9,7 @@ const STAGE_AGENT: Partial<Record<string, AgentName>> = {
   extract: "extractor",
   verify: "verifier",
   categorize: "categorizer",
+  translate: "translator",
 };
 
 const STAGE_LABEL: Record<string, string> = {
@@ -17,6 +18,7 @@ const STAGE_LABEL: Record<string, string> = {
   extract: "extract",
   verify: "verify",
   categorize: "categorize",
+  translate: "translate",
 };
 
 function formatSeconds(ms: number): string {

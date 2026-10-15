@@ -29,6 +29,14 @@ export interface Recipe {
   steps: { order: number; text: string; timestamp: number }[];
   completeness: number;
   source: { videoId: string; url: string; videoTitle: string; channel: string; segmentStart: number; segmentEnd: number };
+  /** The English version, one entry per step and ingredient; absent until a translation has been accepted. */
+  en?: {
+    steps: string[];
+    ingredients: { name: string; note: string | null }[];
+    model: string;
+    proofreader: string;
+    translatedAt: string;
+  };
 }
 
 export type RecipeDoc = Recipe & { _id: string; archived: boolean };
