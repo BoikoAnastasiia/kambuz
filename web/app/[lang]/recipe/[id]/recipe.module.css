@@ -175,3 +175,10 @@
   border-top: 2px solid var(--line);
   padding-top: 16px;
 }
+
+.langNote {
+  margin: 14px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}

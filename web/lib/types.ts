@@ -106,12 +106,13 @@ export interface AdminStatus {
 /** What the suggestion card and the "also fits" list need from a recipe. */
 export interface RecipeCard {
   id: string;
-  nameRu: string;
-  nameEn: string;
+  /** In the page's language. */
+  name: string;
   cuisine: string;
   course: string;
   method: string | null;
   totalMinutes: number | null;
+  /** Ingredient names in the page's language. */
   ingredients: string[];
   videoId: string;
   segmentStart: number;

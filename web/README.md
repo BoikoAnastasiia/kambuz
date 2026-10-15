@@ -1,6 +1,6 @@
 # Kambuz web
 
-"What to cook?" — pick a meal (breakfast, lunch, dinner, dessert), a cuisine (or
+"What to cook?" in Russian and English — pick a meal (breakfast, lunch, dinner, dessert), a cuisine (or
 random) and, optionally, ingredients the dish must contain; the site picks one recipe
 and lists others that fit. Every recipe links to the moment in the video it came from.
 
@@ -20,16 +20,25 @@ file's variables in the environment before Next starts; don't load it from
 
 ## Pages
 
-- `/` — the picker. `GET /api/suggest?meal=&cuisine=&include=a,b&exclude=<recipe id>`
+Russian at the bare paths, English under `/en` (`/en`, `/en/recipe/[id]`):
+
+- `/` — the picker. `GET /api/suggest?meal=&cuisine=&include=a,b&exclude=<recipe id>&lang=ru|en`
 - `/recipe/[id]` — ingredients, steps with timestamps, the video embedded at the dish
 - `/add` — paste a YouTube link. `POST /api/jobs {url}`, then `GET /api/jobs/[id]`
 
-## Language
+## Languages
 
-The interface is in Russian, like the recipes; only the WHAT TO COOK? title is in
-English. Labels come from the Russian names in the vocab (cuisines, courses) and from
-`lib/format.ts` (meals, methods, units, Russian plurals). The worker's progress
-messages on the add page are written in Russian in `src/db/worker.ts`.
+Pages live in `app/[lang]` (`ru`, `en`). `proxy.ts` rewrites a bare path to the
+Russian pages, so links shared before the English site existed still work, and
+redirects to `/en` a visitor who chose the 🇺🇸 flag (the switch sets a `lang`
+cookie) or whose browser's first language isn't Russian, Ukrainian, Belarusian or
+Kazakh. The flags in the header link to the same page in the other language.
+
+The interface text, durations, units and plurals are in `lib/i18n.ts`; cuisine,
+course and ingredient names come from the vocab's `nameRu` / `nameEn`. A recipe's
+English comes from its `en` field, written by the pipeline's translator (see the
+root README); a recipe without one is shown in Russian with a note. The admin page
+(`/add`) and the worker's progress messages stay in Russian.
 
 ## Design
 

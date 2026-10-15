@@ -33,6 +33,9 @@ Glossary — these are commonly mistranslated
 - палочка = a chopstick or stick
 - творог = cottage cheese; сметана = sour cream; ряженка = baked fermented milk
 
+Ingredient names
+- A plain name in lowercase, with no amount: "cream", "garlic", "egg yolk". The amount is shown in its own column.
+
 Ingredient notes
 - The notes were written by an extraction tool. Drop remarks about the tool or the video ("amount not specified", "the chef said", "assumed black pepper", "not found in the dictionary", "the video says 8 but the description says 6").
 - Keep everything that helps the cook, including alternatives and warnings ("or 6 g dry yeast", "don't add separately", "nothing else is salted", "room temperature"). If nothing useful remains, the note is null.

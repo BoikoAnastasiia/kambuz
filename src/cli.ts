@@ -33,7 +33,7 @@ export const USAGE =
   "       kambuz bench rescore <bench-report.json> [--open]\n" +
   "       kambuz db-import   copy a JSON catalog folder (catalog/recipes, catalog/archive) and vocab into MongoDB\n" +
   "       kambuz worker      run the site's queued add-video jobs until stopped (needs MONGODB_URI)\n" +
-  "       kambuz translate [--limit N] [--yes]   add the English version to catalog recipes that have none\n" +
+  "       kambuz translate [--limit N] [--redo] [--yes]   add the English version to catalog recipes that have none\n" +
   "       kambuz eval-translation [--yes] [--open]   score the translator on eval/translation.json (writes nothing)\n" +
   "  --only-stage <stage>  re-run that stage and everything downstream of it (does not re-fetch captions)\n" +
   "                         (eval only: requires --ingest)\n" +
@@ -45,7 +45,8 @@ export const USAGE =
   "  --models <list>       (bench) comma-separated variants, e.g. claude-sonnet-5,claude-sonnet-5:low\n" +
   "  --repeat <n>          (bench) run every case n times (default 1)\n" +
   "  --yes                 (bench, translate, eval-translation) actually make the calls; without it only the plan is printed\n" +
-  "  --limit <n>           (translate) translate at most n recipes";
+  "  --limit <n>           (translate) translate at most n recipes\n" +
+  "  --redo                (translate) translate every recipe again, replacing the English it has";
 
 /** Best-effort: opening the report is a convenience, never a reason to fail the run. */
 function openInBrowser(filePath: string): Promise<void> {
@@ -78,7 +79,7 @@ export type ParsedArgs =
   | { ok: true; command: "bench"; agent: BenchAgent; variants: Variant[]; repeat: number; yes: boolean; open: boolean }
   | { ok: true; command: "bench-rescore"; file: string; open: boolean }
   | { ok: true; command: "db-import" | "worker" }
-  | { ok: true; command: "translate"; yes: boolean; limit?: number }
+  | { ok: true; command: "translate"; yes: boolean; limit?: number; redo: boolean }
   | { ok: true; command: "eval-translation"; yes: boolean; open: boolean }
   | { ok: false; error: string };
 
@@ -88,7 +89,7 @@ function isStage(value: string): value is Stage {
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
   let positionals: string[];
-  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean; open?: boolean; models?: string; repeat?: string; yes?: boolean; limit?: string };
+  let values: { force?: boolean; "only-stage"?: string; ingest?: boolean; quiet?: boolean; open?: boolean; models?: string; repeat?: string; yes?: boolean; limit?: string; redo?: boolean };
   // npm forwards the "--" of `npm run eval -- --ingest` in some setups; left in place it
   // turns every later flag into a positional and the run dies with the usage text.
   const args = argv.filter((a) => a !== "--");
@@ -106,6 +107,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         repeat: { type: "string" },
         yes: { type: "boolean", default: false },
         limit: { type: "string" },
+        redo: { type: "boolean", default: false },
       },
     }));
   } catch (e) {
@@ -181,7 +183,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     if (limitRaw !== undefined && (!/^\d+$/.test(limitRaw.trim()) || Number(limitRaw) < 1)) {
       return { ok: false, error: `--limit must be a whole number of at least 1 (got "${limitRaw}")` };
     }
-    return { ok: true, command: "translate", yes: values.yes ?? false, limit: limitRaw === undefined ? undefined : Number(limitRaw) };
+    return { ok: true, command: "translate", yes: values.yes ?? false, limit: limitRaw === undefined ? undefined : Number(limitRaw), redo: values.redo ?? false };
   }
 
   if (command === "eval-translation") {
@@ -357,7 +359,7 @@ async function main(): Promise<void> {
       return;
     }
     case "translate": {
-      const result = await translateCatalog(mongo.c, deps, { yes: parsed.yes, limit: parsed.limit }, (line) => console.log(line));
+      const result = await translateCatalog(mongo.c, deps, { yes: parsed.yes, limit: parsed.limit, redo: parsed.redo }, (line) => console.log(line));
       await mongo.client.close();
       if (!parsed.yes) return;
       const cost = totalCostUsd(ledger.rows());

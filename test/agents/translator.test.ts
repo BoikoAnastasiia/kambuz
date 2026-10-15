@@ -6,7 +6,7 @@ import { config } from "../../src/config.js";
 const recipe = {
   id: "borscht--v1", nameRu: "Борщ", nameEn: "Borscht",
   ingredients: [
-    { ingredient: "beet", rawName: "свёкла", baseName: "свёкла", quantity: 2, unit: "pc", provenance: "stated", note: "нарезать соломкой" },
+    { ingredient: "beet", rawName: "две свёклы", baseName: "свёкла", quantity: 2, unit: "pc", provenance: "stated", note: "нарезать соломкой" },
     { ingredient: "salt", rawName: "соль", baseName: "соль", quantity: null, unit: null, provenance: "unknown", note: "количество не названо" },
   ],
   steps: [
@@ -58,7 +58,7 @@ describe("checkTranslation", () => {
 });
 
 describe("buildTranslatorUser", () => {
-  it("sends steps, raw ingredient names and notes, and appends earlier problems when retrying", () => {
+  it("sends steps, the plain ingredient names and notes, and appends earlier problems when retrying", () => {
     const user = buildTranslatorUser(recipe, ["step 1: the number 2 is missing"]);
     const input = JSON.parse(user.split("\n\nAn earlier")[0]);
     expect(input).toEqual({

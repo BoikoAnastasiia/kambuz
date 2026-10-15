@@ -235,6 +235,13 @@ describe("translateCatalog", () => {
     expect((await catalog.load()).find((r) => r.id === "pie--a")?.en?.steps).toEqual(["Bake."]);
   });
 
+  it("translates every recipe again with --redo", async () => {
+    await new MongoCatalog(c).write(recipe("pie--b", { en: { ...en, steps: ["Old."], model: "m", proofreader: "p", translatedAt: "t" } }));
+    const out = await translateCatalog(c, deps(llm()), { yes: true, redo: true }, () => {});
+    expect(out.translated).toEqual(["pie--b"]);
+    expect((await c.recipes.findOne({ _id: "pie--b" }))?.en?.steps).toEqual(["Bake."]);
+  });
+
   it("reports a rejected translation and leaves the recipe in Russian only", async () => {
     await new MongoCatalog(c).write(recipe("pie--a"));
     const issue = { item: "step 1", kind: "meaning", russian: "Испечь.", english: "Bake.", explanation: "x" };

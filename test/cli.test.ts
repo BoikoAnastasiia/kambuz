@@ -35,8 +35,8 @@ describe("parseCliArgs", () => {
   });
 
   it("parses translate as a dry run by default, with --yes and --limit", () => {
-    expect(parseCliArgs(["translate"])).toEqual({ ok: true, command: "translate", yes: false, limit: undefined });
-    expect(parseCliArgs(["translate", "--yes", "--limit", "5"])).toEqual({ ok: true, command: "translate", yes: true, limit: 5 });
+    expect(parseCliArgs(["translate"])).toEqual({ ok: true, command: "translate", yes: false, limit: undefined, redo: false });
+    expect(parseCliArgs(["translate", "--yes", "--limit", "5", "--redo"])).toEqual({ ok: true, command: "translate", yes: true, limit: 5, redo: true });
   });
 
   it("rejects a translate --limit that isn't a positive whole number", () => {

@@ -1,6 +1,7 @@
 import "server-only";
 import type { Filter } from "mongodb";
 import { collections } from "./db";
+import type { Lang } from "./i18n";
 import type { MealType, RecipeCard, RecipeDoc, Suggestion, VocabItem } from "./types";
 
 export const MEALS = ["breakfast", "lunch", "dinner", "dessert"] as const;
@@ -49,25 +50,34 @@ function shuffle<T>(xs: T[]): T[] {
   return a;
 }
 
-function toCard(r: RecipeDoc): RecipeCard {
+/**
+ * In English an ingredient is named by the recipe's accepted translation, then by the vocabulary,
+ * and only then left in Russian (a recipe whose translation didn't pass).
+ */
+function toCard(r: RecipeDoc, lang: Lang, vocabEn: Map<string, string>): RecipeCard {
+  const ingredients =
+    lang === "ru"
+      ? r.ingredients.map((i) => i.baseName ?? i.rawName)
+      : r.ingredients.map((i, k) => r.en?.ingredients[k]?.name ?? (i.ingredient ? vocabEn.get(i.ingredient) : undefined) ?? i.rawName);
   return {
     id: r.id,
-    nameRu: r.nameRu,
-    nameEn: r.nameEn,
+    name: lang === "ru" ? r.nameRu : r.nameEn,
     cuisine: r.cuisine,
     course: r.course,
     method: r.method,
     totalMinutes: r.totalMinutes,
-    ingredients: r.ingredients.map((i) => i.baseName ?? i.rawName),
+    ingredients,
     videoId: r.source.videoId,
     segmentStart: r.source.segmentStart,
   };
 }
 
 /** A random match, never the one just shown when another exists, plus a few more that fit. */
-export async function suggest(f: Filters, exclude?: string): Promise<Suggestion> {
-  const { recipes } = await collections();
-  const matches = shuffle(await recipes.find(recipeQuery(f)).toArray());
+export async function suggest(f: Filters, lang: Lang, exclude?: string): Promise<Suggestion> {
+  const { recipes, vocab } = await collections();
+  const [found, ingredientVocab] = await Promise.all([recipes.find(recipeQuery(f)).toArray(), lang === "en" ? vocab.findOne({ _id: "ingredients" }) : null]);
+  const vocabEn = new Map((ingredientVocab?.items ?? []).map((i) => [i.id, i.nameEn]));
+  const matches = shuffle(found);
   const preferred = matches.findIndex((r) => r.id !== exclude);
   const pickIndex = preferred === -1 ? 0 : preferred;
   const pick = matches[pickIndex];
@@ -76,17 +86,18 @@ export async function suggest(f: Filters, exclude?: string): Promise<Suggestion>
   for (const r of matches) {
     for (const id of new Set(r.ingredients.map((i) => i.ingredient))) if (id) available[id] = (available[id] ?? 0) + 1;
   }
-  return { pick: pick ? toCard(pick) : null, others: others.map(toCard), total: matches.length, available };
+  const card = (r: RecipeDoc) => toCard(r, lang, vocabEn);
+  return { pick: pick ? card(pick) : null, others: others.map(card), total: matches.length, available };
 }
 
 export interface PickerOptions {
   /** Cuisines that have at least one recipe, most recipes first; "other" is left to Random. */
   cuisines: VocabItem[];
-  /** Ingredients used by at least one recipe, alphabetical by Russian name. */
+  /** Ingredients used by at least one recipe, alphabetical in the page's language. */
   ingredients: VocabItem[];
 }
 
-export async function pickerOptions(): Promise<PickerOptions> {
+export async function pickerOptions(lang: Lang): Promise<PickerOptions> {
   const { recipes, vocab } = await collections();
   const [cuisineCounts, ingredientIds, cuisineVocab, ingredientVocab] = await Promise.all([
     recipes.aggregate<{ _id: string; n: number }>([{ $match: { archived: false } }, { $group: { _id: "$cuisine", n: { $sum: 1 } } }, { $sort: { n: -1 } }]).toArray(),
@@ -103,6 +114,6 @@ export async function pickerOptions(): Promise<PickerOptions> {
     ingredients: (ingredientIds as (string | null)[])
       .filter((id): id is string => !!id && ingredientById.has(id))
       .map((id) => ingredientById.get(id)!)
-      .sort((a, b) => a.nameRu.localeCompare(b.nameRu, "ru")),
+      .sort((a, b) => (lang === "ru" ? a.nameRu.localeCompare(b.nameRu, "ru") : a.nameEn.localeCompare(b.nameEn, "en"))),
   };
 }

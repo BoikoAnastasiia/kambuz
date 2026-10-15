@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { DICTS, type Lang } from "@/lib/i18n";
 import styles from "./video-embed.module.css";
 
 /**
  * A thumbnail with a play button that becomes the YouTube player on click. The player
  * (and YouTube's cookies) load only when someone actually wants to watch.
  */
-export function VideoEmbed({ videoId, start, title }: { videoId: string; start: number; title: string }) {
+export function VideoEmbed({ lang, videoId, start, title }: { lang: Lang; videoId: string; start: number; title: string }) {
   const [playing, setPlaying] = useState(false);
   const [thumb, setThumb] = useState(`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`);
   const fallback = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
@@ -25,7 +26,7 @@ export function VideoEmbed({ videoId, start, title }: { videoId: string; start: 
     );
   }
   return (
-    <button className={styles.frame} onClick={() => setPlaying(true)} aria-label={`Смотреть «${title}» с начала этого блюда`}>
+    <button className={styles.frame} onClick={() => setPlaying(true)} aria-label={DICTS[lang].watchFromDish(title)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={thumb}

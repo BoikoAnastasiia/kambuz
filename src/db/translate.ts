@@ -23,14 +23,14 @@ export interface TranslateCatalogResult {
 export async function translateCatalog(
   c: Collections,
   deps: { config: Config; llm: LlmClient },
-  opts: { yes: boolean; limit?: number },
+  opts: { yes: boolean; limit?: number; redo?: boolean },
   log: (line: string) => void,
 ): Promise<TranslateCatalogResult> {
-  const docs = await c.recipes.find({ archived: false, en: { $exists: false } }).sort({ _id: 1 }).toArray();
+  const docs = await c.recipes.find(opts.redo ? { archived: false } : { archived: false, en: { $exists: false } }).sort({ _id: 1 }).toArray();
   const todo = opts.limit ? docs.slice(0, opts.limit) : docs;
   const result: TranslateCatalogResult = { pending: docs.length, translated: [], rejected: [], failed: [] };
   if (!opts.yes) {
-    log(`${docs.length} recipe(s) have no English version; this run would translate ${todo.length} for about $${(todo.length * ESTIMATED_USD_PER_RECIPE).toFixed(2)}.`);
+    log(`${docs.length} recipe(s) ${opts.redo ? "in the catalog" : "have no English version"}; this run would translate ${todo.length} for about $${(todo.length * ESTIMATED_USD_PER_RECIPE).toFixed(2)}.`);
     log("Add --yes to run it.");
     return result;
   }

@@ -13,7 +13,8 @@ export function buildTranslatorUser(recipe: Recipe, problems: string[] = []): st
     {
       dish: `${recipe.nameRu} (${recipe.nameEn})`,
       steps: recipe.steps.map((s) => s.text),
-      ingredients: recipe.ingredients.map((i) => ({ name: i.rawName, note: i.note })),
+      // The plain name, as the Russian page shows it; the amount is a separate column there.
+      ingredients: recipe.ingredients.map((i) => ({ name: i.baseName || i.rawName, note: i.note })),
     },
     null,
     1,
@@ -48,7 +49,7 @@ export function checkTranslation(recipe: Recipe, t: TranslationWire): string[] {
 export function buildProofreaderUser(recipe: Recipe, t: TranslationWire): string {
   const line = (x: { name: string; note: string | null } | undefined) => (x ? `${x.name}${x.note ? ` (${x.note})` : ""}` : "(missing)");
   const items = [
-    ...recipe.ingredients.map((i, k) => `ingredient ${k + 1}\nRU: ${line({ name: i.rawName, note: i.note })}\nEN: ${line(t.ingredients[k])}`),
+    ...recipe.ingredients.map((i, k) => `ingredient ${k + 1}\nRU: ${line({ name: i.baseName || i.rawName, note: i.note })}\nEN: ${line(t.ingredients[k])}`),
     ...recipe.steps.map((s, k) => `step ${k + 1}\nRU: ${s.text}\nEN: ${t.steps[k] ?? "(missing)"}`),
   ];
   return [`Dish: ${recipe.nameRu}`, "", items.join("\n\n")].join("\n");

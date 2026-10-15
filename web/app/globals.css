@@ -226,3 +226,42 @@ button {
   text-align: center;
   padding: 32px 8px;
 }
+
+.topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.lang-switch {
+  display: flex;
+  gap: 6px;
+}
+
+.lang-flag {
+  display: block;
+  line-height: 0;
+  border-radius: 4px;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+.lang-flag img {
+  width: 28px;
+  height: 20px;
+  border-radius: 3px;
+  /* A cream edge keeps the Russian flag's red stripe apart from the red header. */
+  box-shadow: 0 0 0 1.5px rgba(255, 244, 222, 0.7);
+}
+
+.lang-flag:hover {
+  opacity: 0.85;
+}
+
+.lang-flag[aria-current="true"] {
+  opacity: 1;
+}
+
+.lang-flag[aria-current="true"] img {
+  box-shadow: 0 0 0 2px var(--cream);
+}
