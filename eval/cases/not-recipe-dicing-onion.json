@@ -1,0 +1,5 @@
+{
+  "videoId": "dCGS067s0zo",
+  "note": "Gordon Ramsay, Dicing An Onion: a knife-skill lesson, English, 76 s. Cutting an ingredient is not a dish, so no recipe (scout rule 1).",
+  "expect": { "dishCount": 0, "names": [], "cuisines": [], "courses": [], "mealTypes": [] }
+}
