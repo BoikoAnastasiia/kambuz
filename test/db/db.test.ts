@@ -205,10 +205,11 @@ describe("recordVideos", () => {
 });
 
 describe("translateCatalog", () => {
-  const en = { steps: ["Bake."], ingredients: [{ name: "beef", note: null }] };
+  const en = { name: "Pie", steps: ["Bake."], ingredients: [{ name: "beef", note: null }] };
   function llm(proofIssues: unknown[] = []) {
     return {
-      callStructured: async ({ agent }: { agent: string }): Promise<any> => (agent === "translator" ? en : { issues: proofIssues }),
+      callStructured: async ({ agent, user }: { agent: string; user: string }): Promise<any> =>
+        agent !== "translator" ? { issues: proofIssues } : user.includes("Rewrite only these lines") ? { name: null, steps: [], ingredients: [] } : en,
     };
   }
   const deps = (l: ReturnType<typeof llm>) => ({ config: buildConfig({}), llm: l });

@@ -11,6 +11,7 @@ import { createLlmClient } from "./llm/client.js";
 import { UsageLedger, formatCost } from "./llm/usage.js";
 import { loadVocab } from "./vocab/load.js";
 import { StageCache } from "./orchestrator/cache.js";
+import { VideoSourceSchema, type VideoSource } from "./schemas/source.js";
 import { connectDb } from "./db/mongo.js";
 import { MongoCatalog } from "./db/mongoCatalog.js";
 import { importCatalog, recordVideos, syncVocab } from "./db/sync.js";
@@ -47,6 +48,11 @@ export const USAGE =
   "  --yes                 (bench, translate, eval-translation) actually make the calls; without it only the plan is printed\n" +
   "  --limit <n>           (translate) translate at most n recipes\n" +
   "  --redo                (translate) translate every recipe again, replacing the English it has";
+
+/** A video's cached captions, or null when this machine never fetched it. */
+function cachedSource(cache: StageCache): (videoId: string) => Promise<VideoSource | null> {
+  return async (videoId) => ((await cache.has(videoId, "source")) ? cache.get(videoId, "source", VideoSourceSchema) : null);
+}
 
 /** Best-effort: opening the report is a convenience, never a reason to fail the run. */
 function openInBrowser(filePath: string): Promise<void> {
@@ -360,7 +366,7 @@ async function main(): Promise<void> {
       return;
     }
     case "translate": {
-      const result = await translateCatalog(mongo.c, deps, { yes: parsed.yes, limit: parsed.limit, redo: parsed.redo }, (line) => console.log(line));
+      const result = await translateCatalog(mongo.c, { ...deps, source: cachedSource(deps.cache) }, { yes: parsed.yes, limit: parsed.limit, redo: parsed.redo }, (line) => console.log(line));
       await mongo.client.close();
       if (!parsed.yes) return;
       const cost = totalCostUsd(ledger.rows());
@@ -382,7 +388,7 @@ async function main(): Promise<void> {
         console.log("Add --yes to run it. KAMBUZ_MODEL_TRANSLATOR=<model> tries another translator.");
         return;
       }
-      const result = await runTranslationEval(mongo.c, deps, ids);
+      const result = await runTranslationEval(mongo.c, { ...deps, source: cachedSource(deps.cache) }, ids);
       await mongo.client.close();
       const rendered = renderTranslationEval(result, models, formatCost(totalCostUsd(ledger.rows())));
       await mkdir(config.paths.reports, { recursive: true });

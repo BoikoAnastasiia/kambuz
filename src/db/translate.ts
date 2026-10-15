@@ -1,7 +1,8 @@
 import pLimit from "p-limit";
 import type { Config } from "../config.js";
 import type { LlmClient } from "../llm/client.js";
-import { translateRecipe } from "../agents/translator.js";
+import { englishSourceFor, translateRecipe } from "../agents/translator.js";
+import type { VideoSource } from "../schemas/source.js";
 import type { Collections } from "./mongo.js";
 import { fromDoc } from "./mongoCatalog.js";
 
@@ -22,7 +23,7 @@ export interface TranslateCatalogResult {
  */
 export async function translateCatalog(
   c: Collections,
-  deps: { config: Config; llm: LlmClient },
+  deps: { config: Config; llm: LlmClient; source?: (videoId: string) => Promise<VideoSource | null> },
   opts: { yes: boolean; limit?: number; redo?: boolean },
   log: (line: string) => void,
 ): Promise<TranslateCatalogResult> {
@@ -41,7 +42,11 @@ export async function translateCatalog(
       limit(async () => {
         const recipe = fromDoc(doc);
         try {
-          const out = await translateRecipe(recipe, deps.llm, deps.config.paths.prompts, deps.config.models);
+          // The cached captions say whether the chef spoke English; recipes written before
+          // captionKind was stored get it recorded on the way.
+          const source = (await deps.source?.(recipe.source.videoId)) ?? null;
+          const out = await translateRecipe(recipe, deps.llm, deps.config.paths.prompts, deps.config.models, englishSourceFor(recipe, source));
+          if (source && !recipe.source.captionKind) await c.recipes.updateOne({ _id: doc._id }, { $set: { "source.captionKind": source.captionKind } });
           if (out.ok) {
             await c.recipes.updateOne({ _id: doc._id, archived: false }, { $set: { en: out.en } });
             result.translated.push(recipe.id);

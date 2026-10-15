@@ -19,7 +19,7 @@ import { runExtractor } from "../agents/extractor.js";
 import { runVerifier } from "../agents/verifier.js";
 import { runCategorizer } from "../agents/categorizer.js";
 import { findCandidates, runJudge, decide } from "../agents/judge.js";
-import { translateRecipe } from "../agents/translator.js";
+import { englishSourceFor, translateRecipe } from "../agents/translator.js";
 import path from "node:path";
 import { z } from "zod";
 
@@ -185,7 +185,7 @@ export async function ingest(url: string, deps: IngestDeps, opts: IngestOptions)
               if (recipe.completeness >= config.minCompleteness) {
                 try {
                   recipe.en = await stage(videoId, `translate-${i}`, TranslationSchema, shouldForce("translate"), async () => {
-                    const out = await llmLimit(() => translateRecipe(recipe, llm, promptsDir, config.models));
+                    const out = await llmLimit(() => translateRecipe(recipe, llm, promptsDir, config.models, englishSourceFor(recipe, source)));
                     if (!out.ok) throw new TranslationRejected(out.problems);
                     return out.en;
                   }, segment.workingName);

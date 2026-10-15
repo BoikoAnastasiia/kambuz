@@ -13,6 +13,14 @@ Rules
 - The English must contain no Cyrillic letters at all.
 - The Russian sometimes carries remarks about the video itself: the presenter showing something to the camera, or correcting a slip of the tongue ("(ранее ошибочно назван тимьян)"). Leave those out and keep only the cooking: «Показать яблоки в разрезе для проверки готовности» → "Cut an apple open to check that it is done."
 
+Dish name
+- `name` is the English name of `dish`, in sentence case: "Guacamole with shrimp", "Chicken thighs with potatoes and honey". The base dish plus the variation that defines it, nothing more.
+- `draftEnglishName` was written by the extraction step; use it only if it says the same as the Russian.
+
+English videos
+- When the input includes the chef's original English transcript, the video was in English and the Russian recipe was written from it. Use the chef's own words for the dish name, ingredient names and steps wherever they say what the Russian says ("garlic confit", "dimple the dough", "bread flour").
+- The Russian still decides what is in the recipe: same steps, same order, same amounts. Take nothing from the transcript that the Russian doesn't have.
+
 Glossary — these are commonly mistranslated
 - разбить яйца = crack the eggs (взбить = beat/whisk)
 - до полуготовности = until half-cooked; почти до полуготовности = until almost half-cooked (NOT "nearly done")

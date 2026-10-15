@@ -3,7 +3,8 @@ import pLimit from "p-limit";
 import { z } from "zod";
 import type { Config } from "../config.js";
 import type { LlmClient } from "../llm/client.js";
-import { checkTranslation, describeIssue, runProofreader, runTranslator } from "../agents/translator.js";
+import { checkTranslation, describeIssue, englishSourceFor, runProofreader, runTranslator } from "../agents/translator.js";
+import type { VideoSource } from "../schemas/source.js";
 import type { ProofreadIssue } from "../schemas/recipe.js";
 import type { Collections } from "../db/mongo.js";
 import { fromDoc } from "../db/mongoCatalog.js";
@@ -32,7 +33,7 @@ export async function readTranslationEvalIds(file: string): Promise<string[]> {
  */
 export async function runTranslationEval(
   c: Collections,
-  deps: { config: Config; llm: LlmClient },
+  deps: { config: Config; llm: LlmClient; source?: (videoId: string) => Promise<VideoSource | null> },
   ids: string[],
 ): Promise<{ rows: TranslationEvalRow[]; missing: string[] }> {
   const docs = await c.recipes.find({ _id: { $in: ids }, archived: false }).toArray();
@@ -43,9 +44,10 @@ export async function runTranslationEval(
     ids.filter((id) => byId.has(id)).map((id) =>
       limit(async () => {
         const recipe = byId.get(id)!;
-        const t = await runTranslator(recipe, deps.llm, deps.config.paths.prompts);
+        const ctx = englishSourceFor(recipe, (await deps.source?.(recipe.source.videoId)) ?? null);
+        const t = await runTranslator(recipe, deps.llm, deps.config.paths.prompts, [], ctx);
         const checks = checkTranslation(recipe, t);
-        const issues = await runProofreader(recipe, t, deps.llm, deps.config.paths.prompts);
+        const issues = await runProofreader(recipe, t, deps.llm, deps.config.paths.prompts, ctx);
         return { recipeId: id, nameRu: recipe.nameRu, checks, issues };
       }),
     ),

@@ -55,7 +55,7 @@ Seven stages run per video. Every LLM stage is a pure function with a typed
 | Stage | What it does | LLM |
 |---|---|---|
 | fetcher | `yt-dlp` pulls metadata and the best caption track (see above), parsed into timestamped cues | no |
-| scout | splits the transcript into one segment per dish actually cooked; says when a video is not a recipe at all | yes |
+| scout | splits the transcript into one segment per dish actually made; says when a video is not a recipe at all (a vlog, tips and hacks, a knife lesson, a review) | yes |
 | extractor | one call per segment: name, ingredients with quantities, ordered steps | yes |
 | verifier | checks every ingredient and step against the raw transcript and quotes the evidence | yes |
 | categorizer | cuisine, meal type, course, cooking method, timing, and a `dishKey` slug used for duplicate detection | yes |
@@ -67,6 +67,11 @@ chef said. Quantities carry a provenance tag: `stated` (he said "1.5 litres"),
 `inferred` (he said "take an onion", so one onion), or `unknown`. Ingredients
 that are not in the controlled vocabulary in `vocab/` are reported as unmapped,
 never made up; the vocabulary files are edited by hand only.
+
+Each ingredient has two notes: `note`, shown to the cook ("нарезать соломкой",
+"для соуса", "или 6 г сухих дрожжей"), and `sourceNote`, never shown: where the
+information came from ("в описании 6, в видео 8", "количество не названо", which
+clue decided butter or oil).
 
 A typical video costs about 2 cents through categorizing, on Haiku 5.5; translating
 and proofreading add about 4 cents per recipe.
@@ -169,10 +174,20 @@ translated". A translation failure never costs the recipe itself.
     npm run kambuz -- translate --yes --redo    # translate every recipe again (after a prompt change)
     npm run kambuz -- eval-translation [--yes]  # score the translator on eval/translation.json
 
-The translator gets each ingredient's plain name, the one the Russian page shows
-(`baseName`), and its note; the amount is a separate column on both pages. The
-prompt carries a short glossary of Russian cooking words that models get wrong
-(зажарка, маслины, разбить яйца, почти до полуготовности…).
+The translator writes the dish name (sentence case, "Guacamole with shrimp"), the
+steps and each ingredient's plain name, the one the Russian page shows
+(`baseName`), with its cook-facing note; the amount is a separate column on both
+pages. The prompt carries a short glossary of Russian cooking words that models
+get wrong (зажарка, маслины, разбить яйца, почти до полуготовности…).
+
+When the chef spoke English (English captions or subtitles in the cached
+source), the translator also gets his transcript for that dish and uses his own
+words, so an English video isn't translated into Russian and back. The Russian
+recipe still decides what is in it, step for step.
+
+When the proofreader names the lines it objects to, only those lines are
+rewritten and re-checked, not the whole recipe. Its findings are stored with the
+translation (`en.review`), so its strictness can be reviewed later.
 
 Haiku 5.5 was not good enough here: on the 20 recipes in `eval/translation.json`
 it left Russian in the output and changed meanings, where Sonnet 5.5 got 18 of
@@ -296,12 +311,14 @@ site's sign-in settings (`AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`,
 
     npm test
     npm run typecheck
+    cd web && npm run test:e2e   # browser smoke test of both languages (builds the site; reads the real database)
 
 The tests never call the API. Agents are tested with a fake LLM client,
 the fetcher with fixture caption files, the cache and pipeline on a
 temporary directory (with a JSON-file catalog), the database layer on an
 in-memory MongoDB (downloaded on the first run), and the site's role and
-language logic (`test/web`) as plain functions.
+language logic (`test/web`) as plain functions. The browser test in `web/e2e`
+is the exception: it runs the built site against the real database, read-only.
 
 ## Layout
 

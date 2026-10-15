@@ -54,8 +54,10 @@ function richVerification() {
 // checkTranslation (same counts, the step's digits, no Cyrillic) and the proofreader finds nothing.
 function translationAnswer(agent: string, user: string): any {
   if (agent === "proofreader") return { issues: [] };
-  const input = JSON.parse(user.split("\n\nAn earlier")[0]);
+  if (user.includes("Rewrite only these lines")) return { name: null, steps: [], ingredients: [] };
+  const input = JSON.parse(user.split("\n\n")[0]);
   return {
+    name: "Dish",
     steps: input.steps.map((s: string, k: number) => `Step ${k + 1} ${s.replace(/[^\d]+/g, " ").trim()}`.trim()),
     ingredients: input.ingredients.map((_: unknown, k: number) => ({ name: `ingredient ${k + 1}`, note: null })),
   };
