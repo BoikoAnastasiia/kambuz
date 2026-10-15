@@ -22,8 +22,9 @@ Glossary — these are commonly mistranslated
 - стакан = cup (a Russian стакан is about 200–250 ml); полстакана = half a cup
 - перец = pepper; write "black pepper" only if the Russian says чёрный
 - зелень = herbs (not "fresh herbs" unless it says свежая)
-- лавровый лист with no count = a bay leaf
+- лавровый лист with no count = "bay leaf", no article (not "a bay leaf", which says how many)
 - сбрызнуть = drizzle or sprinkle (not brush); смазать = brush
+- насыпать = put or spoon out something solid (purée, flour, rice), never "pour"; налить = pour a liquid
 - противень = baking tray; форма = baking dish or tin
 - обжарить = fry; тушить = braise or stew; томить = simmer gently; припустить = soften or cook gently
 - перебить фарш = beat the mince well

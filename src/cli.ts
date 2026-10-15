@@ -350,6 +350,7 @@ async function main(): Promise<void> {
             await mkdir(config.paths.reports, { recursive: true });
             await appendSpend(spendFile, spendEntry(report.finishedAt || report.startedAt, url, report.usageRows));
             console.log(`worker: ${url} → ${report.written.length} recipe(s), ${formatCost(totalCostUsd(report.usageRows))}`);
+            for (const u of report.untranslated) console.log(`worker: ${u.recipeId} kept in Russian only: ${u.problems.join(" | ")}`);
             return report;
           },
         },
