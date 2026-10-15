@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { connection } from "next/server";
 import { lang } from "next/root-params";
 import { collections } from "@/lib/db";
+import { movedRecipeId } from "@/lib/moved";
 import { capitalize, clock } from "@/lib/format";
 import { DICTS, amount, duration, isLang, localePath, methodLabel, type Lang } from "@/lib/i18n";
 import { watchUrl } from "@/lib/youtube";
@@ -77,7 +78,11 @@ async function RecipeView({ params }: { params: Promise<{ lang: string; id: stri
     vocab.findOne({ _id: "cuisines" }),
     vocab.findOne({ _id: "courses" }),
   ]);
-  if (!recipe) notFound();
+  if (!recipe) {
+    const moved = await movedRecipeId(recipes, id);
+    if (moved) permanentRedirect(localePath(lang, `/recipe/${moved}`));
+    notFound();
+  }
 
   const cuisine = recipe.cuisine === "other" ? null : vocabName(cuisines?.items, recipe.cuisine, lang);
   const course = vocabName(courses?.items, recipe.course, lang) ?? recipe.course;

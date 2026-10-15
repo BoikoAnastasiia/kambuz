@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 // A recipe that has an English translation; any translated recipe would do.
-const RECIPE = "/recipe/pizza-pepperoni--MDX8fylSisU";
+const RECIPE = "/recipe/pizza--MDX8fylSisU";
+// Its address before the video was re-processed; the dish is archived under that id.
+const OLD_RECIPE = "/recipe/pizza-pepperoni--MDX8fylSisU";
 
 test.describe("a Russian browser", () => {
   test.use({ locale: "ru-RU" });
@@ -54,6 +56,11 @@ test.describe("an English browser", () => {
     const text = (await recipe.locator("section").allInnerTexts()).join(" ");
     expect(text).not.toMatch(/[А-Яа-яЁё]/);
   });
+});
+
+test("an old recipe address leads to the same dish's current one", async ({ page }) => {
+  await page.goto(`/en${OLD_RECIPE}`);
+  await expect(page).toHaveURL(new RegExp(`/en${RECIPE}$`));
 });
 
 test("the sitemap lists recipes in both languages", async ({ request }) => {
