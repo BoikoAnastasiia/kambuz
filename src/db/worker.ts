@@ -22,6 +22,7 @@ export function describeEvent(e: IngestEvent): string | null {
       if (e.stage === "source") return "Скачиваем субтитры";
       if (e.stage === "scout") return "Ищем блюда в видео";
       if (e.stage === "extract") return `Записываем рецепт: ${e.workingName ?? `блюдо ${(e.segmentIndex ?? 0) + 1}`}`;
+      if (e.stage === "translate") return `Переводим на английский: ${e.workingName ?? `блюдо ${(e.segmentIndex ?? 0) + 1}`}`;
       return null;
     case "segment:error":
       return `Одно блюдо не получилось: ${friendlyError(e.error)}`;
@@ -32,7 +33,7 @@ export function describeEvent(e: IngestEvent): string | null {
       if (e.action === "invalid") return "Одно блюдо пропущено: рецепт не прошёл проверку";
       return null;
     case "video:done":
-      if (e.status === "skipped-no-captions") return "У этого видео нет русских субтитров";
+      if (e.status === "skipped-no-captions") return "У этого видео нет субтитров";
       if (e.status === "not-recipe") return "Это не похоже на кулинарное видео";
       if (e.status === "error") return "Не удалось разобрать видео";
       return `Готово, рецептов: ${e.recipes}`;

@@ -190,8 +190,9 @@ describe("worker", () => {
   it("describes only the events worth showing on the site", () => {
     expect(describeEvent({ type: "stage:start", videoId: "v", stage: "extract", segmentIndex: 0, workingName: "Пирог" })).toBe("Записываем рецепт: Пирог");
     expect(describeEvent({ type: "stage:start", videoId: "v", stage: "verify", segmentIndex: 0 })).toBeNull();
+    expect(describeEvent({ type: "stage:start", videoId: "v", stage: "translate", segmentIndex: 0, workingName: "Пирог" })).toBe("Переводим на английский: Пирог");
     expect(describeEvent({ type: "video:done", videoId: "v", status: "done", recipes: 1 })).toBe("Готово, рецептов: 1");
-    expect(describeEvent({ type: "video:done", videoId: "v", status: "skipped-no-captions", recipes: 0 })).toBe("У этого видео нет русских субтитров");
+    expect(describeEvent({ type: "video:done", videoId: "v", status: "skipped-no-captions", recipes: 0 })).toBe("У этого видео нет субтитров");
   });
 });
 
