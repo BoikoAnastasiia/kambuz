@@ -84,7 +84,9 @@ export interface CaptionTrack {
 
 /**
  * The track whose text is closest to what the chef actually said or wrote:
- * 1. the automatic caption of the original speech ("<lang>-orig", any language);
+ * 1. the automatic caption of the original speech ("<lang>-orig"). A video YouTube has dubbed
+ *    has one per audio track ("ru-orig", "en-US-orig", "ar-orig"…); the one in the video's own
+ *    language is the chef's voice and the rest are machine dubs, so it comes first;
  * 2. an automatic caption in the video's own language (older videos have no "-orig" key);
  * 3. subtitles the author uploaded: the video's language, then Russian, then English, then any;
  * 4. the Russian automatic caption, which may be YouTube's machine translation — still
@@ -95,7 +97,8 @@ export function pickCaptionTrack(info: Pick<Info, "language" | "subtitles" | "au
   const auto = Object.keys(info.automatic_captions ?? {});
   const manual = Object.keys(info.subtitles ?? {}).filter((k) => k !== "live_chat");
   const videoLang = baseLanguage(info.language);
-  const orig = auto.find((k) => k.endsWith("-orig"));
+  const origs = auto.filter((k) => k.endsWith("-orig"));
+  const orig = origs.find((k) => baseLanguage(k.slice(0, -"-orig".length)) === videoLang) ?? origs[0];
   if (orig) return { lang: orig, auto: true, kind: "spoken" };
   if (videoLang !== "und" && auto.includes(videoLang)) return { lang: videoLang, auto: true, kind: "spoken" };
   const preferred = [videoLang, "ru", "en"].map((l) => manual.find((k) => baseLanguage(k) === l)).find(Boolean) ?? manual[0];

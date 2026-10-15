@@ -4,6 +4,12 @@ import { parseVideoId, buildSource, ytDlpError, pickCaptionTrack, infoArgs, subs
 const tracks = (keys: string[]) => Object.fromEntries(keys.map((k) => [k, []]));
 
 describe("pickCaptionTrack", () => {
+  it("takes the original-speech track in the video's own language when YouTube has dubbed it", () => {
+    // A Russian ship-cook video with an English AI dub, and an English video dubbed into many languages.
+    expect(pickCaptionTrack({ language: "ru", subtitles: {}, automatic_captions: tracks(["en-US-orig", "ru-orig", "en", "ru"]) })).toEqual({ lang: "ru-orig", auto: true, kind: "spoken" });
+    expect(pickCaptionTrack({ language: "en-US", subtitles: {}, automatic_captions: tracks(["ar-orig", "de-DE-orig", "en-orig", "ru-orig"]) })).toEqual({ lang: "en-orig", auto: true, kind: "spoken" });
+  });
+
   it("prefers the original spoken track in any language", () => {
     expect(pickCaptionTrack({ language: null, subtitles: {}, automatic_captions: tracks(["ru", "en", "ru-orig"]) })).toEqual({ lang: "ru-orig", auto: true, kind: "spoken" });
     expect(pickCaptionTrack({ language: "en-US", subtitles: {}, automatic_captions: tracks(["en-orig", "en", "ru"]) })).toEqual({ lang: "en-orig", auto: true, kind: "spoken" });
