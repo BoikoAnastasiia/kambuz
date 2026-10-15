@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CaptionKindSchema } from "./source.js";
 
 export const ProvenanceSchema = z.enum(["stated", "inferred", "unknown"]);
 export type Provenance = z.infer<typeof ProvenanceSchema>;
@@ -10,9 +11,16 @@ export const DraftIngredientSchema = z.object({
   quantity: z.number().nullable(),
   unit: z.string().nullable().describe("g, ml, pc, tbsp, tsp, clove, or null"),
   provenance: ProvenanceSchema,
-  note: z.string().nullable(),
+  note: z.string().nullable().describe("For the cook: preparation, what it is for, fat content, an alternative. Shown on the site."),
+  // Recipes and cache files written before the split have only `note`.
+  sourceNote: z.string().nullable().optional(),
 });
 export type DraftIngredient = z.infer<typeof DraftIngredientSchema>;
+
+// What the extractor is asked for: every field required, so the model always decides where a remark goes.
+export const DraftIngredientWireSchema = DraftIngredientSchema.extend({
+  sourceNote: z.string().nullable().describe("Where the information came from, never shown: description vs speech, the clue for butter vs oil, 'not named', 'not in the vocabulary'."),
+});
 
 export const DraftStepSchema = z.object({
   order: z.number().int(),
@@ -30,6 +38,8 @@ export const DraftRecipeSchema = z.object({
   unmappedIngredients: z.array(z.string()),
 });
 export type DraftRecipe = z.infer<typeof DraftRecipeSchema>;
+
+export const DraftRecipeWireSchema = DraftRecipeSchema.extend({ ingredients: z.array(DraftIngredientWireSchema) });
 
 export const VerificationSchema = z.object({
   ingredients: z.array(z.object({ rawName: z.string(), quote: z.string().nullable(), supported: z.boolean() })),
@@ -73,26 +83,32 @@ export const CategorizationWireSchema = CategorizationSchema.extend({
 export const RecipeFlagSchema = z.object({ kind: z.enum(["ingredient", "step"]), ref: z.string(), reason: z.string() });
 export type RecipeFlag = z.infer<typeof RecipeFlagSchema>;
 
-// What the translator is asked for: one English line per Russian step and ingredient, same order.
+// What the translator is asked for: the dish name, then one English line per Russian step and ingredient, same order.
 export const TranslationWireSchema = z.object({
+  name: z.string(),
   steps: z.array(z.string()),
   ingredients: z.array(z.object({ name: z.string(), note: z.string().nullable() })),
 });
 export type TranslationWire = z.infer<typeof TranslationWireSchema>;
 
+export const ProofreadIssueKindSchema = z.enum(["meaning", "added", "dropped", "unclear", "tool_note"]);
+export const ProofreadIssueSchema = z.object({ item: z.string(), kind: ProofreadIssueKindSchema, russian: z.string(), english: z.string(), explanation: z.string() });
+export const ProofreadSchema = z.object({ issues: z.array(ProofreadIssueSchema) });
+export type ProofreadIssue = z.infer<typeof ProofreadIssueSchema>;
+
 /** The English version stored on a recipe, present only once it passed the checks and the proofreader. */
 export const TranslationSchema = TranslationWireSchema.extend({
+  // Translations stored before names were translated have none; the site falls back to nameEn.
+  name: z.string().optional(),
   model: z.string(),
   proofreader: z.string(),
   translatedAt: z.string(),
+  /** What the proofreader found before the translation was accepted, kept so its strictness can be reviewed. */
+  review: z.object({ rounds: z.number(), findings: z.array(ProofreadIssueSchema) }).optional(),
+  /** True when the chef's own English transcript was given to the translator. */
+  fromEnglishSource: z.boolean().optional(),
 });
 export type Translation = z.infer<typeof TranslationSchema>;
-
-export const ProofreadIssueKindSchema = z.enum(["meaning", "added", "dropped", "unclear", "tool_note"]);
-export const ProofreadSchema = z.object({
-  issues: z.array(z.object({ item: z.string(), kind: ProofreadIssueKindSchema, russian: z.string(), english: z.string(), explanation: z.string() })),
-});
-export type ProofreadIssue = z.infer<typeof ProofreadSchema>["issues"][number];
 
 export const RecipeSchema = z.object({
   id: z.string(),
@@ -115,6 +131,8 @@ export const RecipeSchema = z.object({
     videoId: z.string(), url: z.string(), videoTitle: z.string(),
     channel: z.string(), channelId: z.string(),
     segmentStart: z.number(), segmentEnd: z.number(), language: z.string(),
+    /** What `language` describes: spoken captions, the author's subtitles, chapter titles or nothing. Older recipes lack it. */
+    captionKind: CaptionKindSchema.optional(),
   }),
   extractedAt: z.string(),
   models: z.record(z.string(), z.string()),

@@ -1,6 +1,6 @@
 import type { LlmClient } from "../llm/client.js";
 import { loadPrompt } from "../prompts/load.js";
-import { DraftRecipeSchema, type DraftRecipe } from "../schemas/recipe.js";
+import { DraftRecipeWireSchema, type DraftRecipe } from "../schemas/recipe.js";
 import type { ScoutSegment } from "../schemas/scout.js";
 import type { Vocab } from "../vocab/load.js";
 import { ingredientPromptList } from "../vocab/validate.js";
@@ -45,7 +45,7 @@ export async function runExtractor(
   source?: SourceContext,
 ): Promise<DraftRecipe> {
   const system = await loadPrompt("extractor", promptsDir);
-  const raw = await llm.callStructured({ agent: "extractor", system, user: buildExtractorUser(segment, vocab, timedTranscript, source), schema: DraftRecipeSchema });
+  const raw = await llm.callStructured({ agent: "extractor", system, user: buildExtractorUser(segment, vocab, timedTranscript, source), schema: DraftRecipeWireSchema });
   const known = new Set(vocab.ingredients.map((i) => i.id));
   const unmapped = new Set(raw.unmappedIngredients);
   const ingredients = raw.ingredients.map((ing) => {
