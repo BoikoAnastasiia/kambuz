@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { AdminLink } from "@/components/AdminLink";
 import { Flags, LanguageSwitch } from "@/components/LanguageSwitch";
 import { DICTS, LANGS, isLang, localePath } from "@/lib/i18n";
+import { SITE_URL } from "@/lib/site";
 import "../globals.css";
 
 // Both carry Cyrillic: recipe names and ingredients are in Russian.
@@ -20,9 +21,10 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
   const { lang } = await params;
   const t = DICTS[isLang(lang) ? lang : "ru"];
   return {
+    metadataBase: new URL(SITE_URL),
     title: t.htmlTitle,
     description: t.htmlDescription,
-    alternates: { languages: { ru: "/", en: "/en" } },
+    alternates: { canonical: localePath(isLang(lang) ? lang : "ru", "/"), languages: { ru: "/", en: "/en" } },
   };
 }
 

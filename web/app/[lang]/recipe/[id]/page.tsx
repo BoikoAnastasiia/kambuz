@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -36,6 +37,27 @@ function content(recipe: RecipeDoc, lang: Lang): { ingredients: Line[]; steps: s
   });
   const steps = recipe.steps.map((s, k) => en?.steps[k] ?? s.text);
   return { ingredients, steps, translated: lang === "ru" || !!en };
+}
+
+function dishName(recipe: RecipeDoc, lang: Lang): string {
+  return lang === "ru" ? recipe.nameRu : (recipe.en?.name ?? recipe.nameEn);
+}
+
+/** The dish in the tab and in search results, with the ingredients as the description. */
+export async function generateMetadata({ params }: PageProps<"/[lang]/recipe/[id]">): Promise<Metadata> {
+  // A database read belongs to the request (the driver stamps it with the time), like the page's own.
+  await connection();
+  const { lang: rawLang, id } = await params;
+  const lang: Lang = isLang(rawLang) ? rawLang : "ru";
+  const { recipes } = await collections();
+  const recipe = await recipes.findOne({ _id: id });
+  if (!recipe) return {};
+  const names = content(recipe, lang).ingredients.map((i) => i.name.toLowerCase());
+  return {
+    title: `${dishName(recipe, lang)} — Kambuz`,
+    description: `${DICTS[lang].ingredients}: ${names.slice(0, 12).join(", ")}${names.length > 12 ? "…" : ""}`,
+    alternates: { canonical: localePath(lang, `/recipe/${id}`), languages: { ru: `/recipe/${id}`, en: `/en/recipe/${id}` } },
+  };
 }
 
 function vocabName(items: VocabItem[] | undefined, id: string, lang: Lang): string | undefined {
@@ -79,7 +101,7 @@ async function RecipeView({ params }: { params: Promise<{ lang: string; id: stri
             <span key={tag} className={styles.tag}>{capitalize(tag)}</span>
           ))}
         </div>
-        <h1 className={styles.title}>{lang === "ru" ? recipe.nameRu : recipe.nameEn}</h1>
+        <h1 className={styles.title}>{dishName(recipe, lang)}</h1>
         <dl className={styles.stats}>
           {stats.map((s) => (
             <div key={s.label}>

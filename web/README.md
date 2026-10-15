@@ -25,6 +25,10 @@ Russian at the bare paths, English under `/en` (`/en`, `/en/recipe/[id]`):
 - `/` — the picker. `GET /api/suggest?meal=&cuisine=&include=a,b&exclude=<recipe id>&lang=ru|en`
 - `/recipe/[id]` — ingredients, steps with timestamps, the video embedded at the dish
 - `/add` — paste a YouTube link. `POST /api/jobs {url}`, then `GET /api/jobs/[id]`
+- `/sitemap.xml` — every recipe in both languages; `/robots.txt` points to it
+
+Each recipe page has its own title ("Pepperoni Pizza — Kambuz") and links to its
+other-language twin.
 
 ## Languages
 
@@ -39,6 +43,13 @@ course and ingredient names come from the vocab's `nameRu` / `nameEn`. A recipe'
 English comes from its `en` field, written by the pipeline's translator (see the
 root README); a recipe without one is shown in Russian with a note. The admin page
 (`/add`) and the worker's progress messages stay in Russian.
+
+## Test
+
+    npm run test:e2e     # builds, starts on :3100, and checks both languages in Chromium
+
+It reads the real database (nothing is written), so it needs `MONGODB_URI` in the
+repo-root `.env`.
 
 ## Design
 

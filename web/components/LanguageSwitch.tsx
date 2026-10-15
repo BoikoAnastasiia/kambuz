@@ -26,6 +26,9 @@ export function Flags({ lang, pathname }: { lang: Lang; pathname: string }) {
           key={f.lang}
           href={switchPath(pathname, f.lang)}
           hrefLang={f.lang}
+          // Not prefetched: a prefetch made before the click carries the old cookie, so the
+          // proxy would answer it with a redirect back to the language being left.
+          prefetch={false}
           lang={f.lang}
           aria-current={f.lang === lang ? "true" : undefined}
           aria-label={f.label}

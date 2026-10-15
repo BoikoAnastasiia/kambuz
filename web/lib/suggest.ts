@@ -61,7 +61,7 @@ function toCard(r: RecipeDoc, lang: Lang, vocabEn: Map<string, string>): RecipeC
       : r.ingredients.map((i, k) => r.en?.ingredients[k]?.name ?? (i.ingredient ? vocabEn.get(i.ingredient) : undefined) ?? i.rawName);
   return {
     id: r.id,
-    name: lang === "ru" ? r.nameRu : r.nameEn,
+    name: lang === "ru" ? r.nameRu : (r.en?.name ?? r.nameEn),
     cuisine: r.cuisine,
     course: r.course,
     method: r.method,

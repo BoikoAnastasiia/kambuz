@@ -9,6 +9,7 @@ export interface Ingredient {
   quantity: number | null;
   unit: string | null;
   provenance: "stated" | "inferred" | "unknown";
+  /** For the cook; shown. Where the information came from is in `sourceNote`, which the site never shows. */
   note: string | null;
 }
 
@@ -28,9 +29,12 @@ export interface Recipe {
   ingredients: Ingredient[];
   steps: { order: number; text: string; timestamp: number }[];
   completeness: number;
+  extractedAt: string;
   source: { videoId: string; url: string; videoTitle: string; channel: string; segmentStart: number; segmentEnd: number };
   /** The English version, one entry per step and ingredient; absent until a translation has been accepted. */
   en?: {
+    /** Older translations have no name; use nameEn then. */
+    name?: string;
     steps: string[];
     ingredients: { name: string; note: string | null }[];
     model: string;
