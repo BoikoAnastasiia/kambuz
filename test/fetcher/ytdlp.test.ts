@@ -19,8 +19,10 @@ describe("pickCaptionTrack", () => {
     expect(pickCaptionTrack({ language: "en-US", subtitles: {}, automatic_captions: tracks(["en", "ru"]) })).toEqual({ lang: "en", auto: true, kind: "spoken" });
   });
 
-  it("falls back to the author's subtitles, video language first, then Russian, then English", () => {
-    expect(pickCaptionTrack({ language: null, subtitles: tracks(["en", "ru"]), automatic_captions: tracks(["en", "ru"]) })).toEqual({ lang: "ru", auto: false, kind: "author" });
+  it("falls back to the author's subtitles, video language first, then English, then Russian", () => {
+    // A silent video with subtitles in many languages: English is most likely the author's own.
+    expect(pickCaptionTrack({ language: null, subtitles: tracks(["en", "ru"]), automatic_captions: tracks(["en", "ru"]) })).toEqual({ lang: "en", auto: false, kind: "author" });
+    expect(pickCaptionTrack({ language: null, subtitles: tracks(["ru", "uk"]), automatic_captions: {} })).toEqual({ lang: "ru", auto: false, kind: "author" });
     expect(pickCaptionTrack({ language: "de", subtitles: tracks(["en", "de"]), automatic_captions: {} })).toEqual({ lang: "de", auto: false, kind: "author" });
     expect(pickCaptionTrack({ language: null, subtitles: tracks(["live_chat"]), automatic_captions: {} })).toBeNull();
   });

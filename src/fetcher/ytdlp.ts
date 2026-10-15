@@ -88,7 +88,10 @@ export interface CaptionTrack {
  *    has one per audio track ("ru-orig", "en-US-orig", "ar-orig"…); the one in the video's own
  *    language is the chef's voice and the rest are machine dubs, so it comes first;
  * 2. an automatic caption in the video's own language (older videos have no "-orig" key);
- * 3. subtitles the author uploaded: the video's language, then Russian, then English, then any;
+ * 3. subtitles the author uploaded: the video's language, then English, then Russian, then any.
+ *    English before Russian: a silent video with subtitles in twenty languages usually wrote
+ *    them in English, and the English site then gets the author's words, not a translation
+ *    of their Russian translation; the extractor writes the Russian recipe from any language;
  * 4. the Russian automatic caption, which may be YouTube's machine translation — still
  *    better than nothing, and what every video got before languages were picked here.
  * Any other automatic caption is a machine translation of a translation and is never used.
@@ -101,7 +104,7 @@ export function pickCaptionTrack(info: Pick<Info, "language" | "subtitles" | "au
   const orig = origs.find((k) => baseLanguage(k.slice(0, -"-orig".length)) === videoLang) ?? origs[0];
   if (orig) return { lang: orig, auto: true, kind: "spoken" };
   if (videoLang !== "und" && auto.includes(videoLang)) return { lang: videoLang, auto: true, kind: "spoken" };
-  const preferred = [videoLang, "ru", "en"].map((l) => manual.find((k) => baseLanguage(k) === l)).find(Boolean) ?? manual[0];
+  const preferred = [videoLang, "en", "ru"].map((l) => manual.find((k) => baseLanguage(k) === l)).find(Boolean) ?? manual[0];
   if (preferred) return { lang: preferred, auto: false, kind: "author" };
   if (auto.includes("ru")) return { lang: "ru", auto: true, kind: "spoken" };
   return null;
