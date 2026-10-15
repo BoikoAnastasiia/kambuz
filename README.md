@@ -1,15 +1,47 @@
 # Kambuz
 
-Multi-agent pipeline that turns YouTube cooking videos into grounded, structured recipes.
-Give it a video or playlist URL; it writes one recipe per dish into MongoDB, where the
-"What to cook?" site in `web/` reads them.
+Multi-agent Claude pipeline that turns YouTube cooking videos into grounded, structured
+recipes, and the "What to cook?" site that serves them in Russian and English. Give it a
+video or playlist URL; it writes one recipe per dish into MongoDB, and the site in `web/`
+picks you a dish by meal, cuisine and the ingredients you have.
+
+**Live:** https://kambuz-lilac.vercel.app (English: https://kambuz-lilac.vercel.app/en)
 
 Kambuz (камбуз) is the galley on a ship. The first source channel is a ship's cook
 who films his recipes in Russian, without descriptions or chapters, so the only
 input is the auto-generated captions. One video often holds five to eight dishes.
 
-Other videos work too, in any language; the recipes always come out in Russian.
-For each video the fetcher reads the info json and keeps the best timed text it has:
+## Features
+
+- **One recipe per dish** — a scout splits a vlog into the dishes actually cooked and
+  skips videos that aren't recipes; each step links to its moment in the video
+- **Grounded, not invented** — a verifier checks every ingredient and amount against
+  the transcript, and every quantity says whether it was stated, inferred or unknown
+- **Duplicates caught** — a judge compares a new dish with similar ones and keeps the
+  more complete version
+- **Russian and English** — Sonnet 5.5 translates each recipe, code checks and an
+  Opus 5.5 proofread decide whether the translation is good enough to show
+- **Add a video from the site** — admins (Google sign-in) paste a link; a worker on
+  your own machine picks up the job and the recipes appear a few minutes later
+- **Measured** — an eval for the extraction, a bench for comparing models per agent,
+  a translation eval, and the cost of every run in dollars
+
+<p align="center">
+  <img src="docs/screens/home.png" width="260" alt="Home — pick a meal and a cuisine, get a dish" />
+  <img src="docs/screens/ingredients.png" width="260" alt="Must-have ingredients — only ones the matching dishes contain" />
+  <img src="docs/screens/recipe.png" width="260" alt="Recipe — ingredients, steps and the video at the dish" />
+</p>
+
+## Stack
+
+TypeScript · Claude API (Haiku 5.5, Sonnet 5.5, Opus 5.5) with Zod structured outputs ·
+yt-dlp · MongoDB Atlas · Next.js 16 (App Router, Cache Components) · Auth.js · Vercel ·
+vitest
+
+## Sources
+
+Videos in any language work. The recipes are written in Russian, then translated into
+English. For each video the fetcher reads the info json and keeps the best timed text it has:
 the auto-captions of the original speech (`<lang>-orig`), else subtitles the author
 uploaded, else (a silent video) its chapter titles. The author's description goes
 to every agent as a second source, so ingredients and amounts written there count
@@ -22,7 +54,7 @@ Seven stages run per video. Every LLM stage is a pure function with a typed
 
 | Stage | What it does | LLM |
 |---|---|---|
-| fetcher | `yt-dlp` pulls metadata and Russian auto-captions, parsed into timestamped cues | no |
+| fetcher | `yt-dlp` pulls metadata and the best caption track (see above), parsed into timestamped cues | no |
 | scout | splits the transcript into one segment per dish actually cooked; says when a video is not a recipe at all | yes |
 | extractor | one call per segment: name, ingredients with quantities, ordered steps | yes |
 | verifier | checks every ingredient and step against the raw transcript and quotes the evidence | yes |
@@ -35,6 +67,9 @@ chef said. Quantities carry a provenance tag: `stated` (he said "1.5 litres"),
 `inferred` (he said "take an onion", so one onion), or `unknown`. Ingredients
 that are not in the controlled vocabulary in `vocab/` are reported as unmapped,
 never made up; the vocabulary files are edited by hand only.
+
+A typical video costs about 2 cents through categorizing, on Haiku 5.5; translating
+and proofreading add about 4 cents per recipe.
 
 Per-video stage results are cached in `.cache/<videoId>/`, so a run resumes
 where it stopped and a single stage can be re-run after a prompt or vocabulary
@@ -56,10 +91,11 @@ Node 22 or newer.
     npm run kambuz -- ingest "https://youtu.be/bskR7LVpF7I"
     npm run kambuz -- ingest "https://www.youtube.com/playlist?list=..."
     npm run kambuz -- ingest <url> --only-stage extract   # rerun extraction after editing vocab
+    npm run kambuz -- translate --yes                    # English for recipes that have none
     npm run eval                                         # score the catalog against eval/cases
 
 `--only-stage <stage>` re-runs that stage and every stage downstream of it
-(`scout` < `extract` < `verify` < `categorize`); `--force` alone re-runs
+(`scout` < `extract` < `verify` < `categorize` < `translate`); `--force` alone re-runs
 every agent stage. Neither flag re-fetches captions — the `yt-dlp` source
 stage is only re-run when its cache entry is missing.
 
@@ -76,8 +112,9 @@ print the final report.
 
 Each run writes a report to `reports/<timestamp>.md` and prints its path
 and the token-usage table to stdout. The report lists what was written,
-what the verifier flagged, which segments failed, and every ingredient the
-extractor could not map to `vocab/ingredients.json`.
+what the verifier flagged, which segments failed, every ingredient the
+extractor could not map to `vocab/ingredients.json`, and the recipes whose
+translation was not accepted.
 
 ## Reports
 
@@ -117,7 +154,7 @@ provenance). The command prints a table and exits non-zero if any check fails,
 so a prompt or vocabulary change can be regression-tested. Without `--ingest`
 it never calls the API — it only reads what is already in the database.
 
-### Translation
+## Translation
 
 Every kept recipe gets an English version (`en` on the recipe document) written
 by the translator (Sonnet 5.5) and checked twice: by code (same number of steps
@@ -129,7 +166,13 @@ translated". A translation failure never costs the recipe itself.
 
     npm run kambuz -- translate                 # how many recipes have no English, and the cost
     npm run kambuz -- translate --yes [--limit N]
+    npm run kambuz -- translate --yes --redo    # translate every recipe again (after a prompt change)
     npm run kambuz -- eval-translation [--yes]  # score the translator on eval/translation.json
+
+The translator gets each ingredient's plain name, the one the Russian page shows
+(`baseName`), and its note; the amount is a separate column on both pages. The
+prompt carries a short glossary of Russian cooking words that models get wrong
+(зажарка, маслины, разбить яйца, почти до полуготовности…).
 
 Haiku 5.5 was not good enough here: on the 20 recipes in `eval/translation.json`
 it left Russian in the output and changed meanings, where Sonnet 5.5 got 18 of
@@ -195,17 +238,19 @@ The catalog lives in MongoDB (a free Atlas M0 cluster is plenty), and `ingest`,
     MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/kambuz
 
 Collections: `recipes` (live ones, plus each replaced version with
-`archived: true`), `videos` (every video the pipeline has seen and what came of
-it), `jobs` (add-video requests from the site) and `vocab` (copied from
-`vocab/*.json` whenever the worker starts).
+`archived: true`; the English version is the `en` field), `videos` (every video
+the pipeline has seen and what came of it), `jobs` (add-video requests from the
+site), `workers` (the worker's heartbeat, shown on the admin page) and `vocab`
+(copied from `vocab/*.json` whenever the worker starts).
 
 The catalog used to be JSON files in `catalog/`; that folder is in git history.
 To load such a folder back into the database:
 
     npm run kambuz -- db-import     # catalog/recipes, catalog/archive and vocab; safe to re-run
 
-The "What to cook?" site in `web/` reads the same database. To add videos from
-the site, keep the worker running next to it:
+The "What to cook?" site in `web/` reads the same database (setup, sign-in and
+deploy in `web/README.md`). To add videos from the site, keep the worker running
+next to it:
 
     npm run kambuz -- worker        # runs queued add-video jobs one at a time
     cd web && npm run dev           # http://localhost:3000
@@ -215,25 +260,37 @@ collection and the worker picks it up, so the pipeline (and yt-dlp, which YouTub
 blocks on most hosting) stays on this machine even when the site is deployed. A
 video already in the database is not queued again. Stopping the worker with Ctrl+C
 lets the current job finish; a job cut off harder is put back in the queue on the
-next start.
+next start. Adding videos needs the admin role: Google sign-in with an email listed
+in `ADMIN_EMAILS`.
+
+The site is in Russian at the bare paths (`/`, `/recipe/…`) and in English under
+`/en`. Pages live in `web/app/[lang]`; `web/proxy.ts` rewrites a bare path to the
+Russian pages, and sends a visitor to `/en` when they picked the 🇺🇸 flag (a
+`lang` cookie) or, on a first visit, when their browser's first language isn't
+Russian, Ukrainian, Belarusian or Kazakh. The interface text is in
+`web/lib/i18n.ts`; recipes show their stored `en` translation, and a recipe
+without one shows the Russian with a note. The admin page stays in Russian.
 
 ## Configuration
 
-`.env` (copied from `.env.example`) holds `ANTHROPIC_API_KEY` and, optionally:
+`.env` (copied from `.env.example`) holds `ANTHROPIC_API_KEY`, `MONGODB_URI`, the
+site's sign-in settings (`AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`,
+`ADMIN_EMAILS`) and, optionally:
 
-- `KAMBUZ_MODEL=<id>` — model for every agent (default `claude-haiku-5-5`).
+- `KAMBUZ_MODEL=<id>` — model for every extraction agent (default `claude-haiku-5-5`).
 - `KAMBUZ_MODEL_SCOUT`, `..._EXTRACTOR`, `..._VERIFIER`, `..._CATEGORIZER`,
   `..._JUDGE` — override one agent, e.g. `KAMBUZ_MODEL_SCOUT=claude-opus-5`.
 - `KAMBUZ_MODEL_TRANSLATOR` (default `claude-sonnet-5-5`) and
   `KAMBUZ_MODEL_PROOFREADER` (default `claude-opus-5-5`) — the translation pair;
   `KAMBUZ_MODEL` does not change them. Both run at `high` effort.
 - `KAMBUZ_EFFORT_<AGENT>=low|medium|high|xhigh|max` — thinking effort for one agent,
-  e.g. `KAMBUZ_EFFORT_VERIFIER=low`. The scout defaults to `high`; every other
-  agent sends no effort field and runs at the model's own default (`medium` on
+  e.g. `KAMBUZ_EFFORT_VERIFIER=low`. The scout, translator and proofreader default
+  to `high`; every other agent sends no effort field and runs at the model's own default (`medium` on
   Haiku 5.5). Any other value is ignored.
 - `KAMBUZ_CONCURRENCY=<n>` — simultaneous LLM calls across the whole run
   (default 4).
-- `MONGODB_URI` — the database (see above); required, and the site reads it too.
+- `KAMBUZ_MIN_COMPLETENESS=<0..1>` — recipes scoring below this are not written
+  (default 0.3).
 
 ## Test
 
@@ -242,22 +299,28 @@ next start.
 
 The tests never call the API. Agents are tested with a fake LLM client,
 the fetcher with fixture caption files, the cache and pipeline on a
-temporary directory (with a JSON-file catalog), and the database layer on an
-in-memory MongoDB (downloaded on the first run).
+temporary directory (with a JSON-file catalog), the database layer on an
+in-memory MongoDB (downloaded on the first run), and the site's role and
+language logic (`test/web`) as plain functions.
 
 ## Layout
 
     src/
       fetcher/       yt-dlp wrapper and VTT caption parser
-      agents/        scout, extractor, verifier, categorizer, judge
+      agents/        scout, extractor, verifier, categorizer, judge, translator (+ proofreader)
       prompts/       one markdown prompt per agent
       llm/           structured-output client and usage ledger
       orchestrator/  stage cache, catalog, pipeline
       schemas/       Zod schemas for every stage
       vocab/         loader and validator for vocab/*.json
-      db/            MongoDB catalog, import, and the add-video job worker
+      db/            MongoDB catalog, import, the add-video job worker, catalog translation
+      eval/          catalog eval and translation eval
+      bench/         per-agent model comparison
+      cli/           live progress tree and spend log
     vocab/           cuisines, courses, methods, ingredients (human-edited)
-    web/             the Next.js site (see web/README.md)
+    eval/            eval cases, bench labels, translation eval recipes
+    web/             the Next.js site, Russian and English (see web/README.md)
+    docs/screens/    the screenshots above
     docs/specs/      design document
     docs/plans/      implementation plan
 
