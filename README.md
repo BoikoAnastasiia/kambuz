@@ -29,8 +29,8 @@ input is the auto-generated captions. One video often holds five to eight dishes
   a translation eval, and the cost of every run in dollars
 
 <p align="center">
-  <img src="docs/screens/home.png" width="260" alt="Home — pick a meal and a cuisine, get a dish" />
-  <img src="docs/screens/ingredients.png" width="260" alt="Must-have ingredients — only ones the matching dishes contain" />
+  <img src="docs/screens/home.png" width="260" alt="Home — meal, cuisine and ingredient menus, a search, and a dish picked for you" />
+  <img src="docs/screens/search.png" width="260" alt="Search — every dish matching the text, within the menus' filters" />
   <img src="docs/screens/recipe.png" width="260" alt="Recipe — ingredients, steps and the video at the dish" />
 </p>
 
