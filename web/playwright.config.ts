@@ -13,5 +13,7 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 240_000,
   },
-  projects: [{ name: "chromium", use: devices["Desktop Chrome"] }],
+  // The installed Google Chrome, so no browser has to be downloaded; `npx playwright install chromium`
+  // and dropping `channel` runs it on Playwright's own build instead.
+  projects: [{ name: "chrome", use: { ...devices["Desktop Chrome"], channel: "chrome" } }],
 });
