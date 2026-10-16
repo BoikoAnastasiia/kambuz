@@ -13,7 +13,7 @@ test.describe("a Russian browser", () => {
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "ru");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Что на ужин?");
-    await expect(page.getByRole("radio", { name: /Ужин/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Приём пищи: Ужин" })).toBeVisible();
   });
 
   test("switches the same recipe to English with the flag, and stays English after that", async ({ page }) => {
@@ -55,6 +55,47 @@ test.describe("an English browser", () => {
     // The source video's title may be Russian; the recipe itself must not be.
     const text = (await recipe.locator("section").allInnerTexts()).join(" ");
     expect(text).not.toMatch(/[А-Яа-яЁё]/);
+  });
+});
+
+test.describe("search", () => {
+  test.use({ locale: "ru-RU" });
+
+  test("finds the pizza among Italian dishes, whatever the word's ending", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: /^Кухня:/ }).click();
+    await page.getByRole("radio", { name: "Итальянская" }).click();
+    await expect(page.getByRole("button", { name: "Кухня: Итальянская" })).toBeVisible();
+    await page.getByRole("searchbox", { name: "Найти блюдо" }).fill("пиццу");
+    await expect(page.getByRole("heading", { name: /^Нашлось \d+/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /пицца/i }).first()).toBeVisible();
+  });
+
+  test("searches every meal until one is chosen, so a breakfast dish is found from the dinner default", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("searchbox", { name: "Найти блюдо" }).fill("овсянку");
+    await expect(page.getByRole("button", { name: "Приём пищи: Любое время" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /овсян/i }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Очистить поиск" }).click();
+    await expect(page.getByRole("button", { name: "Приём пищи: Ужин" })).toBeVisible();
+  });
+
+  test("says when nothing is found, and clears back to a random pick", async ({ page }) => {
+    await page.goto("/");
+    const search = page.getByRole("searchbox", { name: "Найти блюдо" });
+    await search.fill("абракадабра");
+    await expect(page.getByText("Ничего не нашлось по запросу «абракадабра»")).toBeVisible();
+    await page.getByRole("button", { name: "Очистить поиск" }).click();
+    await expect(page.getByRole("button", { name: /Другое блюдо/ })).toBeVisible();
+  });
+
+  test("closes a menu on a click outside it", async ({ page }) => {
+    await page.goto("/");
+    const meal = page.getByRole("button", { name: /^Приём пищи:/ });
+    await meal.click();
+    await expect(meal).toHaveAttribute("aria-expanded", "true");
+    await page.getByRole("heading", { level: 1 }).click();
+    await expect(meal).toHaveAttribute("aria-expanded", "false");
   });
 });
 

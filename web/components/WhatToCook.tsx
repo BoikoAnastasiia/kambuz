@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { PickerOptions } from "@/lib/suggest";
 import type { RecipeCard, Suggestion, VocabItem } from "@/lib/types";
 import { capitalize, clock } from "@/lib/format";
@@ -15,6 +15,7 @@ const MEALS = [
   { id: "lunch", icon: "🍲" },
   { id: "dinner", icon: "🍝" },
   { id: "dessert", icon: "🍰" },
+  { id: "any", icon: "🍽️" },
 ] as const;
 
 /** A vocabulary item's name in the page's language. */
@@ -23,82 +24,148 @@ function nameIn(item: VocabItem, lang: Lang): string {
 }
 
 type Meal = (typeof MEALS)[number]["id"];
+type Menu = "meal" | "cuisine" | "ingredients";
+
+// Typing waits this long before asking the server, so a word isn't searched letter by letter.
+const SEARCH_DELAY_MS = 250;
 
 export function WhatToCook({ lang, options, initial }: { lang: Lang; options: PickerOptions; initial: Suggestion }) {
   const t = DICTS[lang];
-  const [meal, setMeal] = useState<Meal>("dinner");
+  // The meal the visitor chose, or null until they do. Until then a search looks at every meal,
+  // so «сырники» are found from the dinner default, and clearing the search brings dinner back.
+  const [chosenMeal, setChosenMeal] = useState<Meal | null>(null);
   const [cuisine, setCuisine] = useState("random");
   const [include, setInclude] = useState<string[]>([]);
-  const [advanced, setAdvanced] = useState(false);
+  const [query, setQuery] = useState("");
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState<Menu | null>(null);
   const [result, setResult] = useState<Suggestion>(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // The filters the result on screen was fetched for; the server rendered the defaults.
-  const shownFor = useRef("dinner|random|");
+  const shownFor = useRef("dinner|random||");
+  // Only the newest request may change the screen: typing fires several, and they can answer out of order.
+  const latest = useRef(0);
+  const bar = useRef<HTMLDivElement>(null);
 
   const cuisineName = useMemo(() => new Map(options.cuisines.map((c) => [c.id, nameIn(c, lang)])), [options.cuisines, lang]);
   const ingredientById = useMemo(() => new Map(options.ingredients.map((i) => [i.id, i])), [options.ingredients]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setQ(query.trim()), SEARCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const meal: Meal = chosenMeal ?? (q ? "any" : "dinner");
+
+  // An open menu closes on a click anywhere outside the filter bar, or on Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!bar.current?.contains(e.target as Node)) setOpen(null);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   async function load(exclude?: string) {
+    const request = ++latest.current;
     setLoading(true);
     setError(null);
-    const q = new URLSearchParams({ meal, cuisine, lang });
-    if (include.length) q.set("include", include.join(","));
-    if (exclude) q.set("exclude", exclude);
+    const params = new URLSearchParams({ meal, cuisine, lang });
+    if (include.length) params.set("include", include.join(","));
+    if (q) params.set("q", q);
+    if (exclude) params.set("exclude", exclude);
     try {
-      const res = await fetch(`/api/suggest?${q}`);
+      const res = await fetch(`/api/suggest?${params}`);
       const body = await res.json();
+      if (request !== latest.current) return;
       if (!res.ok) throw new Error(body.error ?? t.somethingWrong);
       setResult(body as Suggestion);
     } catch (e) {
-      setError((e as Error).message);
+      if (request === latest.current) setError((e as Error).message);
     } finally {
-      setLoading(false);
+      if (request === latest.current) setLoading(false);
     }
   }
 
   // Refetch only when the filters differ from what is shown. Comparing filters rather than
   // skipping the first run keeps this right when React runs effects twice in development.
   useEffect(() => {
-    const key = `${meal}|${cuisine}|${include.join(",")}`;
+    const key = `${meal}|${cuisine}|${include.join(",")}|${q}`;
     if (key === shownFor.current) return;
     shownFor.current = key;
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meal, cuisine, include]);
+  }, [meal, cuisine, include, q]);
+
+  const toggle = (menu: Menu) => setOpen((o) => (o === menu ? null : menu));
+  const mealIcon = MEALS.find((m) => m.id === meal)!.icon;
 
   return (
     <div className={styles.wrap}>
       <section className={styles.filters} aria-label={t.filters}>
-        {/* The meal is the main choice, exactly one of four: a segmented control. */}
-        <div className={styles.segmented} role="radiogroup" aria-label={t.meal}>
-          {MEALS.map((m) => (
-            <button key={m.id} role="radio" aria-checked={meal === m.id} className={styles.segment} onClick={() => setMeal(m.id)}>
-              <span className={styles.segmentIcon} aria-hidden>{m.icon}</span>
-              {t.meals[m.id]}
-            </button>
-          ))}
-        </div>
-        {/* Cuisine refines it: smaller, quieter chips under a label, selected in ink rather than red. */}
-        <div className={styles.cuisineGroup}>
-          <span className="label" id="cuisine-label">{t.cuisine}</span>
-          <div className={`${styles.row} ${styles.scroll}`} role="radiogroup" aria-labelledby="cuisine-label">
-            <button role="radio" aria-checked={cuisine === "random"} className={styles.small} onClick={() => setCuisine("random")}>
-              🎲 {t.anyCuisine}
-            </button>
-            {options.cuisines.map((c) => (
-              <button key={c.id} role="radio" aria-checked={cuisine === c.id} className={styles.small} onClick={() => setCuisine(c.id)}>
-                {nameIn(c, lang)}
-              </button>
-            ))}
-          </div>
-        </div>
+        <div className={styles.bar} ref={bar}>
+          <Dropdown label={t.meal} open={open === "meal"} onToggle={() => toggle("meal")} icon={mealIcon} value={t.meals[meal]}>
+            <div className={styles.options} role="radiogroup" aria-label={t.meal}>
+              {MEALS.map((m) => (
+                <button
+                  key={m.id}
+                  role="radio"
+                  aria-checked={meal === m.id}
+                  className={styles.option}
+                  onClick={() => {
+                    setChosenMeal(m.id);
+                    setOpen(null);
+                  }}
+                >
+                  <span aria-hidden>{m.icon}</span> {t.meals[m.id]}
+                </button>
+              ))}
+            </div>
+          </Dropdown>
 
-        <div className={styles.advanced}>
-          <button className={styles.advancedToggle} aria-expanded={advanced} onClick={() => setAdvanced((a) => !a)}>
-            <span aria-hidden>{advanced ? "▾" : "▸"}</span> {t.mustHave}{include.length ? ` (${include.length})` : ""}
-          </button>
-          {advanced && (
+          <Dropdown
+            label={t.cuisine}
+            open={open === "cuisine"}
+            onToggle={() => toggle("cuisine")}
+            icon="🌍"
+            value={cuisine === "random" ? t.anyCuisineButton : (cuisineName.get(cuisine) ?? cuisine)}
+            active={cuisine !== "random"}
+          >
+            <div className={styles.options} role="radiogroup" aria-label={t.cuisine}>
+              {[{ id: "random", label: `🎲 ${t.anyCuisine}` }, ...options.cuisines.map((c) => ({ id: c.id, label: nameIn(c, lang) }))].map((c) => (
+                <button
+                  key={c.id}
+                  role="radio"
+                  aria-checked={cuisine === c.id}
+                  className={styles.option}
+                  onClick={() => {
+                    setCuisine(c.id);
+                    setOpen(null);
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </Dropdown>
+
+          <Dropdown
+            label={t.mustHave}
+            open={open === "ingredients"}
+            onToggle={() => toggle("ingredients")}
+            icon="🧄"
+            value={include.length ? `${t.ingredientsButton} (${include.length})` : t.ingredientsButton}
+            active={include.length > 0}
+            wide
+          >
+            {/* Stays open while ingredients are added, so several can be picked in a row. */}
             <IngredientPicker
               lang={lang}
               all={options.ingredients}
@@ -108,6 +175,23 @@ export function WhatToCook({ lang, options, initial }: { lang: Lang; options: Pi
               onAdd={(id) => setInclude((xs) => (xs.includes(id) ? xs : [...xs, id]))}
               onRemove={(id) => setInclude((xs) => xs.filter((x) => x !== id))}
             />
+          </Dropdown>
+        </div>
+
+        <div className={styles.searchBox}>
+          <span className={styles.searchIcon} aria-hidden>🔍</span>
+          <input
+            className={styles.dishSearch}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchLabel}
+          />
+          {query && (
+            <button className={styles.clear} onClick={() => setQuery("")} aria-label={t.clearSearch}>
+              ×
+            </button>
           )}
         </div>
       </section>
@@ -115,7 +199,9 @@ export function WhatToCook({ lang, options, initial }: { lang: Lang; options: Pi
       {error && <p className="empty">{error}</p>}
 
       <section aria-live="polite" className={loading ? styles.loading : undefined}>
-        {result.pick ? (
+        {result.results ? (
+          <SearchResults lang={lang} t={t} q={q} results={result.results} total={result.total} cuisineName={cuisineName} />
+        ) : result.pick ? (
           <>
             <PickCard lang={lang} t={t} card={result.pick} cuisineName={cuisineName.get(result.pick.cuisine)} />
             <div className={styles.reroll}>
@@ -127,18 +213,7 @@ export function WhatToCook({ lang, options, initial }: { lang: Lang; options: Pi
             {result.others.length > 0 && (
               <div className={styles.others}>
                 <h2 className={styles.othersTitle}>{t.alsoFits}</h2>
-                <ul className={styles.otherList}>
-                  {result.others.map((o) => (
-                    <li key={o.id}>
-                      <Link href={localePath(lang, `/recipe/${o.id}`)} className={styles.other}>
-                        <span className={styles.otherName}>{o.name}</span>
-                        <span className={styles.otherMeta}>
-                          {[cuisineName.get(o.cuisine), duration(o.totalMinutes, lang)].filter(Boolean).join(" · ")}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <DishList lang={lang} cards={result.others} cuisineName={cuisineName} />
               </div>
             )}
           </>
@@ -153,6 +228,79 @@ export function WhatToCook({ lang, options, initial }: { lang: Lang; options: Pi
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+/** A filter button showing its current choice; its panel opens under the whole bar, so it never runs off a phone screen. */
+function Dropdown({
+  label, icon, value, open, onToggle, active, wide, children,
+}: {
+  label: string;
+  icon: string;
+  value: string;
+  open: boolean;
+  onToggle: () => void;
+  active?: boolean;
+  wide?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className={styles.dropdown}>
+      <button
+        className={`${styles.trigger} ${active ? styles.triggerActive : ""}`}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label={`${label}: ${value}`}
+        onClick={onToggle}
+      >
+        <span aria-hidden>{icon}</span>
+        <span>{value}</span>
+        <span className={styles.caret} aria-hidden>▾</span>
+      </button>
+      {open && <div className={`${styles.panel} ${wide ? styles.panelWide : ""}`}>{children}</div>}
+    </div>
+  );
+}
+
+function DishList({ lang, cards, cuisineName }: { lang: Lang; cards: RecipeCard[]; cuisineName: Map<string, string> }) {
+  return (
+    <ul className={styles.otherList}>
+      {cards.map((o) => (
+        <li key={o.id}>
+          <Link href={localePath(lang, `/recipe/${o.id}`)} className={styles.other}>
+            <span className={styles.otherName}>{o.name}</span>
+            <span className={styles.otherMeta}>{[cuisineName.get(o.cuisine), duration(o.totalMinutes, lang)].filter(Boolean).join(" · ")}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SearchResults({
+  lang, t, q, results, total, cuisineName,
+}: {
+  lang: Lang;
+  t: Dict;
+  q: string;
+  results: RecipeCard[];
+  total: number;
+  cuisineName: Map<string, string>;
+}) {
+  if (!results.length) {
+    return (
+      <div className={styles.none}>
+        <p className={styles.noneTitle}>{t.nothingFound(q)}</p>
+        <p>{t.nothingFoundHint}</p>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <h2 className={styles.othersTitle}>{t.found(total)}</h2>
+      <DishList lang={lang} cards={results} cuisineName={cuisineName} />
+      {total > results.length && <p className="label">{t.foundMore(results.length)}</p>}
     </div>
   );
 }

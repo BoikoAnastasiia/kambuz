@@ -6,26 +6,20 @@ function Block({ className, width }: { className?: string; width?: number | stri
 }
 
 // Fixed widths rather than random ones: the server and the browser must render the same.
-const CUISINE_WIDTHS = [86, 92, 104, 118, 108, 116, 124];
+const PILL_WIDTHS = [120, 176, 168];
 const INGREDIENT_WIDTHS = [70, 96, 64, 88, 120, 74, 92, 66];
 
-/** The home picker while recipes load: meal bar, cuisine chips, the ingredients toggle and a card. */
+/** The home picker while recipes load: the three filter buttons, the search box and a card. */
 export function PickerSkeleton({ lang }: { lang: Lang }) {
   return (
     <div className={styles.picker} aria-busy="true" aria-label={DICTS[lang].loadingRecipes}>
       <div className={styles.filters}>
-        <div className={styles.segmented}>
-          {[0, 1, 2, 3].map((i) => (
-            <Block key={i} className={styles.segment} />
+        <div className={styles.bar}>
+          {PILL_WIDTHS.map((w, i) => (
+            <Block key={i} className={styles.pill} width={w} />
           ))}
         </div>
-        <Block className={styles.label} />
-        <div className={styles.row}>
-          {CUISINE_WIDTHS.map((w, i) => (
-            <Block key={i} className={styles.chip} width={w} />
-          ))}
-        </div>
-        <Block className={styles.toggle} />
+        <Block className={styles.searchBar} />
       </div>
       <CardSkeleton />
     </div>

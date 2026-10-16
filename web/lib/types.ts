@@ -128,4 +128,6 @@ export interface Suggestion {
   total: number;
   /** For each ingredient id, how many of the matching recipes use it: what the picker can still offer. */
   available: Record<string, number>;
+  /** With a search: every match, best first (at most 48; `total` has the full count). Null without one. */
+  results: RecipeCard[] | null;
 }

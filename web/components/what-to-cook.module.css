@@ -9,147 +9,204 @@
   justify-items: center;
 }
 
-.row {
+/* Three filter buttons in a row; whichever is open drops its panel under the whole row. */
+.bar {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  max-width: 100%;
+  gap: 10px;
+  width: min(720px, 100%);
 }
 
-/* Meal: one connected track, the chosen segment filled red. */
-.segmented {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  width: min(560px, 100%);
-  padding: 5px;
-  gap: 4px;
-  background: var(--paper);
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  box-shadow: 0 4px 0 var(--ink);
-}
-
-.segment {
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  border-radius: 999px;
-  padding: 12px 8px;
-  font-weight: 800;
-  font-size: 1.05rem;
+.trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 7px;
-  transition: background 0.15s ease, color 0.15s ease;
+  gap: 8px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 3px 0 var(--ink);
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
 }
 
-.segment:hover {
+.trigger:hover {
   background: var(--mustard-soft);
 }
 
-.segment[aria-checked="true"] {
+.trigger[aria-expanded="true"] {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+/* A filter that narrows the dishes (a cuisine, ingredients) is lit, so it isn't forgotten. */
+.triggerActive {
+  background: var(--mustard);
+}
+
+.triggerActive:hover {
+  background: #ffcd55;
+}
+
+.caret {
+  font-size: 0.8em;
+  transition: transform 0.15s ease;
+}
+
+.trigger[aria-expanded="true"] .caret {
+  transform: rotate(180deg);
+}
+
+/* On a computer a menu opens under its own button, as wide as its contents. */
+.dropdown {
+  position: relative;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  min-width: 100%;
+  width: max-content;
+  max-width: 320px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 8px;
+}
+
+/* The ingredients menu holds a search box and chips, so it gets real width; it opens leftwards from the last button. */
+.panelWide {
+  left: auto;
+  right: 0;
+  width: 460px;
+  max-width: none;
+}
+
+.options {
+  display: grid;
+  gap: 2px;
+}
+
+/* On a phone the buttons wrap, and a menu under one of them could run off the screen: it spans the row instead. */
+@media (max-width: 560px) {
+  .dropdown {
+    position: static;
+  }
+  .panel,
+  .panelWide {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+  }
+}
+
+.option {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+.option:hover {
+  background: var(--mustard-soft);
+}
+
+.option[aria-checked="true"] {
   background: var(--red);
   color: #fff;
 }
 
-.segmentIcon {
-  font-size: 1.15em;
+@media (max-width: 480px) {
+  .trigger {
+    padding: 9px 13px;
+    font-size: 0.92rem;
+  }
+}
+
+/* The dish search, under the filters and searching within them. */
+.searchBox {
+  position: relative;
+  width: min(640px, 100%);
+  margin-top: 8px;
+}
+
+.dishSearch {
+  font: inherit;
+  font-size: 1.05rem;
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 14px 48px;
+  background: #fff;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+@media (max-width: 480px) {
+  .dishSearch {
+    font-size: 1rem;
+    padding: 13px 42px 13px 44px;
+  }
+  .searchIcon {
+    left: 15px;
+  }
+}
+
+/* The narrowest phones (320px) still show the whole hint. */
+@media (max-width: 340px) {
+  .dishSearch {
+    font-size: 0.9rem;
+    padding: 12px 36px 12px 38px;
+  }
+  .searchIcon {
+    left: 12px;
+  }
+}
+
+.dishSearch::-webkit-search-cancel-button {
+  display: none;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: var(--line);
+  color: var(--ink);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 1.1rem;
   line-height: 1;
 }
 
-/* On a phone the emoji sits above the word so four segments still fit. */
-@media (max-width: 480px) {
-  .segmented {
-    border-radius: 22px;
-  }
-  .segment {
-    flex-direction: column;
-    gap: 2px;
-    padding: 8px 2px;
-    font-size: 0.82rem;
-    border-radius: 17px;
-  }
-  .segmentIcon {
-    font-size: 1.35rem;
-  }
-}
-
-/* Cuisine: a small label over quieter chips. */
-.cuisineGroup {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  max-width: 100%;
-  margin-top: 10px;
-}
-
-.small {
-  border: 1.5px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 999px;
-  padding: 6px 13px;
-  font-weight: 700;
-  font-size: 0.86rem;
-  white-space: nowrap;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.small:hover {
-  border-color: var(--ink);
-}
-
-.small[aria-checked="true"] {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--cream);
-}
-
-/* Cuisines can outgrow a phone screen: scroll sideways there instead of wrapping into a wall. */
-@media (max-width: 640px) {
-  .cuisineGroup {
-    width: 100%;
-    justify-items: stretch;
-  }
-  .cuisineGroup > :global(.label) {
-    text-align: center;
-  }
-  .scroll {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    overflow-x: auto;
-    width: 100%;
-    padding: 2px 2px 8px;
-    scrollbar-width: none;
-  }
-  .scroll::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.advanced {
-  width: min(640px, 100%);
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-}
-
-.advancedToggle {
-  background: none;
-  border: 0;
-  color: var(--red);
-  font-weight: 800;
-  padding: 6px 8px;
+.clear:hover {
+  background: var(--mustard);
 }
 
 .picker {
   width: 100%;
-  background: var(--paper);
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px;
   display: grid;
   gap: 10px;
 }

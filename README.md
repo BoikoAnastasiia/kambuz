@@ -21,6 +21,8 @@ input is the auto-generated captions. One video often holds five to eight dishes
   more complete version
 - **Russian and English** — Sonnet 5.5 translates each recipe, code checks and an
   Opus 5.5 proofread decide whether the translation is good enough to show
+- **Search** — by dish or ingredient, in Russian or English, within the meal, cuisine
+  and ingredient menus
 - **Add a video from the site** — admins (Google sign-in) paste a link; a worker on
   your own machine picks up the job and the recipes appear a few minutes later
 - **Measured** — an eval for the extraction, a bench for comparing models per agent,

@@ -2,9 +2,10 @@ import "server-only";
 import type { Filter } from "mongodb";
 import { collections } from "./db";
 import type { Lang } from "./i18n";
+import { score } from "./search";
 import type { MealType, RecipeCard, RecipeDoc, Suggestion, VocabItem } from "./types";
 
-export const MEALS = ["breakfast", "lunch", "dinner", "dessert"] as const;
+export const MEALS = ["breakfast", "lunch", "dinner", "dessert", "any"] as const;
 export type Meal = (typeof MEALS)[number];
 
 export interface Filters {
@@ -13,6 +14,8 @@ export interface Filters {
   cuisine: string;
   /** Ingredient ids that must all be in the dish. */
   include: string[];
+  /** Free text to find among the dishes the filters allow; empty for a random pick. */
+  q?: string;
 }
 
 export function parseFilters(params: URLSearchParams): Filters {
@@ -21,6 +24,7 @@ export function parseFilters(params: URLSearchParams): Filters {
     meal: (MEALS as readonly string[]).includes(meal ?? "") ? (meal as Meal) : "dinner",
     cuisine: params.get("cuisine")?.trim() || "random",
     include: (params.get("include") ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+    q: params.get("q")?.trim().slice(0, 80) || undefined,
   };
 }
 
@@ -32,7 +36,7 @@ export function parseFilters(params: URLSearchParams): Filters {
 export function recipeQuery(f: Filters): Filter<RecipeDoc> {
   const q: Filter<RecipeDoc> = { archived: false };
   if (f.meal === "dessert") q.course = "dessert";
-  else {
+  else if (f.meal !== "any") {
     q.mealTypes = f.meal as MealType;
     q.course = { $ne: "dessert" };
   }
@@ -72,22 +76,45 @@ function toCard(r: RecipeDoc, lang: Lang, vocabEn: Map<string, string>): RecipeC
   };
 }
 
+/** Everything a search looks at, in both languages whatever the page's. */
+function searchable(r: RecipeDoc, vocabEn: Map<string, string>) {
+  return {
+    names: [r.nameRu, r.nameEn, r.en?.name ?? ""],
+    ingredients: r.ingredients.flatMap((i, k) => [i.baseName ?? "", i.rawName, r.en?.ingredients[k]?.name ?? "", (i.ingredient && vocabEn.get(i.ingredient)) || ""]),
+  };
+}
+
 /** A random match, never the one just shown when another exists, plus a few more that fit. */
 export async function suggest(f: Filters, lang: Lang, exclude?: string): Promise<Suggestion> {
   const { recipes, vocab } = await collections();
-  const [found, ingredientVocab] = await Promise.all([recipes.find(recipeQuery(f)).toArray(), lang === "en" ? vocab.findOne({ _id: "ingredients" }) : null]);
+  // The vocabulary's English names also let a search find ingredients by their English name.
+  const [found, ingredientVocab] = await Promise.all([recipes.find(recipeQuery(f)).toArray(), lang === "en" || f.q ? vocab.findOne({ _id: "ingredients" }) : null]);
   const vocabEn = new Map((ingredientVocab?.items ?? []).map((i) => [i.id, i.nameEn]));
+  const card = (r: RecipeDoc) => toCard(r, lang, vocabEn);
+  const countIngredients = (rs: RecipeDoc[]) => {
+    const available: Record<string, number> = {};
+    for (const r of rs) {
+      for (const id of new Set(r.ingredients.map((i) => i.ingredient))) if (id) available[id] = (available[id] ?? 0) + 1;
+    }
+    return available;
+  };
+
+  // A search lists every dish that matches, best first, instead of picking one at random.
+  if (f.q) {
+    const ranked = found
+      .map((r) => ({ r, s: score(searchable(r, vocabEn), f.q!) }))
+      .filter((x) => x.s > 0)
+      .sort((a, b) => b.s - a.s || card(a.r).name.localeCompare(card(b.r).name, lang))
+      .map((x) => x.r);
+    return { pick: null, others: [], total: ranked.length, available: countIngredients(ranked), results: ranked.slice(0, 48).map(card) };
+  }
+
   const matches = shuffle(found);
   const preferred = matches.findIndex((r) => r.id !== exclude);
   const pickIndex = preferred === -1 ? 0 : preferred;
   const pick = matches[pickIndex];
   const others = matches.filter((_, i) => i !== pickIndex).slice(0, 6);
-  const available: Record<string, number> = {};
-  for (const r of matches) {
-    for (const id of new Set(r.ingredients.map((i) => i.ingredient))) if (id) available[id] = (available[id] ?? 0) + 1;
-  }
-  const card = (r: RecipeDoc) => toCard(r, lang, vocabEn);
-  return { pick: pick ? card(pick) : null, others: others.map(card), total: matches.length, available };
+  return { pick: pick ? card(pick) : null, others: others.map(card), total: matches.length, available: countIngredients(matches), results: null };
 }
 
 export interface PickerOptions {

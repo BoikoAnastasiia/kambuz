@@ -1,8 +1,9 @@
 # Kambuz web
 
-"What to cook?" in Russian and English — pick a meal (breakfast, lunch, dinner, dessert), a cuisine (or
-random) and, optionally, ingredients the dish must contain; the site picks one recipe
-and lists others that fit. Every recipe links to the moment in the video it came from.
+"What to cook?" in Russian and English — three menus pick a meal (breakfast, lunch,
+dinner, dessert or any), a cuisine (or any) and, optionally, ingredients the dish must
+contain; the site picks one recipe and lists others that fit. The search under the
+menus lists every dish that matches, within those filters. Every recipe links to the moment in the video it came from.
 
 The site only reads and writes MongoDB. It never runs the pipeline: **Add a video**
 queues a job, and the worker (`npm run kambuz -- worker` in the repo root) picks it up,
@@ -22,7 +23,11 @@ file's variables in the environment before Next starts; don't load it from
 
 Russian at the bare paths, English under `/en` (`/en`, `/en/recipe/[id]`):
 
-- `/` — the picker. `GET /api/suggest?meal=&cuisine=&include=a,b&exclude=<recipe id>&lang=ru|en`
+- `/` — the picker. `GET /api/suggest?meal=&cuisine=&include=a,b&q=&exclude=<recipe id>&lang=ru|en`.
+  With `q`, the answer is a ranked list (`results`) instead of a random pick. Search
+  (`lib/search.ts`) matches word beginnings in dish names and ingredients, in both
+  languages, ignoring ё/е and word endings («пиццу» finds «пицца»); a name match ranks
+  above an ingredient match. Until the visitor picks a meal, a search covers every meal.
 - `/recipe/[id]` — ingredients, steps with timestamps, the video embedded at the dish
 - `/add` — paste a YouTube link. `POST /api/jobs {url}`, then `GET /api/jobs/[id]`
 - `/sitemap.xml` — every recipe in both languages; `/robots.txt` points to it
