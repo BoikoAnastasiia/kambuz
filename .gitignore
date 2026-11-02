@@ -3,3 +3,6 @@ reports/
 node_modules/
 .env
 .superpowers/
+
+# Browser-test logs and snapshots from the Playwright MCP
+.playwright-mcp/
