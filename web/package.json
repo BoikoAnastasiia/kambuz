@@ -9,18 +9,18 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "mongodb": "^7.7.0",
-    "next": "16.4.0",
+    "mongodb": "^7.8.0",
+    "next": "16.4.4",
     "next-auth": "^5.0.0-beta.32",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.1",
-    "@types/node": "^20",
+    "@playwright/test": "1.64.1",
+    "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5"
+    "typescript": "^7.0.2"
   }
 }
