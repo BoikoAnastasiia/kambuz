@@ -67,6 +67,7 @@
   { "id": "baking-powder", "nameRu": "Разрыхлитель", "nameEn": "Baking powder", "aliases": [] },
   { "id": "olive-oil", "nameRu": "Оливковое масло", "nameEn": "Olive oil", "aliases": [] },
   { "id": "sunflower-oil", "nameRu": "Подсолнечное масло", "nameEn": "Sunflower oil", "aliases": [] },
+  { "id": "garlic-oil", "nameRu": "Чесночное масло", "nameEn": "Garlic oil", "aliases": [] },
   { "id": "vinegar", "nameRu": "Уксус", "nameEn": "Vinegar", "aliases": [] },
   { "id": "rice", "nameRu": "Рис", "nameEn": "Rice", "aliases": [] },
   { "id": "buckwheat", "nameRu": "Гречка", "nameEn": "Buckwheat", "aliases": ["гречневая крупа"] },
