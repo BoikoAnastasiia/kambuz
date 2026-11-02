@@ -84,7 +84,10 @@ function searchable(r: RecipeDoc, vocabEn: Map<string, string>) {
   };
 }
 
-/** A random match, never the one just shown when another exists, plus a few more that fit. */
+/**
+ * A random match, never the one just shown when another exists, plus more that fit: a few at
+ * random, or, once a cuisine or an ingredient narrows the choice, every other match by name.
+ */
 export async function suggest(f: Filters, lang: Lang, exclude?: string): Promise<Suggestion> {
   const { recipes, vocab } = await collections();
   // The vocabulary's English names also let a search find ingredients by their English name.
@@ -113,8 +116,10 @@ export async function suggest(f: Filters, lang: Lang, exclude?: string): Promise
   const preferred = matches.findIndex((r) => r.id !== exclude);
   const pickIndex = preferred === -1 ? 0 : preferred;
   const pick = matches[pickIndex];
-  const others = matches.filter((_, i) => i !== pickIndex).slice(0, 6);
-  return { pick: pick ? card(pick) : null, others: others.map(card), total: matches.length, available: countIngredients(matches), results: null };
+  const rest = matches.filter((_, i) => i !== pickIndex).map(card);
+  const narrowed = f.cuisine !== "random" || f.include.length > 0;
+  const others = narrowed ? rest.sort((a, b) => a.name.localeCompare(b.name, lang)) : rest.slice(0, 6);
+  return { pick: pick ? card(pick) : null, others, total: matches.length, available: countIngredients(matches), results: null };
 }
 
 export interface PickerOptions {
